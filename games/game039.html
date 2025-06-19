@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合格闘 - ゲーム039</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px 25px; border-radius: 15px; min-width: 100px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .game-area { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 40px; margin-bottom: 30px; min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        
+        .combat-arena { width: 100%; height: 250px; background: rgba(0,0,0,0.3); border-radius: 15px; position: relative; margin: 20px 0; overflow: hidden; }
+        .fighter { position: absolute; bottom: 20px; width: 60px; height: 80px; background: #4caf50; border-radius: 10px; transition: all 0.3s ease; }
+        .fighter.player { left: 50px; }
+        .fighter.opponent { right: 50px; background: #f44336; }
+        
+        .technique-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .tech-btn { background: rgba(255, 255, 255, 0.2); border: 2px solid #4caf50; color: white; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease; }
+        .tech-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .tech-btn.selected { border-color: #ffc107; background: rgba(255, 193, 7, 0.3); }
+        
+        .situation-display { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0; }
+        .situation-text { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; }
+        .technique-options { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .option-btn { background: rgba(255, 255, 255, 0.2); border: 1px solid white; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease; }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        
+        .demo-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.8; }
+        .demo-text { font-size: 1.3rem; margin-bottom: 30px; line-height: 1.6; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+        
+        @media (max-width: 768px) { .technique-selector { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">🥊 総合格闘</h1>
+        <p class="game-description">全ての格闘技術を統合した総合的戦闘能力と応用的格闘技術の完成ゲーム</p>
+        
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">戦闘数</div><div class="stat-value" id="battles">0/30</div></div>
+            <div class="stat"><div class="stat-label">勝利数</div><div class="stat-value" id="wins">0</div></div>
+            <div class="stat"><div class="stat-label">総合評価</div><div class="stat-value" id="rating">0%</div></div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div id="gamePlay" style="display: none;">
+                <div id="instruction" style="font-size: 1.2rem; margin-bottom: 20px;">状況に応じて最適な格闘技術を選択せよ！</div>
+                
+                <div class="combat-arena">
+                    <div class="fighter player" id="player"></div>
+                    <div class="fighter opponent" id="opponent"></div>
+                </div>
+                
+                <div class="situation-display" id="situationDisplay">
+                    <div class="situation-text" id="situationText">戦闘準備中...</div>
+                    <div class="technique-options" id="techniqueOptions"></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center;"><div>現在戦闘</div><div id="currentBattle" style="font-size: 1.5rem; font-weight: bold; color: #2196f3;">1</div></div>
+                    <div style="text-align: center;"><div>勝率</div><div id="winRate" style="font-size: 1.5rem; font-weight: bold; color: #4caf50;">100%</div></div>
+                    <div style="text-align: center;"><div>技術統合度</div><div id="integration" style="font-size: 1.5rem; font-weight: bold; color: #ff9800;">0%</div></div>
+                </div>
+            </div>
+            
+            <div id="gameStart">
+                <div class="demo-icon">🥊</div>
+                <div class="demo-text">全ての格闘技術を統合し、状況に応じた最適な技術選択を習得せよ！<br>総合格闘能力と応用的格闘技術の完成を目指すゲーム</div>
+                <div class="feature-list">
+                    <div class="feature-item">🥊 全格闘技術の統合活用</div>
+                    <div class="feature-item">🎯 状況に応じた技術選択</div>
+                    <div class="feature-item">📈 30回の総合戦闘実行</div>
+                    <div class="feature-item">🏆 総合評価85%以上でクリア</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            battles: 0,
+            wins: 0,
+            totalScore: 0,
+            currentSituation: null,
+            isPlaying: false,
+            techniques: {
+                striking: ['ストレートパンチ', 'アッパーカット', 'フック', 'エルボーストライク'],
+                kicking: ['ローキック', 'ハイキック', '膝蹴り', 'サイドキック'],
+                grappling: ['タックル', '投げ技', 'サブミッション', 'グラウンド'],
+                defense: ['ブロック', 'パリィ', 'カウンター', '回避']
+            },
+            situations: [
+                { text: '相手が距離を取って様子を見ている', optimal: 'striking', techniques: ['ストレートパンチ', 'ローキック', 'ブロック'] },
+                { text: '相手が接近戦を仕掛けてきた', optimal: 'grappling', techniques: ['タックル', 'エルボーストライク', '膝蹴り'] },
+                { text: '相手が蹴り技を多用してくる', optimal: 'defense', techniques: ['ブロック', 'カウンター', 'タックル'] },
+                { text: 'グラウンドポジションになった', optimal: 'grappling', techniques: ['サブミッション', 'グラウンド', 'パリィ'] },
+                { text: '相手が疲労している様子', optimal: 'striking', techniques: ['フック', 'ハイキック', 'アッパーカット'] },
+                { text: '相手が攻撃的に前進してくる', optimal: 'defense', techniques: ['回避', 'パリィ', 'カウンター'] },
+                { text: 'クリンチ状態になった', optimal: 'grappling', techniques: ['投げ技', '膝蹴り', 'エルボーストライク'] },
+                { text: '相手がガードを固めている', optimal: 'kicking', techniques: ['ローキック', 'サイドキック', '膝蹴り'] }
+            ]
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.battles = 0;
+            gameState.wins = 0;
+            gameState.totalScore = 0;
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            nextBattle();
+        }
+
+        function nextBattle() {
+            if (gameState.battles >= 30) {
+                endGame();
+                return;
+            }
+            
+            gameState.battles++;
+            
+            // Select random situation
+            gameState.currentSituation = gameState.situations[Math.floor(Math.random() * gameState.situations.length)];
+            
+            document.getElementById('situationText').textContent = gameState.currentSituation.text;
+            
+            // Create technique options
+            const optionsContainer = document.getElementById('techniqueOptions');
+            optionsContainer.innerHTML = '';
+            
+            // Add optimal technique and 2 random non-optimal techniques
+            const allTechniques = Object.values(gameState.techniques).flat();
+            const options = [...gameState.currentSituation.techniques];
+            
+            // Shuffle and add some random techniques
+            while (options.length < 4) {
+                const randomTech = allTechniques[Math.floor(Math.random() * allTechniques.length)];
+                if (!options.includes(randomTech)) {
+                    options.push(randomTech);
+                }
+            }
+            
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+            
+            options.forEach(technique => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = technique;
+                btn.onclick = () => selectTechnique(technique);
+                optionsContainer.appendChild(btn);
+            });
+            
+            updateDisplay();
+        }
+
+        function selectTechnique(selectedTechnique) {
+            if (!gameState.isPlaying) return;
+            
+            const isOptimal = gameState.currentSituation.techniques.includes(selectedTechnique);
+            let score = 0;
+            
+            if (isOptimal) {
+                score = 100;
+                gameState.wins++;
+                animateCombat(true);
+            } else {
+                score = Math.random() < 0.3 ? 60 : 30; // 30% chance of partial success
+                animateCombat(false);
+            }
+            
+            gameState.totalScore += score;
+            
+            // Visual feedback
+            setTimeout(() => {
+                const result = score >= 80 ? '勝利！' : score >= 60 ? '引き分け' : '敗北';
+                document.getElementById('situationText').textContent = `結果: ${result} (${score}点)`;
+                
+                setTimeout(() => {
+                    nextBattle();
+                }, 1500);
+            }, 1000);
+        }
+
+        function animateCombat(win) {
+            const player = document.getElementById('player');
+            const opponent = document.getElementById('opponent');
+            
+            if (win) {
+                // Player attacks
+                player.style.transform = 'translateX(50px) scale(1.1)';
+                opponent.style.transform = 'translateX(-20px) rotate(15deg)';
+                player.style.background = '#4caf50';
+                opponent.style.background = '#ff5722';
+                
+                setTimeout(() => {
+                    player.style.transform = '';
+                    opponent.style.transform = '';
+                    player.style.background = '#4caf50';
+                    opponent.style.background = '#f44336';
+                }, 800);
+            } else {
+                // Opponent attacks
+                opponent.style.transform = 'translateX(-50px) scale(1.1)';
+                player.style.transform = 'translateX(20px) rotate(-15deg)';
+                opponent.style.background = '#f44336';
+                player.style.background = '#ff5722';
+                
+                setTimeout(() => {
+                    player.style.transform = '';
+                    opponent.style.transform = '';
+                    player.style.background = '#4caf50';
+                    opponent.style.background = '#f44336';
+                }, 800);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('battles').textContent = gameState.battles + '/30';
+            document.getElementById('wins').textContent = gameState.wins;
+            document.getElementById('currentBattle').textContent = gameState.battles;
+            
+            const winRate = gameState.battles > 0 ? Math.round((gameState.wins / gameState.battles) * 100) : 100;
+            document.getElementById('winRate').textContent = winRate + '%';
+            
+            const avgScore = gameState.battles > 0 ? Math.round(gameState.totalScore / gameState.battles) : 0;
+            document.getElementById('rating').textContent = avgScore + '%';
+            document.getElementById('integration').textContent = avgScore + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            
+            const totalRating = gameState.battles > 0 ? Math.round(gameState.totalScore / gameState.battles) : 0;
+            const winRate = gameState.battles > 0 ? Math.round((gameState.wins / gameState.battles) * 100) : 0;
+            
+            let result = `総合格闘修練完了！\n\n戦闘数: ${gameState.battles}\n勝利数: ${gameState.wins}\n勝率: ${winRate}%\n総合評価: ${totalRating}%\n\n`;
+            
+            if (totalRating >= 85 && winRate >= 70) {
+                result += "🥊 素晴らしい！総合格闘マスターです！";
+            } else if (totalRating >= 70) {
+                result += "🤼 良い結果です！さらなる技術統合を目指しましょう！";
+            } else {
+                result += "📈 まだ改善の余地があります。状況判断力を高めましょう。";
+            }
+            
+            alert(result);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

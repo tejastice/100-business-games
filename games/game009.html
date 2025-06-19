@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>連続反応 - ゲーム009</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .instruction {
+            font-size: 1.8rem;
+            margin: 20px 0;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 30px 0;
+            min-height: 300px;
+        }
+
+        .number-card {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .number-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .number-card.clicked {
+            background: rgba(76, 175, 80, 0.8);
+            animation: pulse 0.3s;
+        }
+
+        .number-card.wrong {
+            background: rgba(244, 67, 54, 0.8);
+            animation: shake 0.5s;
+        }
+
+        .number-card.hidden {
+            background: rgba(255, 255, 255, 0.1);
+            color: transparent;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 20%, 40%, 60%, 80%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+        }
+
+        .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffeb3b;
+            margin: 20px 0;
+        }
+
+        .sequence-display {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-selector select {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+        }
+
+        .difficulty-selector option {
+            background: #333;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .phase-indicator {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #ff9800;
+        }
+
+        @media (max-width: 768px) {
+            .number-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 300px;
+            }
+            
+            .number-card {
+                width: 70px;
+                height: 70px;
+                font-size: 1.5rem;
+            }
+            
+            .instruction {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">⚡ 連続反応</h1>
+        <p class="game-description">連続して現れる多様な刺激に対して素早く正確に反応し、持続的な注意力と反射神経を鍛える連続反応能力向上ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">成功数</div>
+                <div class="stat-value" id="success">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解率</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <label for="difficulty">難易度: </label>
+            <select id="difficulty">
+                <option value="easy">初級（3秒表示）</option>
+                <option value="normal" selected>中級（2秒表示）</option>
+                <option value="hard">上級（1.5秒表示）</option>
+                <option value="expert">エキスパート（1秒表示）</option>
+            </select>
+        </div>
+
+        <div class="game-area">
+            <div class="timer-display" id="timer">準備完了</div>
+            <div class="phase-indicator" id="phaseIndicator">スタートボタンを押してゲームを開始</div>
+            <div class="instruction" id="instruction">数字を記憶して、昇順でクリックしてください</div>
+            <div class="sequence-display" id="sequenceDisplay"></div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="number-grid" id="numberGrid">
+                <!-- 数字カードがここに動的に生成される -->
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" disabled>一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 このゲームで向上するビジネススキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>短期記憶</h4>
+                    <p>一時的な情報を正確に保持する能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🔄</div>
+                    <h4>順序処理</h4>
+                    <p>論理的な順序で情報を整理する能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">👁️</div>
+                    <h4>視覚記憶</h4>
+                    <p>視覚的情報を記憶・再現する能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>処理速度</h4>
+                    <p>素早く正確に判断・実行する能力</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            score: 0,
+            level: 1,
+            success: 0,
+            total: 0,
+            isPlaying: false,
+            isPaused: false,
+            phase: 'ready', // ready, memorize, recall
+            currentSequence: [],
+            playerSequence: [],
+            currentNumbers: [],
+            difficulty: 'normal',
+            sequenceLength: 3,
+            showTimer: null,
+            hideTimer: null,
+            currentIndex: 0
+        };
+
+        const difficultySettings = {
+            easy: { showTime: 3000, startLength: 3, pointMultiplier: 1 },
+            normal: { showTime: 2000, startLength: 4, pointMultiplier: 1.5 },
+            hard: { showTime: 1500, startLength: 5, pointMultiplier: 2 },
+            expert: { showTime: 1000, startLength: 6, pointMultiplier: 3 }
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            gameState.difficulty = document.getElementById('difficulty').value;
+            gameState.sequenceLength = difficultySettings[gameState.difficulty].startLength;
+            gameState.level = 1;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('difficulty').disabled = true;
+            
+            startRound();
+        }
+
+        function startRound() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            gameState.phase = 'memorize';
+            gameState.playerSequence = [];
+            gameState.currentIndex = 0;
+            
+            updatePhaseIndicator();
+            generateSequence();
+            showSequence();
+        }
+
+        function generateSequence() {
+            // 1から16の数字からランダムに選択
+            const availableNumbers = Array.from({length: 16}, (_, i) => i + 1);
+            gameState.currentNumbers = [];
+            
+            // 必要な数だけランダムに選択
+            for (let i = 0; i < gameState.sequenceLength; i++) {
+                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                gameState.currentNumbers.push(availableNumbers[randomIndex]);
+                availableNumbers.splice(randomIndex, 1);
+            }
+            
+            // 正解の順序は昇順
+            gameState.currentSequence = [...gameState.currentNumbers].sort((a, b) => a - b);
+            
+            createNumberGrid();
+        }
+
+        function createNumberGrid() {
+            const grid = document.getElementById('numberGrid');
+            grid.innerHTML = '';
+            
+            // 16個のカードを作成（使用する数字と空のカード）
+            const allPositions = Array.from({length: 16}, (_, i) => i);
+            const shuffledNumbers = [...gameState.currentNumbers];
+            
+            // シャッフル
+            for (let i = shuffledNumbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
+            }
+            
+            for (let i = 0; i < 16; i++) {
+                const card = document.createElement('div');
+                card.className = 'number-card';
+                
+                if (i < gameState.currentNumbers.length) {
+                    card.textContent = shuffledNumbers[i];
+                    card.dataset.number = shuffledNumbers[i];
+                    card.addEventListener('click', () => selectNumber(parseInt(shuffledNumbers[i])));
+                } else {
+                    card.style.visibility = 'hidden';
+                }
+                
+                grid.appendChild(card);
+            }
+        }
+
+        function showSequence() {
+            document.getElementById('instruction').textContent = '数字を記憶してください';
+            document.getElementById('sequenceDisplay').textContent = `記憶する数字: ${gameState.currentNumbers.join(', ')}`;
+            
+            const showTime = difficultySettings[gameState.difficulty].showTime;
+            let timeLeft = Math.ceil(showTime / 1000);
+            
+            updateTimer(timeLeft);
+            
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    hideSequence();
+                }
+            }, 1000);
+        }
+
+        function hideSequence() {
+            gameState.phase = 'recall';
+            updatePhaseIndicator();
+            
+            document.getElementById('instruction').textContent = '数字を昇順でクリックしてください';
+            document.getElementById('sequenceDisplay').textContent = `正解順序: ${gameState.currentSequence.join(' → ')}`;
+            document.getElementById('timer').textContent = '入力中...';
+            
+            // 数字カードを隠す
+            const cards = document.querySelectorAll('.number-card');
+            cards.forEach(card => {
+                if (card.dataset.number) {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            // 少し待ってから表示
+            setTimeout(() => {
+                cards.forEach(card => {
+                    if (card.dataset.number) {
+                        card.classList.remove('hidden');
+                    }
+                });
+            }, 500);
+        }
+
+        function selectNumber(number) {
+            if (gameState.phase !== 'recall' || !gameState.isPlaying || gameState.isPaused) return;
+            
+            const expectedNumber = gameState.currentSequence[gameState.currentIndex];
+            const card = document.querySelector(`[data-number="${number}"]`);
+            
+            if (number === expectedNumber) {
+                // 正解
+                card.classList.add('clicked');
+                gameState.playerSequence.push(number);
+                gameState.currentIndex++;
+                
+                if (gameState.currentIndex >= gameState.currentSequence.length) {
+                    // ラウンド完了
+                    completeRound(true);
+                }
+            } else {
+                // 間違い
+                card.classList.add('wrong');
+                setTimeout(() => {
+                    card.classList.remove('wrong');
+                }, 500);
+                
+                completeRound(false);
+            }
+        }
+
+        function completeRound(success) {
+            gameState.total++;
+            
+            setTimeout(() => {
+                if (success) {
+                    gameState.success++;
+                    
+                    // スコア計算
+                    const basePoints = 100;
+                    const lengthBonus = gameState.sequenceLength * 20;
+                    const levelBonus = gameState.level * 10;
+                    const difficultyBonus = Math.floor(basePoints * difficultySettings[gameState.difficulty].pointMultiplier);
+                    const points = basePoints + lengthBonus + levelBonus + difficultyBonus;
+                    
+                    gameState.score += points;
+                    
+                    document.getElementById('instruction').textContent = `正解！ +${points}点`;
+                    
+                    // レベルアップチェック
+                    if (gameState.success % 3 === 0) {
+                        gameState.level++;
+                        gameState.sequenceLength = Math.min(gameState.sequenceLength + 1, 12);
+                        showLevelUpMessage();
+                    }
+                } else {
+                    document.getElementById('instruction').textContent = '間違い！正解順序を確認してください';
+                }
+                
+                updateDisplay();
+                
+                setTimeout(() => {
+                    if (gameState.isPlaying) {
+                        startRound();
+                    }
+                }, 2000);
+            }, 1000);
+        }
+
+        function showLevelUpMessage() {
+            document.getElementById('phaseIndicator').textContent = `🎉 レベル ${gameState.level} 達成！`;
+            
+            setTimeout(() => {
+                updatePhaseIndicator();
+            }, 2000);
+        }
+
+        function updatePhaseIndicator() {
+            const indicator = document.getElementById('phaseIndicator');
+            
+            switch (gameState.phase) {
+                case 'ready':
+                    indicator.textContent = 'スタートボタンを押してゲームを開始';
+                    break;
+                case 'memorize':
+                    indicator.textContent = '📝 記憶フェーズ';
+                    break;
+                case 'recall':
+                    indicator.textContent = '🎯 入力フェーズ';
+                    break;
+            }
+        }
+
+        function updateTimer(seconds) {
+            document.getElementById('timer').textContent = `残り時間: ${seconds}秒`;
+        }
+
+        function pauseGame() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            
+            if (gameState.isPaused) {
+                clearTimeout(gameState.showTimer);
+                clearTimeout(gameState.hideTimer);
+                document.getElementById('pauseBtn').textContent = '再開';
+                document.getElementById('instruction').textContent = '一時停止中';
+            } else {
+                document.getElementById('pauseBtn').textContent = '一時停止';
+                if (gameState.phase === 'memorize') {
+                    showSequence();
+                } else {
+                    updatePhaseIndicator();
+                }
+            }
+        }
+
+        function resetGame() {
+            clearTimeout(gameState.showTimer);
+            clearTimeout(gameState.hideTimer);
+            
+            gameState = {
+                score: 0,
+                level: 1,
+                success: 0,
+                total: 0,
+                isPlaying: false,
+                isPaused: false,
+                phase: 'ready',
+                currentSequence: [],
+                playerSequence: [],
+                currentNumbers: [],
+                difficulty: 'normal',
+                sequenceLength: 3,
+                showTimer: null,
+                hideTimer: null,
+                currentIndex: 0
+            };
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('difficulty').disabled = false;
+            document.getElementById('pauseBtn').textContent = '一時停止';
+            document.getElementById('instruction').textContent = '数字を記憶して、昇順でクリックしてください';
+            document.getElementById('sequenceDisplay').textContent = '';
+            document.getElementById('timer').textContent = '準備完了';
+            document.getElementById('numberGrid').innerHTML = '';
+            
+            updatePhaseIndicator();
+            updateDisplay();
+            updateProgress();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearTimeout(gameState.showTimer);
+            clearTimeout(gameState.hideTimer);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('difficulty').disabled = false;
+            document.getElementById('instruction').textContent = 'ゲーム終了！';
+            
+            showGameResults();
+        }
+
+        function showGameResults() {
+            const accuracy = gameState.total > 0 ? Math.round((gameState.success / gameState.total) * 100) : 0;
+            const performance = getPerformanceRating(gameState.score, accuracy, gameState.level);
+            
+            alert(`🔢 ゲーム結果
+            
+スコア: ${gameState.score}点
+レベル: ${gameState.level}
+成功数: ${gameState.success}/${gameState.total}
+正解率: ${accuracy}%
+
+パフォーマンス: ${performance}
+
+ビジネススキル向上度:
+🧠 短期記憶: ${getSkillRating(gameState.level * 200)}
+🔄 順序処理: ${getSkillRating(gameState.success * 100)}
+👁️ 視覚記憶: ${getSkillRating(accuracy * 15)}
+⚡ 処理速度: ${getSkillRating(gameState.score / 10)}`);
+        }
+
+        function getPerformanceRating(score, accuracy, level) {
+            if (score >= 2000 && accuracy >= 90 && level >= 8) return '🏆 エクセレント';
+            if (score >= 1500 && accuracy >= 80 && level >= 6) return '🥇 とても良い';
+            if (score >= 1000 && accuracy >= 70 && level >= 4) return '🥈 良い';
+            if (score >= 500 && accuracy >= 60 && level >= 3) return '🥉 普通';
+            return '📈 要練習';
+        }
+
+        function getSkillRating(value) {
+            if (value >= 1500) return '★★★★★ マスター';
+            if (value >= 1200) return '★★★★☆ 上級';
+            if (value >= 900) return '★★★☆☆ 中級';
+            if (value >= 600) return '★★☆☆☆ 初級';
+            return '★☆☆☆☆ 基礎';
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('success').textContent = gameState.success;
+            
+            const accuracy = gameState.total > 0 ? Math.round((gameState.success / gameState.total) * 100) : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateProgress() {
+            const progress = gameState.total > 0 ? (gameState.success / Math.max(gameState.total, 10)) * 100 : 0;
+            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲームを終了してメニューに戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // 初期表示
+        updateDisplay();
+        updateProgress();
+        updatePhaseIndicator();
+    </script>
+</body>
+</html>

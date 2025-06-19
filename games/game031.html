@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コンボ技術 - ゲーム031</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .combo-game {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .combo-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .combo-pattern {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 80px;
+            color: #4caf50;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .input-sequence {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .combo-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            margin: 5px;
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 60px;
+        }
+
+        .combo-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .combo-btn:active {
+            background: #4caf50;
+            transform: scale(0.95);
+        }
+
+        .combo-btn.correct {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .combo-btn.wrong {
+            background: #f44336;
+            border-color: #f44336;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-item {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 80px;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .demo-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+
+            .combo-btn {
+                padding: 12px 20px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">⚡ コンボ技術</h1>
+        <p class="game-description">連続攻撃技術の習得と流れるような攻撃連携による高度な格闘技能ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">経験値</div>
+                <div class="stat-value" id="experience">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">達成度</div>
+                <div class="stat-value" id="progress">0%</div>
+            </div>
+        </div>
+
+        <div class="combo-game">
+            <div id="gamePlay" style="display: none;">
+                <div class="combo-area">
+                    <div class="combo-pattern" id="comboPattern">ゲームを開始してください</div>
+                    <div class="input-sequence">
+                        <button class="combo-btn" data-combo="A">A</button>
+                        <button class="combo-btn" data-combo="B">B</button>
+                        <button class="combo-btn" data-combo="C">C</button>
+                        <button class="combo-btn" data-combo="D">D</button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                <div class="game-info">
+                    <div class="info-item">
+                        <div class="info-label">成功コンボ</div>
+                        <div class="info-value" id="successCombos">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">習得率</div>
+                        <div class="info-value" id="masteryRate">0%</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">現在パターン</div>
+                        <div class="info-value" id="currentPattern">1/10</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">連続性</div>
+                        <div class="info-value" id="continuity">0</div>
+                    </div>
+                </div>
+            </div>
+            <div id="gameStart">
+                <div class="demo-content">
+                    <div class="demo-icon">⚡</div>
+                    <div class="demo-text">
+                        10種類のコンボパターンをマスター！<br>
+                        連続性と精度の両立で格闘技能を向上
+                    </div>
+                    <div class="feature-list">
+                        <div class="feature-item">⚡ 10種類のコンボパターン習得</div>
+                        <div class="feature-item">📊 連続性と精度の両立測定</div>
+                        <div class="feature-item">📈 習得進度と成功率追跡</div>
+                        <div class="feature-item">🏆 習得率90%以上でコンボマスター</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📚 詳細ルール・遊び方</h3>
+            <div style="margin: 15px 0;">
+                <h4>🎯 目的</h4>
+                <p>10種類のコンボパターンを習得し、連続性と精度の両方を向上させる</p>
+            </div>
+            <div style="margin: 15px 0;">
+                <h4>🎮 ゲームの流れ</h4>
+                <ol style="margin-left: 20px;">
+                    <li>画面に表示されるコンボパターンを確認</li>
+                    <li>A、B、C、Dボタンを正確な順序で入力</li>
+                    <li>タイミングと連続性を重視</li>
+                    <li>成功すると次のパターンに進行</li>
+                </ol>
+            </div>
+            <div style="margin: 15px 0;">
+                <h4>📊 評価システム</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>コンボ成功率:</strong> 正確な入力による成功割合</li>
+                    <li><strong>連続性精度:</strong> タイミングの一貫性</li>
+                    <li><strong>習得進度:</strong> パターンの記憶と習熟度</li>
+                </ul>
+            </div>
+            <div style="margin: 15px 0;">
+                <h4>🏆 勝利条件</h4>
+                <p><strong>習得率90%以上</strong>でコンボマスター認定。全10パターンの習得を目指す</p>
+            </div>
+            <div style="margin: 15px 0;">
+                <h4>⌨️ 操作方法</h4>
+                <ul style="margin-left: 20px;">
+                    <li>マウス: 画面上のA、B、C、Dボタンをクリック</li>
+                    <li>キーボード: A、B、C、Dキーで直接入力</li>
+                </ul>
+            </div>
+            <div style="margin: 15px 0;">
+                <h4>💡 プレイのコツ</h4>
+                <ul style="margin-left: 20px;">
+                    <li>パターンを記憶し、リズムを意識する</li>
+                    <li>連続入力の流れを体で覚える</li>
+                    <li>正確性を重視し、慌てず確実に入力</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>コンボ技術</h4>
+                    <p>連続攻撃の精密制御</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <h4>連続操作</h4>
+                    <p>流れるような操作連携</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>タイミング</h4>
+                    <p>正確なタイミング制御</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>パターン記憶</h4>
+                    <p>複雑パターンの習得</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            experience: 0,
+            progress: 0,
+            isPlaying: false,
+            currentPattern: 1,
+            totalPatterns: 10,
+            successCombos: 0,
+            currentInput: [],
+            targetCombo: [],
+            masteredPatterns: 0,
+            continuity: 0,
+            lastInputTime: 0
+        };
+
+        // 10種類のコンボパターン
+        const comboPatterns = [
+            ['A', 'B', 'C'],           // 基本3連
+            ['A', 'B', 'C', 'D'],      // 基本4連
+            ['A', 'A', 'B', 'C'],      // 連打組み込み
+            ['A', 'C', 'B', 'D'],      // 交互パターン
+            ['B', 'D', 'A', 'C', 'B'], // 5連コンボ
+            ['A', 'B', 'A', 'C', 'D'], // 複雑5連
+            ['C', 'C', 'A', 'B'],      // 連打開始
+            ['A', 'D', 'B', 'C', 'A', 'D'], // 6連コンボ
+            ['B', 'A', 'D', 'C', 'B', 'A'], // 逆順組み込み
+            ['A', 'B', 'C', 'D', 'A', 'B', 'C'] // 最終7連
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.currentPattern = 1;
+            gameState.successCombos = 0;
+            gameState.masteredPatterns = 0;
+            gameState.continuity = 0;
+            gameState.currentInput = [];
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            startComboPattern();
+            addEventListeners();
+        }
+
+        function startComboPattern() {
+            if (gameState.currentPattern > gameState.totalPatterns) {
+                endGame();
+                return;
+            }
+            
+            gameState.targetCombo = comboPatterns[gameState.currentPattern - 1];
+            gameState.currentInput = [];
+            
+            document.getElementById('comboPattern').textContent = gameState.targetCombo.join(' → ');
+            document.getElementById('currentPattern').textContent = `${gameState.currentPattern}/${gameState.totalPatterns}`;
+            
+            // Reset button states
+            document.querySelectorAll('.combo-btn').forEach(btn => {
+                btn.className = 'combo-btn';
+            });
+            
+            updateProgress();
+        }
+
+        function addEventListeners() {
+            // ボタンクリック
+            document.querySelectorAll('.combo-btn').forEach(btn => {
+                btn.addEventListener('click', () => handleInput(btn.dataset.combo));
+            });
+            
+            // キーボード入力
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function handleKeyPress(e) {
+            if (!gameState.isPlaying) return;
+            
+            const key = e.key.toUpperCase();
+            if (['A', 'B', 'C', 'D'].includes(key)) {
+                handleInput(key);
+            }
+        }
+
+        function handleInput(input) {
+            if (!gameState.isPlaying) return;
+            
+            const currentTime = Date.now();
+            gameState.currentInput.push(input);
+            
+            // ボタンフィードバック
+            const btn = document.querySelector(`[data-combo="${input}"]`);
+            btn.classList.add('correct');
+            setTimeout(() => btn.classList.remove('correct'), 200);
+            
+            // 正確性チェック
+            const targetIndex = gameState.currentInput.length - 1;
+            const isCorrect = input === gameState.targetCombo[targetIndex];
+            
+            if (!isCorrect) {
+                // 間違った入力
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 500);
+                gameState.currentInput = [];
+                gameState.continuity = Math.max(0, gameState.continuity - 1);
+                updateStats();
+                return;
+            }
+            
+            // 連続性評価
+            if (gameState.lastInputTime > 0) {
+                const timeDiff = currentTime - gameState.lastInputTime;
+                if (timeDiff < 1000) { // 1秒以内の入力で連続性向上
+                    gameState.continuity++;
+                }
+            }
+            gameState.lastInputTime = currentTime;
+            
+            // コンボ完成チェック
+            if (gameState.currentInput.length === gameState.targetCombo.length) {
+                // コンボ成功
+                gameState.successCombos++;
+                gameState.masteredPatterns++;
+                gameState.experience += 20;
+                gameState.continuity += 2;
+                
+                setTimeout(() => {
+                    gameState.currentPattern++;
+                    startComboPattern();
+                }, 1000);
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('successCombos').textContent = gameState.successCombos;
+            document.getElementById('continuity').textContent = gameState.continuity;
+            
+            const masteryRate = Math.round((gameState.masteredPatterns / gameState.totalPatterns) * 100);
+            document.getElementById('masteryRate').textContent = masteryRate + '%';
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = (gameState.currentPattern - 1) / gameState.totalPatterns * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('experience').textContent = gameState.experience;
+            document.getElementById('progress').textContent = Math.round(progress) + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            document.removeEventListener('keydown', handleKeyPress);
+            
+            const masteryRate = Math.round((gameState.masteredPatterns / gameState.totalPatterns) * 100);
+            
+            let result = `コンボ技術習得完了！\n\n`;
+            result += `成功コンボ数: ${gameState.successCombos}\n`;
+            result += `習得率: ${masteryRate}%\n`;
+            result += `連続性評価: ${gameState.continuity}\n\n`;
+            
+            if (masteryRate >= 90) {
+                result += "🏆 素晴らしい！コンボマスターです！";
+                gameState.level++;
+                gameState.experience += 100;
+            } else if (masteryRate >= 70) {
+                result += "🎯 良い結果です！さらなる習得を目指しましょう！";
+                gameState.experience += 50;
+            } else {
+                result += "📈 まだ改善の余地があります。練習を続けましょう。";
+                gameState.experience += 25;
+            }
+            
+            alert(result);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            document.getElementById('successCombos').textContent = '0';
+            document.getElementById('masteryRate').textContent = '0%';
+            document.getElementById('currentPattern').textContent = '1/10';
+            document.getElementById('continuity').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            
+            updateProgress();
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // ページ読み込み時にゲーム情報を設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameNumber = window.location.pathname.match(/game(\d+)\.html/);
+            if (gameNumber) {
+                const gameId = parseInt(gameNumber[1]);
+                updateGameInfo(gameId);
+            }
+        });
+
+        function updateGameInfo(gameId) {
+            const gameInfo = {
+                title: `ゲーム${gameId.toString().padStart(3, '0')}`,
+                description: 'ビジネススキル向上のための実践的トレーニング',
+                icon: '🎮'
+            };
+
+            if (gameId === 31) {
+                gameInfo.icon = '⚡';
+                gameInfo.title = 'コンボ技術';
+                gameInfo.description = '連続攻撃技術の習得と流れるような攻撃連携による高度な格闘技能ゲーム';
+            } else if (gameId <= 40) {
+                gameInfo.icon = '⚡';
+                gameInfo.description = 'アクション系スキル - 反射神経と瞬間判断力を鍛える';
+            } else if (gameId <= 70) {
+                gameInfo.icon = '🧩';
+                gameInfo.description = 'パズル系スキル - 論理的思考と問題解決能力を向上';
+            } else if (gameId <= 85) {
+                gameInfo.icon = '🃏';
+                gameInfo.description = 'カード系スキル - 戦略的思考と記憶力を強化';
+            } else if (gameId <= 100) {
+                gameInfo.icon = '⚽';
+                gameInfo.description = 'スポーツ系スキル - 集中力と協調性を育成';
+            }
+
+            document.querySelector('.game-title').innerHTML = `${gameInfo.icon} ${gameInfo.title}`;
+            document.querySelector('.game-description').textContent = gameInfo.description;
+            document.querySelector('.demo-icon').textContent = gameInfo.icon;
+            document.title = `${gameInfo.title} - 100ミニゲーム統合システム`;
+        }
+
+        updateProgress();
+    </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>必殺技術 - ゲーム038</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px 25px; border-radius: 15px; min-width: 100px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .game-area { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 40px; margin-bottom: 30px; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        
+        .technique-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .technique-card { background: rgba(255, 255, 255, 0.2); border: 2px solid #4caf50; border-radius: 15px; padding: 15px; cursor: pointer; transition: all 0.3s ease; }
+        .technique-card:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); }
+        .technique-card.selected { border-color: #ffc107; background: rgba(255, 193, 7, 0.3); }
+        .technique-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+        .technique-power { font-size: 0.9rem; color: #4caf50; }
+        
+        .power-meter { width: 400px; height: 30px; border: 2px solid white; border-radius: 15px; position: relative; overflow: hidden; margin: 20px auto; }
+        .power-indicator { width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #ffc107, #f44336); position: absolute; left: 0; transition: width 0.1s ease; }
+        .sweet-spot { position: absolute; left: 75%; width: 10%; height: 100%; background: rgba(255, 255, 255, 0.3); border: 2px solid #ffc107; }
+        
+        .execute-btn { background: linear-gradient(135deg, #f44336, #ff5722); color: white; border: none; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: all 0.3s ease; }
+        .execute-btn:hover { transform: scale(1.05); }
+        .execute-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .demo-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.8; }
+        .demo-text { font-size: 1.3rem; margin-bottom: 30px; line-height: 1.6; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">⚔️ 必殺技術</h1>
+        <p class="game-description">決定打となる必殺技の適切なタイミング発動と最大効果を狙った決定打技術ゲーム</p>
+        
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">習得技</div><div class="stat-value" id="techniques">0/6</div></div>
+            <div class="stat"><div class="stat-label">成功数</div><div class="stat-value" id="success">0</div></div>
+            <div class="stat"><div class="stat-label">効果率</div><div class="stat-value" id="efficiency">0%</div></div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div id="gamePlay" style="display: none;">
+                <div id="instruction" style="font-size: 1.2rem; margin-bottom: 20px;">必殺技を選択し、最適なタイミングで発動せよ！</div>
+                
+                <div class="technique-grid" id="techniqueGrid">
+                    <div class="technique-card" onclick="selectTechnique(0)">
+                        <div class="technique-name">雷撃斬</div>
+                        <div class="technique-power">威力: 120</div>
+                    </div>
+                    <div class="technique-card" onclick="selectTechnique(1)">
+                        <div class="technique-name">炎舞剣</div>
+                        <div class="technique-power">威力: 150</div>
+                    </div>
+                    <div class="technique-card" onclick="selectTechnique(2)">
+                        <div class="technique-name">氷結牙</div>
+                        <div class="technique-power">威力: 110</div>
+                    </div>
+                    <div class="technique-card" onclick="selectTechnique(3)">
+                        <div class="technique-name">風神槍</div>
+                        <div class="technique-power">威力: 140</div>
+                    </div>
+                    <div class="technique-card" onclick="selectTechnique(4)">
+                        <div class="technique-name">地砕拳</div>
+                        <div class="technique-power">威力: 160</div>
+                    </div>
+                    <div class="technique-card" onclick="selectTechnique(5)">
+                        <div class="technique-name">天翔脚</div>
+                        <div class="technique-power">威力: 130</div>
+                    </div>
+                </div>
+                
+                <div class="power-meter" onclick="executeTechnique()">
+                    <div class="power-indicator" id="powerIndicator"></div>
+                    <div class="sweet-spot"></div>
+                </div>
+                
+                <button class="execute-btn" id="executeBtn" onclick="executeTechnique()">必殺技発動！</button>
+                
+                <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center;"><div>試行数</div><div id="attempts" style="font-size: 1.5rem; font-weight: bold; color: #2196f3;">0/8</div></div>
+                    <div style="text-align: center;"><div>最大効果</div><div id="maxEffect" style="font-size: 1.5rem; font-weight: bold; color: #4caf50;">0%</div></div>
+                    <div style="text-align: center;"><div>選択技</div><div id="selectedTech" style="font-size: 1.5rem; font-weight: bold; color: #ff9800;">未選択</div></div>
+                </div>
+            </div>
+            
+            <div id="gameStart">
+                <div class="demo-icon">⚔️</div>
+                <div class="demo-text">6種類の必殺技を習得し、最適なタイミングで発動せよ！<br>効果最大化を狙った決定打技術を身につけるゲーム</div>
+                <div class="feature-list">
+                    <div class="feature-item">⚔️ 6種類の必殺技習得</div>
+                    <div class="feature-item">🎯 発動タイミング最適化</div>
+                    <div class="feature-item">📈 効果最大化技術</div>
+                    <div class="feature-item">🏆 効果最大化率90%以上でクリア</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            techniques: ['雷撃斬', '炎舞剣', '氷結牙', '風神槍', '地砕拳', '天翔脚'],
+            powers: [120, 150, 110, 140, 160, 130],
+            selected: -1,
+            attempts: 0,
+            successes: 0,
+            totalEffect: 0,
+            isPlaying: false,
+            powerLevel: 0,
+            direction: 1,
+            animationId: null
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.attempts = 0;
+            gameState.successes = 0;
+            gameState.totalEffect = 0;
+            gameState.selected = -1;
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            startPowerAnimation();
+            updateDisplay();
+        }
+
+        function selectTechnique(index) {
+            if (!gameState.isPlaying) return;
+            
+            // Clear previous selection
+            document.querySelectorAll('.technique-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select new technique
+            document.querySelectorAll('.technique-card')[index].classList.add('selected');
+            gameState.selected = index;
+            
+            document.getElementById('selectedTech').textContent = gameState.techniques[index];
+        }
+
+        function startPowerAnimation() {
+            const powerIndicator = document.getElementById('powerIndicator');
+            
+            const animate = () => {
+                if (!gameState.isPlaying) return;
+                
+                gameState.powerLevel += gameState.direction * 2;
+                
+                if (gameState.powerLevel >= 100 || gameState.powerLevel <= 0) {
+                    gameState.direction *= -1;
+                }
+                
+                powerIndicator.style.width = gameState.powerLevel + '%';
+                gameState.animationId = requestAnimationFrame(animate);
+            };
+            
+            animate();
+        }
+
+        function executeTechnique() {
+            if (!gameState.isPlaying || gameState.selected === -1 || gameState.attempts >= 8) return;
+            
+            gameState.attempts++;
+            
+            // Calculate effectiveness based on power level (sweet spot is 75-85%)
+            let effectiveness = 0;
+            if (gameState.powerLevel >= 75 && gameState.powerLevel <= 85) {
+                effectiveness = 100; // Perfect timing
+                gameState.successes++;
+            } else if (gameState.powerLevel >= 65 && gameState.powerLevel <= 95) {
+                effectiveness = 80; // Good timing
+                gameState.successes++;
+            } else if (gameState.powerLevel >= 50 && gameState.powerLevel <= 100) {
+                effectiveness = 60; // Okay timing
+            } else {
+                effectiveness = 30; // Poor timing
+            }
+            
+            gameState.totalEffect += effectiveness;
+            
+            // Visual feedback
+            const effectText = effectiveness >= 90 ? '完璧！' : effectiveness >= 80 ? '良好' : effectiveness >= 60 ? '普通' : '不十分';
+            document.getElementById('maxEffect').textContent = Math.round(gameState.totalEffect / gameState.attempts) + '%';
+            
+            // Reset selection
+            document.querySelectorAll('.technique-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            gameState.selected = -1;
+            document.getElementById('selectedTech').textContent = '未選択';
+            
+            updateDisplay();
+            
+            if (gameState.attempts >= 8) {
+                endGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('techniques').textContent = gameState.successes + '/6';
+            document.getElementById('success').textContent = gameState.successes;
+            document.getElementById('attempts').textContent = gameState.attempts + '/8';
+            
+            const avgEffect = gameState.attempts > 0 ? Math.round(gameState.totalEffect / gameState.attempts) : 0;
+            document.getElementById('efficiency').textContent = avgEffect + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            cancelAnimationFrame(gameState.animationId);
+            
+            const avgEffect = gameState.attempts > 0 ? Math.round(gameState.totalEffect / gameState.attempts) : 0;
+            
+            let result = `必殺技術修練完了！\n\n成功数: ${gameState.successes}/8\n効果最大化率: ${avgEffect}%\n\n`;
+            
+            if (avgEffect >= 90) {
+                result += "⚔️ 素晴らしい！必殺技マスターです！";
+            } else if (avgEffect >= 75) {
+                result += "🗡️ 良い結果です！さらなる技術向上を目指しましょう！";
+            } else {
+                result += "📈 まだ改善の余地があります。タイミングを極めましょう。";
+            }
+            
+            alert(result);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            if (gameState.animationId) cancelAnimationFrame(gameState.animationId);
+            
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

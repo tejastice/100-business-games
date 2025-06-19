@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算数チャレンジ - ゲーム051</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .math-challenge {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .question-display {
+            margin-bottom: 30px;
+        }
+
+        .math-question {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffc107;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .time-remaining {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ff5722;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .answer-input {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        #answerInput {
+            width: 200px;
+            height: 60px;
+            font-size: 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #answerInput:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .submit-btn {
+            background: #4caf50;
+            border: 2px solid #4caf50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .progress-display {
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            width: 1%;
+            transition: width 0.3s ease;
+        }
+
+        .accuracy-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4caf50;
+            margin: 10px 0;
+        }
+
+        .result-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+
+        .result-feedback.correct {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        .result-feedback.incorrect {
+            background: rgba(244, 67, 54, 0.9);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .logic-grid {
+                grid-template-columns: repeat(4, 50px);
+            }
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧩 算数チャレンジ</h1>
+        <p class="game-description">算数と数学のチャレンジ - 四則演算の高速処理と計算精度による数学的処理能力</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>🎯 ゲームルール</h4>
+            <p>・100問の四則演算を解こう</p>
+            <p>・制限時間内での解答で速度を計測</p>
+            <p>・計算精度を維持しよう</p>
+            <p>・正解率95%以上でクリア達成</p>
+        </div>
+
+        <div class="game-area">
+            <div class="math-challenge" id="mathChallenge">
+                <div class="question-display">
+                    <h4>🎯 問題 <span id="questionNumber">1</span>/100</h4>
+                    <div class="math-question" id="mathQuestion">2 + 3 = ?</div>
+                    <div class="time-remaining" id="timeRemaining">60</div>
+                </div>
+                
+                <div class="answer-input">
+                    <input type="number" id="answerInput" placeholder="答えを入力">
+                    <button class="submit-btn" onclick="submitAnswer()">回答</button>
+                </div>
+                
+                <div class="progress-display">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="accuracy-display" id="accuracyDisplay">95.0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startChallenge()">チャレンジ開始</button>
+            <button class="btn" onclick="nextQuestion()">次の問題</button>
+            <button class="btn" onclick="skipQuestion()">スキップ</button>
+            <button class="btn" onclick="resetChallenge()">リセット</button>
+        </div>
+    </div>
+
+    <div class="result-feedback" id="resultFeedback">正解！</div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            correct: 0,
+            totalQuestions: 0,
+            currentQuestion: 1,
+            currentAnswer: 0,
+            timeRemaining: 60,
+            gameActive: false,
+            questionStartTime: 0,
+            totalTimeSpent: 0
+        };
+
+        function initializeGame() {
+            generateQuestion();
+            updateDisplay();
+            setupEventListeners();
+        }
+
+        function generateQuestion() {
+            const operations = ['+', '-', '×', '÷'];
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+            
+            let num1, num2, answer;
+            
+            switch(operation) {
+                case '+':
+                    num1 = Math.floor(Math.random() * 100) + 1;
+                    num2 = Math.floor(Math.random() * 100) + 1;
+                    answer = num1 + num2;
+                    break;
+                case '-':
+                    num1 = Math.floor(Math.random() * 100) + 50;
+                    num2 = Math.floor(Math.random() * 50) + 1;
+                    answer = num1 - num2;
+                    break;
+                case '×':
+                    num1 = Math.floor(Math.random() * 20) + 1;
+                    num2 = Math.floor(Math.random() * 20) + 1;
+                    answer = num1 * num2;
+                    break;
+                case '÷':
+                    num2 = Math.floor(Math.random() * 12) + 1;
+                    answer = Math.floor(Math.random() * 20) + 1;
+                    num1 = num2 * answer;
+                    break;
+            }
+            
+            gameState.currentAnswer = answer;
+            gameState.questionStartTime = Date.now();
+            
+            document.getElementById('mathQuestion').textContent = `${num1} ${operation} ${num2} = ?`;
+            document.getElementById('questionNumber').textContent = gameState.currentQuestion;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('answerInput').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    submitAnswer();
+                }
+            });
+        }
+
+        function startChallenge() {
+            if(gameState.gameActive) return;
+            
+            gameState.gameActive = true;
+            gameState.totalQuestions = 0;
+            gameState.currentQuestion = 1;
+            gameState.correct = 0;
+            gameState.timeRemaining = 60;
+            gameState.totalTimeSpent = 0;
+            
+            generateQuestion();
+            startTimer();
+            updateDisplay();
+        }
+
+        function startTimer() {
+            const timer = setInterval(() => {
+                gameState.timeRemaining--;
+                document.getElementById('timeRemaining').textContent = gameState.timeRemaining;
+                
+                if(gameState.timeRemaining <= 0) {
+                    clearInterval(timer);
+                    endChallenge();
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            if(!gameState.gameActive) return;
+            
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+            const isCorrect = userAnswer === gameState.currentAnswer;
+            
+            gameState.totalQuestions++;
+            const timeTaken = Date.now() - gameState.questionStartTime;
+            gameState.totalTimeSpent += timeTaken;
+            
+            if(isCorrect) {
+                gameState.correct++;
+                showFeedback('正解！', true);
+                gameState.score += Math.max(100 - Math.floor(timeTaken / 100), 10);
+            } else {
+                showFeedback(`不正解。正解は ${gameState.currentAnswer}`, false);
+            }
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1000);
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('resultFeedback');
+            feedback.textContent = message;
+            feedback.className = `result-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            if(!gameState.gameActive) return;
+            
+            if(gameState.currentQuestion >= 100) {
+                endChallenge();
+                return;
+            }
+            
+            gameState.currentQuestion++;
+            generateQuestion();
+            updateDisplay();
+        }
+
+        function skipQuestion() {
+            if(!gameState.gameActive) return;
+            
+            gameState.totalQuestions++;
+            showFeedback(`スキップ。正解は ${gameState.currentAnswer}`, false);
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 1000);
+        }
+
+        function endChallenge() {
+            gameState.gameActive = false;
+            
+            const accuracy = gameState.totalQuestions > 0 ? (gameState.correct / gameState.totalQuestions) * 100 : 0;
+            const avgTime = gameState.totalQuestions > 0 ? gameState.totalTimeSpent / gameState.totalQuestions : 0;
+            const isSuccess = accuracy >= 95;
+            
+            if(isSuccess) {
+                alert(`🎉 チャレンジ成功！\n正解率: ${accuracy.toFixed(1)}%\n平均回答時間: ${(avgTime/1000).toFixed(1)}秒\nスコア: ${gameState.score}点`);
+            } else {
+                alert(`チャレンジ終了\n正解率: ${accuracy.toFixed(1)}% (目標: 95%)\n正解数: ${gameState.correct}/${gameState.totalQuestions}`);
+            }
+            
+            updateDisplay();
+        }
+
+        function resetChallenge() {
+            gameState = {
+                level: 1,
+                score: 0,
+                correct: 0,
+                totalQuestions: 0,
+                currentQuestion: 1,
+                currentAnswer: 0,
+                timeRemaining: 60,
+                gameActive: false,
+                questionStartTime: 0,
+                totalTimeSpent: 0
+            };
+            
+            generateQuestion();
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.totalQuestions > 0 ? (gameState.correct / gameState.totalQuestions) * 100 : 0;
+            document.getElementById('correct').textContent = `${gameState.correct}/${gameState.totalQuestions}`;
+            document.getElementById('accuracyDisplay').textContent = `${accuracy.toFixed(1)}%`;
+            document.getElementById('progressFill').style.width = `${gameState.currentQuestion}%`;
+            
+            if(accuracy >= 95) {
+                document.getElementById('accuracyDisplay').style.color = '#4caf50';
+            } else if(accuracy >= 85) {
+                document.getElementById('accuracyDisplay').style.color = '#ffc107';
+            } else {
+                document.getElementById('accuracyDisplay').style.color = '#f44336';
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html>

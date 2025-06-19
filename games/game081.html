@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ババ抜き心理 - ゲーム081</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+        }
+
+        .players-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            min-height: 300px;
+        }
+
+        .player-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .player-area.active {
+            background: rgba(255, 255, 0, 0.2);
+            border: 2px solid #f1c40f;
+        }
+
+        .player-area.has-joker {
+            background: rgba(231, 76, 60, 0.3);
+            border: 2px solid #e74c3c;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .player-hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        .playing-card {
+            background: white;
+            color: #333;
+            border: 1px solid #333;
+            border-radius: 4px;
+            width: 35px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .playing-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .playing-card.selected {
+            border-color: #f1c40f;
+            border-width: 2px;
+            transform: scale(1.15);
+        }
+
+        .playing-card.joker {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .playing-card.red {
+            color: #e74c3c;
+        }
+
+        .playing-card.black {
+            color: #333;
+        }
+
+        .card-value {
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .card-suit {
+            font-size: 10px;
+        }
+
+        .card-back {
+            background: #2c3e50;
+            color: white;
+            font-size: 12px;
+        }
+
+        .psychology-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .player-psychology {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .psychology-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .psychology-content {
+            font-size: 0.8rem;
+            line-height: 1.2;
+        }
+
+        .confidence-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 6px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .action-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .action-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .players-area {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .psychology-panel {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .playing-card {
+                width: 25px;
+                height: 35px;
+                font-size: 8px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🃏 ババ抜き心理</h1>
+        <p class="game-description">心理的駆け引きと相手の行動読みによる心理戦ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ゲーム数</div>
+                <div class="stat-value" id="gameCount">0/10</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">上位成績</div>
+                <div class="stat-value" id="topRanks">0/6</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">心理読み</div>
+                <div class="stat-value" id="psychologyScore">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">推測精度</div>
+                <div class="stat-value" id="predictionScore">0%</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div id="gameStatus">新しいゲームを開始してください</div>
+        </div>
+
+        <div class="game-board">
+            <div class="players-area">
+                <div class="player-area" id="player0">
+                    <div class="player-name">あなた</div>
+                    <div class="player-hand" id="hand0"></div>
+                    <div class="player-status">残り: <span id="count0">26</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player1">
+                    <div class="player-name">プレイヤー1</div>
+                    <div class="player-hand" id="hand1"></div>
+                    <div class="player-status">残り: <span id="count1">9</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player2">
+                    <div class="player-name">プレイヤー2</div>
+                    <div class="player-hand" id="hand2"></div>
+                    <div class="player-status">残り: <span id="count2">9</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player3">
+                    <div class="player-name">プレイヤー3</div>
+                    <div class="player-hand" id="hand3"></div>
+                    <div class="player-status">残り: <span id="count3">9</span>枚</div>
+                </div>
+            </div>
+
+            <div class="psychology-panel">
+                <div class="player-psychology" id="psychology0">
+                    <div class="psychology-title">あなたの状態</div>
+                    <div class="psychology-content" id="psycho0">分析中...</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence0" style="width: 50%"></div>
+                    </div>
+                </div>
+                
+                <div class="player-psychology" id="psychology1">
+                    <div class="psychology-title">プレイヤー1</div>
+                    <div class="psychology-content" id="psycho1">分析中...</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence1" style="width: 50%"></div>
+                    </div>
+                </div>
+                
+                <div class="player-psychology" id="psychology2">
+                    <div class="psychology-title">プレイヤー2</div>
+                    <div class="psychology-content" id="psycho2">分析中...</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence2" style="width: 50%"></div>
+                    </div>
+                </div>
+                
+                <div class="player-psychology" id="psychology3">
+                    <div class="psychology-title">プレイヤー3</div>
+                    <div class="psychology-content" id="psycho3">分析中...</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence3" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-area">
+                <div class="action-title" id="actionTitle">ゲームを開始してください</div>
+                <div id="actionContent">心理分析とカード推測を活用して相手の心を読みましょう</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="predictJoker()" id="predictBtn" disabled>ババ予測</button>
+            <button class="btn warning" onclick="analyzePsychology()">心理分析</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 4人対戦で10ゲーム中6回以上上位2位以内でクリア</li>
+                <li><strong>基本ルール:</strong>
+                    <ul>
+                        <li>ジョーカー1枚を含む53枚のカードを使用</li>
+                        <li>ペアになったカードを捨てていき、最後にジョーカーを持った人が負け</li>
+                        <li>相手のカードを1枚引いて、ペアができたら捨てる</li>
+                        <li>ジョーカーを持たずに手札を全て捨てた順に順位が決まる</li>
+                    </ul>
+                </li>
+                <li><strong>心理戦要素:</strong>
+                    <ul>
+                        <li>相手の表情、行動パターンから心理状態を分析</li>
+                        <li>ジョーカーの位置を推測して戦略的にカードを選択</li>
+                        <li>自分がジョーカーを持った時は相手に気づかれないよう演技</li>
+                        <li>相手の心理的プレッシャーを読み取って最適な選択</li>
+                    </ul>
+                </li>
+                <li><strong>心理分析:</strong> 相手の自信度、緊張状態、ジョーカー保持可能性を分析</li>
+                <li><strong>評価基準:</strong> 順位成績、心理読み精度、駆け引き能力、推測正確性</li>
+                <li><strong>クリア条件:</strong> 10ゲーム中6回以上上位2位以内でババ抜きマスター認定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            players: [
+                { name: 'あなた', cards: [], isHuman: true, hasJoker: false, confidence: 50, psychology: 'normal' },
+                { name: 'プレイヤー1', cards: [], isHuman: false, hasJoker: false, confidence: 50, psychology: 'normal' },
+                { name: 'プレイヤー2', cards: [], isHuman: false, hasJoker: false, confidence: 50, psychology: 'normal' },
+                { name: 'プレイヤー3', cards: [], isHuman: false, hasJoker: false, confidence: 50, psychology: 'normal' }
+            ],
+            currentPlayer: 0,
+            targetPlayer: -1,
+            gameCount: 0,
+            topRankCount: 0,
+            totalGames: 10,
+            gameActive: false,
+            selectedCard: null,
+            psychologySuccess: 0,
+            predictionSuccess: 0,
+            rankings: [],
+            jokerPosition: -1
+        };
+
+        const suits = ['spades', 'hearts', 'clubs', 'diamonds'];
+        const suitSymbols = {'spades': '♠️', 'hearts': '♥️', 'clubs': '♣️', 'diamonds': '♦️'};
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+        function createDeck() {
+            const deck = [];
+            
+            // 通常のカード（52枚）
+            suits.forEach(suit => {
+                values.forEach((value, index) => {
+                    deck.push({
+                        suit: suit,
+                        value: value,
+                        rank: index + 1,
+                        color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black',
+                        isJoker: false
+                    });
+                });
+            });
+            
+            // ジョーカー追加
+            deck.push({
+                suit: 'joker',
+                value: 'JOKER',
+                rank: 0,
+                color: 'red',
+                isJoker: true
+            });
+            
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function dealCards() {
+            const deck = createDeck();
+            
+            // カードを配る
+            for (let i = 0; i < 4; i++) {
+                gameState.players[i].cards = [];
+                gameState.players[i].hasJoker = false;
+                gameState.players[i].confidence = 50;
+                gameState.players[i].psychology = 'normal';
+            }
+            
+            // 53枚を4人に配分
+            deck.forEach((card, index) => {
+                const playerIndex = index % 4;
+                gameState.players[playerIndex].cards.push(card);
+                
+                if (card.isJoker) {
+                    gameState.players[playerIndex].hasJoker = true;
+                    gameState.jokerPosition = playerIndex;
+                }
+            });
+            
+            // 各プレイヤーの初期ペア除去
+            gameState.players.forEach(player => {
+                removePairs(player);
+            });
+            
+            gameState.currentPlayer = 0;
+            gameState.targetPlayer = -1;
+            gameState.gameActive = true;
+            gameState.selectedCard = null;
+            gameState.rankings = [];
+            
+            updatePsychology();
+        }
+
+        function removePairs(player) {
+            const pairs = {};
+            const remainingCards = [];
+            
+            player.cards.forEach(card => {
+                if (card.isJoker) {
+                    remainingCards.push(card);
+                    return;
+                }
+                
+                const key = card.rank;
+                if (pairs[key]) {
+                    // ペア完成、両方削除
+                    delete pairs[key];
+                } else {
+                    pairs[key] = card;
+                }
+            });
+            
+            // 残ったカードを手札に
+            Object.values(pairs).forEach(card => remainingCards.push(card));
+            player.cards = remainingCards;
+        }
+
+        function renderHands() {
+            gameState.players.forEach((player, index) => {
+                const handElement = document.getElementById(`hand${index}`);
+                const countElement = document.getElementById(`count${index}`);
+                const playerArea = document.getElementById(`player${index}`);
+                
+                // ジョーカー保持者のハイライト
+                playerArea.classList.toggle('has-joker', player.hasJoker);
+                playerArea.classList.toggle('active', index === gameState.currentPlayer);
+                
+                if (player.isHuman) {
+                    // プレイヤーの手札は表示
+                    handElement.innerHTML = player.cards.map(card => {
+                        const cardElement = renderCard(card);
+                        if (gameState.selectedCard === card) {
+                            cardElement.classList.add('selected');
+                        }
+                        cardElement.onclick = () => selectCard(card);
+                        return cardElement.outerHTML;
+                    }).join('');
+                } else if (gameState.currentPlayer === 0 && gameState.targetPlayer === index) {
+                    // 引く対象の相手は裏面だが選択可能
+                    handElement.innerHTML = player.cards.map((card, cardIndex) => {
+                        const cardElement = document.createElement('div');
+                        cardElement.className = 'playing-card card-back';
+                        cardElement.textContent = '🂠';
+                        cardElement.onclick = () => drawCard(index, cardIndex);
+                        return cardElement.outerHTML;
+                    }).join('');
+                } else {
+                    // 他のプレイヤーは裏面
+                    handElement.innerHTML = player.cards.map(() => 
+                        '<div class="playing-card card-back">🂠</div>'
+                    ).join('');
+                }
+                
+                countElement.textContent = player.cards.length;
+            });
+        }
+
+        function renderCard(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `playing-card ${card.color}`;
+            
+            if (card.isJoker) {
+                cardElement.classList.add('joker');
+                cardElement.innerHTML = '<div class="card-value">JOKER</div>';
+            } else {
+                cardElement.innerHTML = `
+                    <div class="card-value">${card.value}</div>
+                    <div class="card-suit">${suitSymbols[card.suit]}</div>
+                `;
+            }
+            
+            return cardElement;
+        }
+
+        function selectCard(card) {
+            if (!gameState.gameActive || gameState.currentPlayer !== 0) return;
+            
+            gameState.selectedCard = gameState.selectedCard === card ? null : card;
+            renderHands();
+        }
+
+        function drawCard(playerIndex, cardIndex) {
+            if (!gameState.gameActive || gameState.currentPlayer !== 0 || gameState.targetPlayer !== playerIndex) return;
+            
+            const targetPlayer = gameState.players[playerIndex];
+            const drawnCard = targetPlayer.cards.splice(cardIndex, 1)[0];
+            gameState.players[0].cards.push(drawnCard);
+            
+            // ジョーカーの移動チェック
+            if (drawnCard.isJoker) {
+                targetPlayer.hasJoker = false;
+                gameState.players[0].hasJoker = true;
+                gameState.jokerPosition = 0;
+            }
+            
+            // ペア除去
+            removePairs(gameState.players[0]);
+            
+            // ゲーム終了チェック
+            if (gameState.players[0].cards.length === 0) {
+                endRound(0);
+                return;
+            }
+            
+            if (targetPlayer.cards.length === 0) {
+                endRound(playerIndex);
+                return;
+            }
+            
+            nextPlayer();
+            updatePsychology();
+            renderHands();
+        }
+
+        function nextPlayer() {
+            do {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % 4;
+            } while (gameState.rankings.includes(gameState.currentPlayer));
+            
+            // 次のプレイヤーの相手を決定
+            const availableTargets = [];
+            for (let i = 0; i < 4; i++) {
+                if (i !== gameState.currentPlayer && !gameState.rankings.includes(i) && gameState.players[i].cards.length > 0) {
+                    availableTargets.push(i);
+                }
+            }
+            
+            if (availableTargets.length > 0) {
+                gameState.targetPlayer = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+                
+                if (gameState.currentPlayer !== 0) {
+                    setTimeout(() => aiPlay(), 1500);
+                }
+            }
+        }
+
+        function aiPlay() {
+            const targetPlayer = gameState.players[gameState.targetPlayer];
+            const cardIndex = Math.floor(Math.random() * targetPlayer.cards.length);
+            const drawnCard = targetPlayer.cards.splice(cardIndex, 1)[0];
+            
+            gameState.players[gameState.currentPlayer].cards.push(drawnCard);
+            
+            // ジョーカーの移動チェック
+            if (drawnCard.isJoker) {
+                targetPlayer.hasJoker = false;
+                gameState.players[gameState.currentPlayer].hasJoker = true;
+                gameState.jokerPosition = gameState.currentPlayer;
+            }
+            
+            // ペア除去
+            removePairs(gameState.players[gameState.currentPlayer]);
+            
+            // ゲーム終了チェック
+            if (gameState.players[gameState.currentPlayer].cards.length === 0) {
+                endRound(gameState.currentPlayer);
+                return;
+            }
+            
+            if (targetPlayer.cards.length === 0) {
+                endRound(gameState.targetPlayer);
+                return;
+            }
+            
+            nextPlayer();
+            updatePsychology();
+            renderHands();
+        }
+
+        function updatePsychology() {
+            gameState.players.forEach((player, index) => {
+                const psychoElement = document.getElementById(`psycho${index}`);
+                const confidenceElement = document.getElementById(`confidence${index}`);
+                
+                let psychology = '';
+                let confidence = 50;
+                
+                if (player.hasJoker) {
+                    psychology = player.isHuman ? '緊張状態' : '不安・焦り';
+                    confidence = 20 + Math.random() * 30;
+                } else if (player.cards.length <= 2) {
+                    psychology = player.isHuman ? '有利な状況' : '自信あり';
+                    confidence = 70 + Math.random() * 25;
+                } else if (player.cards.length >= 8) {
+                    psychology = player.isHuman ? '不利な状況' : '警戒中';
+                    confidence = 30 + Math.random() * 30;
+                } else {
+                    psychology = player.isHuman ? '普通の状態' : '様子見';
+                    confidence = 45 + Math.random() * 20;
+                }
+                
+                player.psychology = psychology;
+                player.confidence = confidence;
+                
+                psychoElement.textContent = psychology;
+                confidenceElement.style.width = `${confidence}%`;
+            });
+            
+            updateActionArea();
+        }
+
+        function updateActionArea() {
+            const actionTitle = document.getElementById('actionTitle');
+            const actionContent = document.getElementById('actionContent');
+            
+            if (gameState.currentPlayer === 0) {
+                actionTitle.textContent = 'あなたのターン';
+                actionContent.textContent = `${gameState.players[gameState.targetPlayer].name}からカードを1枚選んで引いてください`;
+            } else {
+                actionTitle.textContent = `${gameState.players[gameState.currentPlayer].name}のターン`;
+                actionContent.textContent = `${gameState.players[gameState.targetPlayer].name}からカードを引いています...`;
+            }
+        }
+
+        function predictJoker() {
+            if (!gameState.gameActive) return;
+            
+            let predictions = [];
+            gameState.players.forEach((player, index) => {
+                if (index !== 0) {
+                    const hasJokerProbability = player.hasJoker ? 100 : 
+                        player.confidence < 40 ? 80 : 
+                        player.confidence < 60 ? 30 : 10;
+                    
+                    predictions.push(`${player.name}: ${hasJokerProbability}%の確率でババ保持`);
+                }
+            });
+            
+            const actualJokerHolder = gameState.players[gameState.jokerPosition];
+            const correct = gameState.jokerPosition !== 0;
+            
+            if (correct) {
+                gameState.predictionSuccess++;
+                predictions.push(`\n✅ 正解: ${actualJokerHolder.name}がババを保持中！`);
+            } else {
+                predictions.push(`\n❌ あなたがババを保持中です`);
+            }
+            
+            alert(`🔍 ババ予測分析\n\n${predictions.join('\n')}`);
+        }
+
+        function analyzePsychology() {
+            let analysis = '🧠 心理分析レポート\n\n';
+            
+            gameState.players.forEach((player, index) => {
+                if (index === 0) {
+                    analysis += `【あなた】\n状態: ${player.psychology}\n`;
+                    analysis += `心理状態: ${player.hasJoker ? 'ババ保持中 - 冷静を保ちましょう' : '安定した状況'}\n\n`;
+                } else {
+                    analysis += `【${player.name}】\n`;
+                    analysis += `心理状態: ${player.psychology}\n`;
+                    analysis += `自信度: ${Math.round(player.confidence)}%\n`;
+                    analysis += `ババ保持可能性: ${player.hasJoker ? '確実' : player.confidence < 50 ? '高' : '低'}\n\n`;
+                }
+            });
+            
+            alert(analysis);
+        }
+
+        function endRound(winnerIndex) {
+            gameState.gameActive = false;
+            gameState.rankings.push(winnerIndex);
+            
+            // 残りプレイヤーの順位決め
+            const remaining = [];
+            for (let i = 0; i < 4; i++) {
+                if (!gameState.rankings.includes(i)) {
+                    remaining.push({index: i, cards: gameState.players[i].cards.length, hasJoker: gameState.players[i].hasJoker});
+                }
+            }
+            
+            // ジョーカーを持っていない人が先、その後手札数で判定
+            remaining.sort((a, b) => {
+                if (a.hasJoker !== b.hasJoker) return a.hasJoker ? 1 : -1;
+                return a.cards - b.cards;
+            });
+            
+            remaining.forEach(p => gameState.rankings.push(p.index));
+            
+            gameState.gameCount++;
+            
+            const playerRank = gameState.rankings.indexOf(0) + 1;
+            if (playerRank <= 2) {
+                gameState.topRankCount++;
+            }
+            
+            const isComplete = gameState.gameCount >= gameState.totalGames;
+            const successRate = Math.round((gameState.topRankCount / gameState.gameCount) * 100);
+            
+            let message = `ゲーム ${gameState.gameCount} 終了\n`;
+            message += `あなたの順位: ${playerRank}位\n`;
+            message += `上位成績: ${gameState.topRankCount}/${gameState.gameCount}\n`;
+            message += `成功率: ${successRate}%\n\n`;
+            
+            if (isComplete) {
+                if (gameState.topRankCount >= 6) {
+                    message += `🏆 クリア達成！ババ抜きマスター認定！`;
+                } else {
+                    message += `💪 クリア条件: 上位2位以内を6回以上`;
+                }
+            } else {
+                message += `次のゲームに進みます`;
+            }
+            
+            alert(message);
+            
+            if (!isComplete) {
+                setTimeout(() => newRound(), 2000);
+            }
+        }
+
+        function newRound() {
+            dealCards();
+            renderHands();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('gameCount').textContent = `${gameState.gameCount}/${gameState.totalGames}`;
+            document.getElementById('topRanks').textContent = `${gameState.topRankCount}/6`;
+            
+            const psychologyScore = gameState.gameCount > 0 ? 
+                Math.round((gameState.psychologySuccess / gameState.gameCount) * 100) : 0;
+            document.getElementById('psychologyScore').textContent = `${psychologyScore}%`;
+            
+            const predictionScore = gameState.gameCount > 0 ? 
+                Math.round((gameState.predictionSuccess / Math.max(1, gameState.gameCount * 2)) * 100) : 0;
+            document.getElementById('predictionScore').textContent = `${predictionScore}%`;
+            
+            // ゲーム状況更新
+            let status = '';
+            if (!gameState.gameActive && gameState.gameCount === 0) {
+                status = '新しいゲームを開始してください';
+            } else if (gameState.gameActive) {
+                status = `ゲーム${gameState.gameCount + 1}進行中 - 心理戦で相手を読もう`;
+            } else {
+                status = `ゲーム${gameState.gameCount}完了 - 次のゲームへ`;
+            }
+            
+            document.getElementById('gameStatus').textContent = status;
+            
+            // ボタン状態更新
+            const predictBtn = document.getElementById('predictBtn');
+            predictBtn.disabled = !gameState.gameActive;
+        }
+
+        function newGame() {
+            gameState.gameCount = 0;
+            gameState.topRankCount = 0;
+            gameState.psychologySuccess = 0;
+            gameState.predictionSuccess = 0;
+            
+            newRound();
+            updateStats();
+        }
+
+        // ゲーム初期化
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花札認識 - ゲーム076</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1100px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+        }
+
+        .hanafuda-board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .hanafuda-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border: 3px solid #333;
+            border-radius: 10px;
+            aspect-ratio: 2/3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 2rem;
+            color: #333;
+            position: relative;
+        }
+
+        .hanafuda-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .hanafuda-card.selected {
+            border-color: #f1c40f;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .hanafuda-card.correct {
+            border-color: #27ae60;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .hanafuda-card.wrong {
+            border-color: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .card-symbol {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .card-text {
+            font-size: 0.7rem;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .current-challenge {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .challenge-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+
+        .challenge-content {
+            font-size: 1.2rem;
+            line-height: 1.4;
+        }
+
+        .season-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .season-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .season-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .hanafuda-board {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+
+            .hanafuda-card {
+                font-size: 1.5rem;
+            }
+
+            .card-symbol {
+                font-size: 2rem;
+            }
+
+            .card-text {
+                font-size: 0.6rem;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🌸 花札認識</h1>
+        <p class="game-description">花札の絵柄・役・季節理解と文化的知識による伝統ゲーム学習</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correctCount">0/48</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">識別率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">季節理解</div>
+                <div class="stat-value" id="seasonScore">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">文化理解</div>
+                <div class="stat-value" id="cultureScore">0%</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="hanafuda-board" id="hanafudaBoard"></div>
+            
+            <div class="info-panel">
+                <div class="current-challenge">
+                    <div class="challenge-title">🎯 現在の問題</div>
+                    <div class="challenge-content" id="challengeText">
+                        新しいゲームを開始してください
+                    </div>
+                </div>
+
+                <div class="season-info">
+                    <div class="challenge-title">🌸 季節と月の対応</div>
+                    <div class="season-grid">
+                        <div class="season-item">1月 松</div>
+                        <div class="season-item">2月 梅</div>
+                        <div class="season-item">3月 桜</div>
+                        <div class="season-item">4月 藤</div>
+                        <div class="season-item">5月 杜若</div>
+                        <div class="season-item">6月 牡丹</div>
+                        <div class="season-item">7月 萩</div>
+                        <div class="season-item">8月 芒</div>
+                        <div class="season-item">9月 菊</div>
+                        <div class="season-item">10月 紅葉</div>
+                        <div class="season-item">11月 柳</div>
+                        <div class="season-item">12月 桐</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="showHint()">ヒント表示</button>
+            <button class="btn" onclick="skipQuestion()">問題をスキップ</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 48枚の花札を正しく識別して識別率90%以上でクリア</li>
+                <li><strong>基本知識:</strong> 花札は12ヶ月×4枚＝48枚で構成される日本の伝統カードゲーム</li>
+                <li><strong>月と花:</strong>
+                    <ul>
+                        <li>1月:松、2月:梅、3月:桜、4月:藤、5月:杜若、6月:牡丹</li>
+                        <li>7月:萩、8月:芒、9月:菊、10月:紅葉、11月:柳、12月:桐</li>
+                    </ul>
+                </li>
+                <li><strong>カードの種類:</strong> 各月4枚（光札・種札・短冊札・カス札）で役が異なる</li>
+                <li><strong>操作方法:</strong> 問題に応じて正しい花札をクリックして選択</li>
+                <li><strong>評価システム:</strong> 識別率、季節理解度、文化的知識の総合評価</li>
+                <li><strong>クリア条件:</strong> 識別率90%以上（43問以上正解）で花札マスター認定</li>
+                <li><strong>学習要素:</strong> 日本の四季、伝統文化、古典文学への理解も深まる</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentQuestion: 0,
+            correctAnswers: 0,
+            totalQuestions: 48,
+            selectedCard: null,
+            questionType: '',
+            correctAnswer: '',
+            gameActive: false,
+            seasonCorrect: 0,
+            cultureCorrect: 0
+        };
+
+        // 花札のデータ（48枚）
+        const hanafudaCards = [
+            // 1月 松
+            {month: 1, name: '松', symbol: '🎍', type: '光札', season: '冬', description: '松に鶴'},
+            {month: 1, name: '松', symbol: '🌲', type: '種札', season: '冬', description: '松'},
+            {month: 1, name: '松', symbol: '🏮', type: '短冊札', season: '冬', description: '松に赤短'},
+            {month: 1, name: '松', symbol: '🎋', type: 'カス札', season: '冬', description: '松のカス'},
+            
+            // 2月 梅
+            {month: 2, name: '梅', symbol: '🌸', type: '光札', season: '冬', description: '梅に鶯'},
+            {month: 2, name: '梅', symbol: '🐦', type: '種札', season: '冬', description: '梅に鶯'},
+            {month: 2, name: '梅', symbol: '📜', type: '短冊札', season: '冬', description: '梅に赤短'},
+            {month: 2, name: '梅', symbol: '🌿', type: 'カス札', season: '冬', description: '梅のカス'},
+            
+            // 3月 桜
+            {month: 3, name: '桜', symbol: '🌸', type: '光札', season: '春', description: '桜に幕'},
+            {month: 3, name: '桜', symbol: '🌸', type: '種札', season: '春', description: '桜'},
+            {month: 3, name: '桜', symbol: '📋', type: '短冊札', season: '春', description: '桜に赤短'},
+            {month: 3, name: '桜', symbol: '🌺', type: 'カス札', season: '春', description: '桜のカス'},
+            
+            // 4月 藤
+            {month: 4, name: '藤', symbol: '💜', type: '種札', season: '春', description: '藤に不如帰'},
+            {month: 4, name: '藤', symbol: '🕊️', type: '種札', season: '春', description: '藤に不如帰'},
+            {month: 4, name: '藤', symbol: '🎀', type: '短冊札', season: '春', description: '藤に短冊'},
+            {month: 4, name: '藤', symbol: '🌼', type: 'カス札', season: '春', description: '藤のカス'},
+            
+            // 5月 杜若（あやめ）
+            {month: 5, name: '杜若', symbol: '🌺', type: '種札', season: '春', description: '杜若に八橋'},
+            {month: 5, name: '杜若', symbol: '🌉', type: '種札', season: '春', description: '杜若に八橋'},
+            {month: 5, name: '杜若', symbol: '🎗️', type: '短冊札', season: '春', description: '杜若に短冊'},
+            {month: 5, name: '杜若', symbol: '🌸', type: 'カス札', season: '春', description: '杜若のカス'},
+            
+            // 6月 牡丹
+            {month: 6, name: '牡丹', symbol: '🦋', type: '種札', season: '夏', description: '牡丹に蝶'},
+            {month: 6, name: '牡丹', symbol: '🌹', type: '種札', season: '夏', description: '牡丹'},
+            {month: 6, name: '牡丹', symbol: '💙', type: '短冊札', season: '夏', description: '牡丹に青短'},
+            {month: 6, name: '牡丹', symbol: '🌷', type: 'カス札', season: '夏', description: '牡丹のカス'},
+            
+            // 7月 萩
+            {month: 7, name: '萩', symbol: '🐗', type: '種札', season: '秋', description: '萩に猪'},
+            {month: 7, name: '萩', symbol: '🌾', type: '種札', season: '秋', description: '萩'},
+            {month: 7, name: '萩', symbol: '🎴', type: '短冊札', season: '秋', description: '萩に短冊'},
+            {month: 7, name: '萩', symbol: '🍃', type: 'カス札', season: '秋', description: '萩のカス'},
+            
+            // 8月 芒（すすき）
+            {month: 8, name: '芒', symbol: '🌕', type: '光札', season: '秋', description: '芒に月'},
+            {month: 8, name: '芒', symbol: '🦆', type: '種札', season: '秋', description: '芒に雁'},
+            {month: 8, name: '芒', symbol: '🌾', type: 'カス札', season: '秋', description: '芒のカス1'},
+            {month: 8, name: '芒', symbol: '🌿', type: 'カス札', season: '秋', description: '芒のカス2'},
+            
+            // 9月 菊
+            {month: 9, name: '菊', symbol: '🍷', type: '種札', season: '秋', description: '菊に盃'},
+            {month: 9, name: '菊', symbol: '🌼', type: '種札', season: '秋', description: '菊'},
+            {month: 9, name: '菊', symbol: '💛', type: '短冊札', season: '秋', description: '菊に青短'},
+            {month: 9, name: '菊', symbol: '🌻', type: 'カス札', season: '秋', description: '菊のカス'},
+            
+            // 10月 紅葉
+            {month: 10, name: '紅葉', symbol: '🦌', type: '種札', season: '秋', description: '紅葉に鹿'},
+            {month: 10, name: '紅葉', symbol: '🍁', type: '種札', season: '秋', description: '紅葉'},
+            {month: 10, name: '紅葉', symbol: '💙', type: '短冊札', season: '秋', description: '紅葉に青短'},
+            {month: 10, name: '紅葉', symbol: '🍂', type: 'カス札', season: '秋', description: '紅葉のカス'},
+            
+            // 11月 柳
+            {month: 11, name: '柳', symbol: '☔', type: '光札', season: '冬', description: '柳に小野道風'},
+            {month: 11, name: '柳', symbol: '🌊', type: '種札', season: '冬', description: '柳に燕'},
+            {month: 11, name: '柳', symbol: '🎗️', type: '短冊札', season: '冬', description: '柳に短冊'},
+            {month: 11, name: '柳', symbol: '🌱', type: 'カス札', season: '冬', description: '柳のカス'},
+            
+            // 12月 桐
+            {month: 12, name: '桐', symbol: '🌅', type: '光札', season: '冬', description: '桐に鳳凰'},
+            {month: 12, name: '桐', symbol: '🌸', type: 'カス札', season: '冬', description: '桐のカス1'},
+            {month: 12, name: '桐', symbol: '🌿', type: 'カス札', season: '冬', description: '桐のカス2'},
+            {month: 12, name: '桐', symbol: '🍃', type: 'カス札', season: '冬', description: '桐のカス3'}
+        ];
+
+        const questionTypes = [
+            'month_identification',
+            'flower_identification', 
+            'season_identification',
+            'type_identification',
+            'culture_knowledge'
+        ];
+
+        function generateQuestion() {
+            const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+            const targetCard = hanafudaCards[Math.floor(Math.random() * hanafudaCards.length)];
+            
+            gameState.questionType = questionType;
+            gameState.correctAnswer = targetCard;
+            
+            let challengeText = '';
+            
+            switch (questionType) {
+                case 'month_identification':
+                    challengeText = `${targetCard.month}月の花札を選択してください`;
+                    break;
+                case 'flower_identification':
+                    challengeText = `「${targetCard.name}」の花札を選択してください`;
+                    break;
+                case 'season_identification':
+                    challengeText = `${targetCard.season}の季節の花札を選択してください`;
+                    break;
+                case 'type_identification':
+                    challengeText = `${targetCard.type}を選択してください`;
+                    break;
+                case 'culture_knowledge':
+                    challengeText = `「${targetCard.description}」の花札を選択してください`;
+                    break;
+            }
+            
+            document.getElementById('challengeText').textContent = challengeText;
+        }
+
+        function renderCards() {
+            const board = document.getElementById('hanafudaBoard');
+            board.innerHTML = '';
+            
+            // ランダムに12枚を表示（月ごとに1枚ずつ）
+            const displayCards = [];
+            for (let month = 1; month <= 12; month++) {
+                const monthCards = hanafudaCards.filter(card => card.month === month);
+                const randomCard = monthCards[Math.floor(Math.random() * monthCards.length)];
+                displayCards.push(randomCard);
+            }
+            
+            displayCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'hanafuda-card';
+                cardElement.onclick = () => selectCard(card, cardElement);
+                
+                cardElement.innerHTML = `
+                    <div class="card-symbol">${card.symbol}</div>
+                    <div class="card-text">
+                        ${card.month}月<br>
+                        ${card.name}<br>
+                        ${card.type}
+                    </div>
+                `;
+                
+                board.appendChild(cardElement);
+            });
+        }
+
+        function selectCard(card, element) {
+            if (!gameState.gameActive) return;
+            
+            // 前の選択をリセット
+            document.querySelectorAll('.hanafuda-card').forEach(el => {
+                el.classList.remove('selected', 'correct', 'wrong');
+            });
+            
+            element.classList.add('selected');
+            gameState.selectedCard = card;
+            
+            setTimeout(() => {
+                checkAnswer(card, element);
+            }, 500);
+        }
+
+        function checkAnswer(selectedCard, element) {
+            const correct = isCorrectAnswer(selectedCard);
+            
+            if (correct) {
+                element.classList.remove('selected');
+                element.classList.add('correct');
+                gameState.correctAnswers++;
+                
+                // 季節問題の場合は季節スコアも加算
+                if (gameState.questionType === 'season_identification') {
+                    gameState.seasonCorrect++;
+                }
+                
+                // 文化問題の場合は文化スコアも加算
+                if (gameState.questionType === 'culture_knowledge') {
+                    gameState.cultureCorrect++;
+                }
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1000);
+            } else {
+                element.classList.remove('selected');
+                element.classList.add('wrong');
+                
+                setTimeout(() => {
+                    element.classList.remove('wrong');
+                    // 正解を強調表示
+                    showCorrectAnswer();
+                }, 1000);
+            }
+            
+            updateStats();
+        }
+
+        function isCorrectAnswer(selectedCard) {
+            const target = gameState.correctAnswer;
+            
+            switch (gameState.questionType) {
+                case 'month_identification':
+                    return selectedCard.month === target.month;
+                case 'flower_identification':
+                    return selectedCard.name === target.name;
+                case 'season_identification':
+                    return selectedCard.season === target.season;
+                case 'type_identification':
+                    return selectedCard.type === target.type;
+                case 'culture_knowledge':
+                    return selectedCard.description === target.description;
+                default:
+                    return false;
+            }
+        }
+
+        function showCorrectAnswer() {
+            document.querySelectorAll('.hanafuda-card').forEach(el => {
+                const cardData = getCardDataFromElement(el);
+                if (cardData && isCorrectAnswer(cardData)) {
+                    el.classList.add('correct');
+                    setTimeout(() => {
+                        el.classList.remove('correct');
+                        nextQuestion();
+                    }, 1500);
+                }
+            });
+        }
+
+        function getCardDataFromElement(element) {
+            const text = element.querySelector('.card-text').textContent;
+            const month = parseInt(text.match(/(\d+)月/)[1]);
+            return hanafudaCards.find(card => 
+                card.month === month && 
+                text.includes(card.name) && 
+                text.includes(card.type)
+            );
+        }
+
+        function nextQuestion() {
+            gameState.currentQuestion++;
+            
+            if (gameState.currentQuestion >= gameState.totalQuestions) {
+                endGame();
+            } else {
+                generateQuestion();
+                renderCards();
+            }
+        }
+
+        function endGame() {
+            gameState.gameActive = false;
+            
+            const accuracy = Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100);
+            const seasonAccuracy = Math.round((gameState.seasonCorrect / (gameState.totalQuestions / 4)) * 100);
+            const cultureAccuracy = Math.round((gameState.cultureCorrect / (gameState.totalQuestions / 5)) * 100);
+            
+            let message = `🎌 花札認識ゲーム完了！\n\n`;
+            message += `正解数: ${gameState.correctAnswers}/${gameState.totalQuestions}\n`;
+            message += `識別率: ${accuracy}%\n`;
+            message += `季節理解: ${seasonAccuracy}%\n`;
+            message += `文化理解: ${cultureAccuracy}%\n\n`;
+            
+            if (accuracy >= 90) {
+                message += `🏆 クリア達成！花札マスター認定！\n`;
+                message += `日本の伝統文化への理解が深まりました！`;
+            } else {
+                message += `💪 クリア条件: 識別率90%以上\n`;
+                message += `花札の美しい世界をもっと学習しましょう！`;
+            }
+            
+            alert(message);
+        }
+
+        function showHint() {
+            const target = gameState.correctAnswer;
+            let hint = '';
+            
+            switch (gameState.questionType) {
+                case 'month_identification':
+                    hint = `ヒント: ${target.month}月の季節は${target.season}です`;
+                    break;
+                case 'flower_identification':
+                    hint = `ヒント: ${target.name}は${target.month}月の花です`;
+                    break;
+                case 'season_identification':
+                    hint = `ヒント: ${target.season}は${target.month}月頃の季節です`;
+                    break;
+                case 'type_identification':
+                    hint = `ヒント: ${target.type}は${target.name}の${target.month}月に含まれます`;
+                    break;
+                case 'culture_knowledge':
+                    hint = `ヒント: 「${target.description}」は${target.month}月${target.name}の${target.type}です`;
+                    break;
+            }
+            
+            alert(hint);
+        }
+
+        function skipQuestion() {
+            if (!gameState.gameActive) return;
+            
+            alert(`正解: ${gameState.correctAnswer.month}月 ${gameState.correctAnswer.name} ${gameState.correctAnswer.type}\n「${gameState.correctAnswer.description}」`);
+            nextQuestion();
+        }
+
+        function updateStats() {
+            document.getElementById('correctCount').textContent = `${gameState.correctAnswers}/${gameState.totalQuestions}`;
+            
+            const accuracy = gameState.currentQuestion > 0 ? 
+                Math.round((gameState.correctAnswers / gameState.currentQuestion) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const seasonScore = Math.round((gameState.seasonCorrect / Math.max(1, Math.ceil(gameState.currentQuestion / 4))) * 100);
+            document.getElementById('seasonScore').textContent = `${seasonScore}%`;
+            
+            const cultureScore = Math.round((gameState.cultureCorrect / Math.max(1, Math.ceil(gameState.currentQuestion / 5))) * 100);
+            document.getElementById('cultureScore').textContent = `${cultureScore}%`;
+        }
+
+        function newGame() {
+            gameState.currentQuestion = 0;
+            gameState.correctAnswers = 0;
+            gameState.selectedCard = null;
+            gameState.gameActive = true;
+            gameState.seasonCorrect = 0;
+            gameState.cultureCorrect = 0;
+            
+            generateQuestion();
+            renderCards();
+            updateStats();
+        }
+
+        // ゲーム初期化
+        renderCards();
+    </script>
+</body>
+</html>

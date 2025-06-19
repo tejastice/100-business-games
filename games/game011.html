@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マウス軌道 - ゲーム011</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .rhythm-track {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .rhythm-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .rhythm-note {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #4CAF50;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: fall linear;
+            border: 2px solid white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fall {
+            from {
+                top: -30px;
+            }
+            to {
+                top: 200px;
+            }
+        }
+
+        .hit-zone {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border: 3px solid #FFD700;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .tap-button {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            border: none;
+            color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tap-button:active {
+            transform: scale(0.9);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .combo-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FFD700;
+            margin: 10px 0;
+        }
+
+        .hit-feedback {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: bold;
+            pointer-events: none;
+            animation: fadeUp 1s ease-out;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .perfect { color: #FFD700; }
+        .good { color: #4CAF50; }
+        .miss { color: #FF6B6B; }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🖱️ マウス軌道</h1>
+        <p class="game-description">指定された経路を正確になぞりながらマウスを移動させ、軌道の精密性と安定性を評価するマウス操作技能ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">コンボ</div>
+                <div class="stat-value" id="combo">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正確度</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="rhythm-track" id="rhythmTrack">
+                <div class="rhythm-line"></div>
+                <div class="hit-zone"></div>
+            </div>
+            
+            <button class="tap-button" id="tapButton" onclick="tapRhythm()">TAP</button>
+            <div class="combo-display" id="comboDisplay">コンボ: 0</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" disabled>一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるビジネススキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>反射神経</h4>
+                    <p>迅速な判断と即座の対応力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <h4>タイミング管理</h4>
+                    <p>最適なタイミングでの行動実行</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>集中力</h4>
+                    <p>持続的な注意力と集中維持</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>パフォーマンス分析</h4>
+                    <p>リアルタイムでの結果評価</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            score: 0,
+            combo: 0,
+            hits: 0,
+            totalNotes: 0,
+            isPlaying: false,
+            isPaused: false,
+            notes: [],
+            gameInterval: null,
+            noteSpeed: 3000,
+            bpm: 120
+        };
+
+        const gameArea = document.getElementById('gameArea');
+        const rhythmTrack = document.getElementById('rhythmTrack');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        function startGame() {
+            if (gameState.isPaused) {
+                resumeGame();
+                return;
+            }
+
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            // ノート生成を開始
+            startNoteGeneration();
+            startBtn.textContent = '再開';
+        }
+
+        function startNoteGeneration() {
+            const beatInterval = 60000 / gameState.bpm; // BPMからミリ秒に変換
+            
+            gameState.gameInterval = setInterval(() => {
+                if (!gameState.isPaused) {
+                    createNote();
+                }
+            }, beatInterval);
+        }
+
+        function createNote() {
+            const note = document.createElement('div');
+            note.className = 'rhythm-note';
+            note.style.animationDuration = `${gameState.noteSpeed}ms`;
+            
+            const noteId = Date.now() + Math.random();
+            note.dataset.noteId = noteId;
+            
+            rhythmTrack.appendChild(note);
+            gameState.notes.push({
+                id: noteId,
+                element: note,
+                startTime: Date.now(),
+                hit: false
+            });
+
+            gameState.totalNotes++;
+
+            // ノートが下に到達したら削除
+            setTimeout(() => {
+                if (note.parentNode && !note.dataset.hit) {
+                    // ミス判定
+                    showHitFeedback('MISS', 'miss');
+                    resetCombo();
+                    updateAccuracy();
+                }
+                if (note.parentNode) {
+                    note.remove();
+                }
+                // 配列からも削除
+                gameState.notes = gameState.notes.filter(n => n.id !== noteId);
+            }, gameState.noteSpeed + 100);
+        }
+
+        function tapRhythm() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            const currentTime = Date.now();
+            let bestNote = null;
+            let bestDistance = Infinity;
+
+            // 最も近いノートを見つける
+            gameState.notes.forEach(note => {
+                if (!note.hit) {
+                    const notePosition = ((currentTime - note.startTime) / gameState.noteSpeed) * 200;
+                    const hitZonePosition = 170; // ヒットゾーンの位置
+                    const distance = Math.abs(notePosition - hitZonePosition);
+                    
+                    if (distance < bestDistance && distance < 40) { // 40pxの許容範囲
+                        bestDistance = distance;
+                        bestNote = note;
+                    }
+                }
+            });
+
+            if (bestNote) {
+                bestNote.hit = true;
+                bestNote.element.dataset.hit = 'true';
+                bestNote.element.remove();
+                
+                // 判定
+                let hitType, points;
+                if (bestDistance < 15) {
+                    hitType = 'PERFECT';
+                    points = 100;
+                    showHitFeedback('PERFECT!', 'perfect');
+                } else if (bestDistance < 30) {
+                    hitType = 'GOOD';
+                    points = 50;
+                    showHitFeedback('GOOD', 'good');
+                } else {
+                    hitType = 'OK';
+                    points = 25;
+                    showHitFeedback('OK', 'good');
+                }
+
+                gameState.score += points * (gameState.combo + 1);
+                gameState.combo++;
+                gameState.hits++;
+                
+                updateDisplay();
+            } else {
+                // 空振り
+                showHitFeedback('MISS', 'miss');
+                resetCombo();
+            }
+        }
+
+        function showHitFeedback(text, type) {
+            const feedback = document.createElement('div');
+            feedback.className = `hit-feedback ${type}`;
+            feedback.textContent = text;
+            feedback.style.left = '50%';
+            feedback.style.top = '50%';
+            feedback.style.transform = 'translate(-50%, -50%)';
+            
+            gameArea.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 1000);
+        }
+
+        function resetCombo() {
+            gameState.combo = 0;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('combo').textContent = gameState.combo;
+            document.getElementById('comboDisplay').textContent = `コンボ: ${gameState.combo}`;
+            updateAccuracy();
+        }
+
+        function updateAccuracy() {
+            const accuracy = gameState.totalNotes > 0 ? 
+                Math.round((gameState.hits / gameState.totalNotes) * 100) : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function pauseGame() {
+            gameState.isPaused = !gameState.isPaused;
+            pauseBtn.textContent = gameState.isPaused ? '再開' : '一時停止';
+            startBtn.disabled = !gameState.isPaused;
+        }
+
+        function resumeGame() {
+            gameState.isPaused = false;
+            pauseBtn.textContent = '一時停止';
+            startBtn.disabled = true;
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.hits = 0;
+            gameState.totalNotes = 0;
+            gameState.notes = [];
+            
+            if (gameState.gameInterval) {
+                clearInterval(gameState.gameInterval);
+            }
+            
+            // 全てのノートを削除
+            const notes = rhythmTrack.querySelectorAll('.rhythm-note');
+            notes.forEach(note => note.remove());
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            startBtn.textContent = 'ゲーム開始';
+            pauseBtn.textContent = '一時停止';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (typeof window !== 'undefined') {
+                if (window.opener) {
+                    window.close();
+                } else {
+                    window.history.back();
+                }
+            }
+        }
+
+        // キーボード操作
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' || e.key === 'Enter') {
+                e.preventDefault();
+                tapRhythm();
+            }
+        });
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神経衰弱 - ゲーム074</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .memory-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 600px;
+            margin: 20px auto;
+            aspect-ratio: 8/5;
+        }
+
+        .memory-card {
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            transition: all 0.3s ease;
+            min-height: 60px;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .memory-card.flipped {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .memory-card.matched {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .instructions h3 {
+            color: #f39c12;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .memory-board {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(7, 1fr);
+                aspect-ratio: 6/7;
+            }
+
+            .memory-card {
+                font-size: 1rem;
+                min-height: 50px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎴 神経衰弱</h1>
+        <p class="game-description">カード位置記憶と戦略的選択による記憶力と論理思考ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">時間</div>
+                <div class="stat-value" id="timer">00:00</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">手数</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">マッチ</div>
+                <div class="stat-value" id="matches">0/20</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">完成率</div>
+                <div class="stat-value" id="completion">0%</div>
+            </div>
+        </div>
+
+        <div class="memory-board" id="memoryBoard"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="showHint()">ヒント表示</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 20ペアのカードをすべてマッチングして完成率85%以上でクリア</li>
+                <li><strong>操作方法:</strong> カードをクリックして2枚選択、同じ絵柄なら成功</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>1. カードを2枚選択してめくる</li>
+                        <li>2. 同じ絵柄なら成功、違えば再び裏返る</li>
+                        <li>3. カードの位置を記憶して効率的にマッチング</li>
+                        <li>4. 全20ペアのマッチングを目指す</li>
+                    </ul>
+                </li>
+                <li><strong>評価システム:</strong> 手数効率、記憶精度、完成時間を総合評価</li>
+                <li><strong>勝利条件:</strong> 完成率85%以上（17ペア以上）でクリア</li>
+                <li><strong>プレイのコツ:</strong> 位置記憶の活用、戦略的順序選択、パターン認識</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            timer: null,
+            startTime: null,
+            gameActive: false,
+            totalPairs: 20
+        };
+
+        // カード絵柄の定義（20ペア）
+        const cardSymbols = [
+            '🌸', '🌺', '🌻', '🌷', '🌹', '🌴', '🍀', '🍁',
+            '⭐', '🌙', '☀️', '⚡', '🔥', '💧', '❄️', '🌪️',
+            '🎯', '🎪', '🎨', '🎭'
+        ];
+
+        function createCards() {
+            gameState.cards = [];
+            const shuffledSymbols = [...cardSymbols];
+            
+            // 各絵柄を2枚ずつ作成
+            for (let i = 0; i < gameState.totalPairs; i++) {
+                gameState.cards.push({
+                    id: i * 2,
+                    symbol: shuffledSymbols[i],
+                    flipped: false,
+                    matched: false
+                });
+                gameState.cards.push({
+                    id: i * 2 + 1,
+                    symbol: shuffledSymbols[i],
+                    flipped: false,
+                    matched: false
+                });
+            }
+            
+            // カードをシャッフル
+            for (let i = gameState.cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [gameState.cards[i], gameState.cards[j]] = [gameState.cards[j], gameState.cards[i]];
+            }
+        }
+
+        function renderCards() {
+            const board = document.getElementById('memoryBoard');
+            board.innerHTML = '';
+            
+            gameState.cards.forEach((card, index) => {
+                const cardElement = document.createElement('button');
+                cardElement.className = 'memory-card';
+                cardElement.onclick = () => flipCard(index);
+                
+                if (card.flipped || card.matched) {
+                    cardElement.textContent = card.symbol;
+                    cardElement.classList.add('flipped');
+                }
+                
+                if (card.matched) {
+                    cardElement.classList.add('matched');
+                    cardElement.onclick = null;
+                }
+                
+                board.appendChild(cardElement);
+            });
+        }
+
+        function flipCard(index) {
+            if (!gameState.gameActive) return;
+            if (gameState.cards[index].flipped || gameState.cards[index].matched) return;
+            if (gameState.flippedCards.length >= 2) return;
+            
+            gameState.cards[index].flipped = true;
+            gameState.flippedCards.push(index);
+            
+            renderCards();
+            
+            if (gameState.flippedCards.length === 2) {
+                gameState.moves++;
+                updateStats();
+                
+                setTimeout(() => {
+                    checkMatch();
+                }, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [firstIndex, secondIndex] = gameState.flippedCards;
+            const firstCard = gameState.cards[firstIndex];
+            const secondCard = gameState.cards[secondIndex];
+            
+            if (firstCard.symbol === secondCard.symbol) {
+                // マッチ成功
+                firstCard.matched = true;
+                secondCard.matched = true;
+                gameState.matchedPairs++;
+                
+                // 完成チェック
+                if (gameState.matchedPairs === gameState.totalPairs) {
+                    gameComplete();
+                }
+            } else {
+                // マッチ失敗
+                firstCard.flipped = false;
+                secondCard.flipped = false;
+            }
+            
+            gameState.flippedCards = [];
+            renderCards();
+            updateStats();
+        }
+
+        function gameComplete() {
+            gameState.gameActive = false;
+            if (gameState.timer) clearInterval(gameState.timer);
+            
+            const completionRate = (gameState.matchedPairs / gameState.totalPairs) * 100;
+            const efficiency = Math.round((gameState.matchedPairs * 2 / gameState.moves) * 100);
+            const timeBonus = Math.max(0, 300 - Math.floor((Date.now() - gameState.startTime) / 1000));
+            
+            let message = `🎉 ゲーム完了！\n\n`;
+            message += `完成率: ${completionRate}%\n`;
+            message += `手数効率: ${efficiency}%\n`;
+            message += `時間ボーナス: ${timeBonus}点\n\n`;
+            
+            if (completionRate >= 85) {
+                message += `🏆 クリア達成！記憶マスター認定！`;
+            } else {
+                message += `💪 もう少し！85%以上でクリア`;
+            }
+            
+            alert(message);
+        }
+
+        function showHint() {
+            if (!gameState.gameActive) return;
+            
+            // 一瞬だけ全カードを表示
+            gameState.cards.forEach(card => {
+                if (!card.matched) {
+                    card.flipped = true;
+                }
+            });
+            
+            renderCards();
+            
+            setTimeout(() => {
+                gameState.cards.forEach(card => {
+                    if (!card.matched && !gameState.flippedCards.includes(gameState.cards.indexOf(card))) {
+                        card.flipped = false;
+                    }
+                });
+                renderCards();
+            }, 1500);
+        }
+
+        function updateStats() {
+            document.getElementById('moves').textContent = gameState.moves;
+            document.getElementById('matches').textContent = `${gameState.matchedPairs}/${gameState.totalPairs}`;
+            
+            const completionRate = Math.round((gameState.matchedPairs / gameState.totalPairs) * 100);
+            document.getElementById('completion').textContent = `${completionRate}%`;
+        }
+
+        function startTimer() {
+            gameState.startTime = Date.now();
+            gameState.timer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function newGame() {
+            if (gameState.timer) clearInterval(gameState.timer);
+            
+            gameState.flippedCards = [];
+            gameState.matchedPairs = 0;
+            gameState.moves = 0;
+            gameState.gameActive = true;
+            
+            createCards();
+            renderCards();
+            updateStats();
+            startTimer();
+            
+            document.getElementById('timer').textContent = '00:00';
+        }
+
+        // ゲーム初期化
+        newGame();
+    </script>
+</body>
+</html>

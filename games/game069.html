@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パースペクティブ - ゲーム069</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .perspective-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .perspective-viewport {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .perspective-viewport h4 {
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .perspective-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .perspective-controls h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .viewpoint-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .viewpoint-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .viewpoint-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .viewpoint-btn.active {
+            background: rgba(255, 193, 7, 0.7);
+            border-color: #ffc107;
+        }
+
+        .perspective-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .depth-slider {
+            width: 100%;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 8px;
+            outline: none;
+            appearance: none;
+        }
+
+        .depth-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffc107;
+            cursor: pointer;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .viewpoint-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .info-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🔍 パースペクティブ</h1>
+        <p class="game-description">視点変換と遠近法理解による空間認識深度理解ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">変換数</div>
+                <div class="stat-value" id="currentTransform">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">理解数</div>
+                <div class="stat-value" id="understoodCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">理解度</div>
+                <div class="stat-value" id="understandingRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 12種類の視点変換を理解し、遠近法と深度情報を正確に把握する</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>3D物体の異なる視点からの見え方を学習する</li>
+                        <li>パースペクティブ（遠近法）の効果を体験する</li>
+                        <li>深度スライダーで奥行きの変化を確認する</li>
+                    </ul>
+                </li>
+                <li><strong>視点操作:</strong> 上面・正面・側面・斜め視点など12種類の視点ボタン</li>
+                <li><strong>勝利条件:</strong> 12変換中、理解度90%以上（11変換以上理解）でクリア</li>
+                <li><strong>評価システム:</strong> 正確な理解: +100点、深度認識: +50点、誤理解: -25点</li>
+                <li><strong>プレイのコツ:</strong> 物体の3次元的な形状と視点の関係性を意識する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="perspective-area" id="perspectiveArea">
+                <div class="perspective-viewport">
+                    <h4>🎯 3D物体表示</h4>
+                    <canvas id="perspectiveCanvas" width="600" height="400" style="border: 2px solid #fff; border-radius: 10px; background: rgba(0,0,0,0.8);"></canvas>
+                </div>
+                
+                <div class="perspective-controls">
+                    <h4>👁️ 視点コントロール</h4>
+                    <div class="viewpoint-controls" id="viewpointControls">
+                        <button class="viewpoint-btn" onclick="changeViewpoint('top')">上面視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('front')">正面視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('side')">側面視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('diagonal')">斜め視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('bottom')">底面視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('back')">背面視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('left')">左視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('right')">右視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('bird')">鳥瞰視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('worm')">虫瞰視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('perspective')">遠近視点</button>
+                        <button class="viewpoint-btn" onclick="changeViewpoint('isometric')">等角視点</button>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <label style="color: #ffc107; font-weight: bold;">深度調整:</label>
+                        <input type="range" class="depth-slider" id="depthSlider" min="1" max="10" value="5" 
+                               oninput="adjustDepth(this.value)">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 5px;">
+                            <span>近</span>
+                            <span>中</span>
+                            <span>遠</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="perspective-info">
+                    <div class="info-panels">
+                        <div class="info-panel">
+                            <strong>現在の視点:</strong><br>
+                            <span id="currentViewpoint">正面視点</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>深度レベル:</strong><br>
+                            <span id="depthLevel">5</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>遠近効果:</strong><br>
+                            <span id="perspectiveEffect">中程度</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>理解状況:</strong><br>
+                            <span id="understandingStatus">学習中</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newPerspectiveChallenge()">新しい物体</button>
+            <button class="btn" onclick="checkUnderstanding()">理解度チェック</button>
+            <button class="btn" onclick="showPerspectiveGuide()">遠近法ガイド</button>
+            <button class="btn" onclick="resetPerspective()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentTransform: 1,
+            totalTransforms: 12,
+            understoodCount: 0,
+            score: 0,
+            currentViewpoint: 'front',
+            currentDepth: 5,
+            currentObject: null,
+            canvas: null,
+            ctx: null,
+            viewpoints: ['top', 'front', 'side', 'diagonal', 'bottom', 'back', 'left', 'right', 'bird', 'worm', 'perspective', 'isometric']
+        };
+
+        const objects3D = [
+            { name: '立方体', type: 'cube', complexity: 'easy' },
+            { name: '球体', type: 'sphere', complexity: 'easy' },
+            { name: '円柱', type: 'cylinder', complexity: 'normal' },
+            { name: '錐体', type: 'cone', complexity: 'normal' },
+            { name: 'L字型', type: 'l-shape', complexity: 'hard' },
+            { name: '階段型', type: 'stairs', complexity: 'hard' },
+            { name: '建物型', type: 'building', complexity: 'expert' },
+            { name: '複合型', type: 'complex', complexity: 'expert' }
+        ];
+
+        function initializeGame() {
+            gameState.canvas = document.getElementById('perspectiveCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resetGameState();
+            generateNewObject();
+            updateDisplay();
+            drawPerspective();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentTransform: 1,
+                totalTransforms: 12,
+                understoodCount: 0,
+                score: 0,
+                currentViewpoint: 'front',
+                currentDepth: 5,
+                currentObject: null,
+                canvas: gameState.canvas,
+                ctx: gameState.ctx,
+                viewpoints: ['top', 'front', 'side', 'diagonal', 'bottom', 'back', 'left', 'right', 'bird', 'worm', 'perspective', 'isometric']
+            };
+        }
+
+        function generateNewObject() {
+            if (gameState.currentTransform > gameState.totalTransforms) {
+                endGame();
+                return;
+            }
+            
+            const objectIndex = (gameState.currentTransform - 1) % objects3D.length;
+            gameState.currentObject = objects3D[objectIndex];
+            
+            // ランダムな初期視点
+            gameState.currentViewpoint = gameState.viewpoints[Math.floor(Math.random() * gameState.viewpoints.length)];
+            gameState.currentDepth = 3 + Math.floor(Math.random() * 5); // 3-7の範囲
+            
+            updateViewpointDisplay();
+            drawPerspective();
+        }
+
+        function changeViewpoint(viewpoint) {
+            gameState.currentViewpoint = viewpoint;
+            
+            // 全てのボタンからactiveクラスを削除
+            document.querySelectorAll('.viewpoint-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // クリックされたボタンにactiveクラスを追加
+            event.target.classList.add('active');
+            
+            updateViewpointDisplay();
+            drawPerspective();
+        }
+
+        function adjustDepth(depth) {
+            gameState.currentDepth = parseInt(depth);
+            document.getElementById('depthLevel').textContent = depth;
+            
+            const effects = ['最小', '極小', '小', 'やや小', '中程度', 'やや大', '大', '極大', '最大', '超大'];
+            document.getElementById('perspectiveEffect').textContent = effects[Math.min(depth - 1, effects.length - 1)];
+            
+            drawPerspective();
+        }
+
+        function updateViewpointDisplay() {
+            const viewpointNames = {
+                'top': '上面視点', 'front': '正面視点', 'side': '側面視点', 'diagonal': '斜め視点',
+                'bottom': '底面視点', 'back': '背面視点', 'left': '左視点', 'right': '右視点',
+                'bird': '鳥瞰視点', 'worm': '虫瞰視点', 'perspective': '遠近視点', 'isometric': '等角視点'
+            };
+            
+            document.getElementById('currentViewpoint').textContent = viewpointNames[gameState.currentViewpoint] || gameState.currentViewpoint;
+            document.getElementById('depthLevel').textContent = gameState.currentDepth;
+        }
+
+        function drawPerspective() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // 黒背景
+            gameState.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            const centerX = gameState.canvas.width / 2;
+            const centerY = gameState.canvas.height / 2;
+            const scale = 80 + gameState.currentDepth * 10;
+            
+            // グリッド表示
+            drawGrid(centerX, centerY);
+            
+            // 3D物体の描画
+            if (gameState.currentObject) {
+                switch (gameState.currentObject.type) {
+                    case 'cube':
+                        drawCubePerspective(centerX, centerY, scale);
+                        break;
+                    case 'sphere':
+                        drawSpherePerspective(centerX, centerY, scale);
+                        break;
+                    case 'cylinder':
+                        drawCylinderPerspective(centerX, centerY, scale);
+                        break;
+                    case 'cone':
+                        drawConePerspective(centerX, centerY, scale);
+                        break;
+                    default:
+                        drawCubePerspective(centerX, centerY, scale);
+                }
+            }
+            
+            // 視点情報表示
+            gameState.ctx.fillStyle = '#fff';
+            gameState.ctx.font = '14px Arial';
+            gameState.ctx.textAlign = 'left';
+            gameState.ctx.fillText(`物体: ${gameState.currentObject?.name || '立方体'}`, 10, 25);
+            gameState.ctx.fillText(`視点: ${document.getElementById('currentViewpoint').textContent}`, 10, 45);
+            gameState.ctx.fillText(`深度: ${gameState.currentDepth}`, 10, 65);
+        }
+
+        function drawGrid(centerX, centerY) {
+            gameState.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            gameState.ctx.lineWidth = 1;
+            
+            // 水平線
+            for (let i = -200; i <= 200; i += 40) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(centerX - 200, centerY + i);
+                gameState.ctx.lineTo(centerX + 200, centerY + i);
+                gameState.ctx.stroke();
+            }
+            
+            // 垂直線
+            for (let i = -200; i <= 200; i += 40) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(centerX + i, centerY - 200);
+                gameState.ctx.lineTo(centerX + i, centerY + 200);
+                gameState.ctx.stroke();
+            }
+        }
+
+        function drawCubePerspective(x, y, scale) {
+            const depth = gameState.currentDepth * 5;
+            
+            gameState.ctx.fillStyle = '#4caf50';
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            
+            switch (gameState.currentViewpoint) {
+                case 'front':
+                    // 正面視点 - 正方形
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    break;
+                case 'diagonal':
+                case 'perspective':
+                    // 遠近視点 - 立方体
+                    // 前面
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    // 上面
+                    gameState.ctx.fillStyle = '#66bb6a';
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(x - scale/2, y - scale/2);
+                    gameState.ctx.lineTo(x - scale/2 + depth, y - scale/2 - depth);
+                    gameState.ctx.lineTo(x + scale/2 + depth, y - scale/2 - depth);
+                    gameState.ctx.lineTo(x + scale/2, y - scale/2);
+                    gameState.ctx.closePath();
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+                    // 右面
+                    gameState.ctx.fillStyle = '#388e3c';
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(x + scale/2, y - scale/2);
+                    gameState.ctx.lineTo(x + scale/2 + depth, y - scale/2 - depth);
+                    gameState.ctx.lineTo(x + scale/2 + depth, y + scale/2 - depth);
+                    gameState.ctx.lineTo(x + scale/2, y + scale/2);
+                    gameState.ctx.closePath();
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+                    break;
+                case 'top':
+                    // 上面視点 - 正方形
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    break;
+                case 'side':
+                    // 側面視点 - 正方形
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    break;
+                default:
+                    // その他の視点 - 変形正方形
+                    const offset = depth * 0.3;
+                    gameState.ctx.fillRect(x - scale/2 + offset, y - scale/2 + offset, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2 + offset, y - scale/2 + offset, scale, scale);
+            }
+        }
+
+        function drawSpherePerspective(x, y, scale) {
+            gameState.ctx.fillStyle = '#2196f3';
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            
+            // どの視点でも円形
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(x, y, scale/2, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+            
+            // 球面表現のハイライト
+            const highlightSize = scale * 0.15;
+            gameState.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(x - scale/4, y - scale/4, highlightSize, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+        }
+
+        function drawCylinderPerspective(x, y, scale) {
+            gameState.ctx.fillStyle = '#ff9800';
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            
+            switch (gameState.currentViewpoint) {
+                case 'top':
+                case 'bottom':
+                    // 上面・底面視点 - 円形
+                    gameState.ctx.beginPath();
+                    gameState.ctx.arc(x, y, scale/2, 0, 2 * Math.PI);
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+                    break;
+                case 'side':
+                case 'front':
+                case 'back':
+                    // 側面視点 - 長方形
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    break;
+                default:
+                    // 遠近視点 - 楕円と矩形の組み合わせ
+                    const depth = gameState.currentDepth * 3;
+                    // 側面
+                    gameState.ctx.fillRect(x - scale/2, y - scale/2, scale, scale);
+                    gameState.ctx.strokeRect(x - scale/2, y - scale/2, scale, scale);
+                    // 上面楕円
+                    gameState.ctx.fillStyle = '#ffb74d';
+                    gameState.ctx.beginPath();
+                    gameState.ctx.ellipse(x, y - scale/2, scale/2, depth, 0, 0, 2 * Math.PI);
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+            }
+        }
+
+        function drawConePerspective(x, y, scale) {
+            gameState.ctx.fillStyle = '#9c27b0';
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            
+            switch (gameState.currentViewpoint) {
+                case 'top':
+                    // 上面視点 - 点
+                    gameState.ctx.beginPath();
+                    gameState.ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+                    break;
+                case 'bottom':
+                    // 底面視点 - 円形
+                    gameState.ctx.beginPath();
+                    gameState.ctx.arc(x, y, scale/2, 0, 2 * Math.PI);
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+                    break;
+                default:
+                    // 側面・遠近視点 - 三角形
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(x, y - scale/2);
+                    gameState.ctx.lineTo(x - scale/2, y + scale/2);
+                    gameState.ctx.lineTo(x + scale/2, y + scale/2);
+                    gameState.ctx.closePath();
+                    gameState.ctx.fill();
+                    gameState.ctx.stroke();
+            }
+        }
+
+        function checkUnderstanding() {
+            // 理解度をチェック（簡易版）
+            const understanding = Math.random() * 0.4 + 0.6; // 60-100%の理解度
+            
+            let message = `📐 パースペクティブ理解チェック\\n\\n`;
+            message += `物体: ${gameState.currentObject.name}\\n`;
+            message += `視点: ${document.getElementById('currentViewpoint').textContent}\\n`;
+            message += `理解度: ${(understanding * 100).toFixed(1)}%\\n\\n`;
+            
+            if (understanding >= 0.9) {
+                message += '🏆 完璧な理解です！';
+                gameState.understoodCount++;
+                gameState.score += 100;
+            } else if (understanding >= 0.7) {
+                message += '👍 良い理解です！';
+                gameState.understoodCount++;
+                gameState.score += 50;
+            } else {
+                message += '📚 もう少し観察してみましょう。';
+            }
+            
+            alert(message);
+            
+            gameState.currentTransform++;
+            setTimeout(() => {
+                generateNewObject();
+                updateDisplay();
+            }, 1000);
+        }
+
+        function showPerspectiveGuide() {
+            const guides = [
+                '🔍 物体を異なる角度から観察してみましょう',
+                '📏 遠近法では遠くの物体ほど小さく見えます',
+                '👁️ 視点の高さで見え方が大きく変わります',
+                '📐 等角視点では比例関係が保たれます',
+                '🎯 深度を調整して立体感を確認しましょう'
+            ];
+            
+            const randomGuide = guides[Math.floor(Math.random() * guides.length)];
+            alert(`パースペクティブのコツ:\\n${randomGuide}`);
+        }
+
+        function resetPerspective() {
+            if (confirm('現在の視点をリセットしますか？進行状況が失われます。')) {
+                gameState.currentViewpoint = 'front';
+                gameState.currentDepth = 5;
+                
+                // スライダーと表示をリセット
+                document.getElementById('depthSlider').value = 5;
+                
+                // ボタンの状態をリセット
+                document.querySelectorAll('.viewpoint-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                updateViewpointDisplay();
+                drawPerspective();
+            }
+        }
+
+        function newPerspectiveChallenge() {
+            if (confirm('新しい物体を表示しますか？現在の進行状況が失われます。')) {
+                generateNewObject();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentTransform').textContent = Math.min(gameState.currentTransform, gameState.totalTransforms);
+            document.getElementById('understoodCount').textContent = gameState.understoodCount;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const understandingRate = gameState.currentTransform > 1 ? 
+                ((gameState.understoodCount / (gameState.currentTransform - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('understandingRate').textContent = `${understandingRate}%`;
+            
+            const progress = ((gameState.currentTransform - 1) / gameState.totalTransforms) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // 理解状況の更新
+            if (understandingRate >= 90) {
+                document.getElementById('understandingStatus').textContent = '優秀';
+            } else if (understandingRate >= 70) {
+                document.getElementById('understandingStatus').textContent = '良好';
+            } else {
+                document.getElementById('understandingStatus').textContent = '学習中';
+            }
+            
+            // ゲーム終了チェック
+            if (gameState.currentTransform > gameState.totalTransforms) {
+                setTimeout(endGame, 1000);
+            }
+        }
+
+        function endGame() {
+            const understandingRate = ((gameState.understoodCount / gameState.totalTransforms) * 100).toFixed(1);
+            const passed = understandingRate >= 90;
+            
+            let message = `🎊 パースペクティブゲーム完了！\\n\\n`;
+            message += `理解変換: ${gameState.understoodCount} / ${gameState.totalTransforms}\\n`;
+            message += `理解度: ${understandingRate}%\\n`;
+            message += `最終スコア: ${gameState.score}点\\n\\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\\n優秀な空間認識能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\\n90%以上の理解度を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

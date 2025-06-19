@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スピード - ゲーム082</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c5530 0%, #1a472a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .card-table {
+            background: #2c5530;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            min-height: 300px;
+            border: 3px solid #4caf50;
+        }
+
+        .cards-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 200px;
+        }
+
+        .card {
+            width: 120px;
+            height: 160px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ddd;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card.red {
+            color: #d32f2f;
+        }
+
+        .card.black {
+            color: #333;
+        }
+
+        .card.selected {
+            border-color: #ffeb3b;
+            box-shadow: 0 0 20px #ffeb3b;
+        }
+
+        .vs-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vs-text {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffeb3b;
+        }
+
+        .instruction {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .reaction-time {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .result-display {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-correct {
+            color: #4caf50;
+        }
+
+        .result-incorrect {
+            color: #f44336;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over {
+            display: none;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 2px solid #4caf50;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .streak-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 235, 59, 0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 1px solid #ffeb3b;
+        }
+
+        .streak-bonus {
+            color: #ffeb3b;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                gap: 20px;
+                height: auto;
+            }
+            
+            .card {
+                width: 100px;
+                height: 130px;
+                font-size: 2.5rem;
+            }
+            
+            .vs-section {
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🃏 スピード</h1>
+        <p class="game-description">2枚のカードを素早く比較して、大きい数字を選択しよう！</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">連続正解</div>
+                <div class="stat-value" id="streak">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">残り時間</div>
+                <div class="stat-value" id="timeLeft">60</div>
+            </div>
+        </div>
+
+        <div class="card-table">
+            <div class="streak-display" id="streakDisplay" style="display: none;">
+                <span class="streak-bonus">🔥 連続ボーナス!</span>
+            </div>
+
+            <div class="cards-container">
+                <div class="card" id="leftCard" onclick="selectCard('left')">
+                    <span id="leftCardValue">A</span>
+                </div>
+
+                <div class="vs-section">
+                    <div class="vs-text">VS</div>
+                    <div class="instruction" id="instruction">
+                        より大きい数字のカードを<br>クリックしよう！
+                    </div>
+                    <div class="reaction-time" id="reactionTime">
+                        反応時間: 0ms
+                    </div>
+                </div>
+
+                <div class="card" id="rightCard" onclick="selectCard('right')">
+                    <span id="rightCardValue">K</span>
+                </div>
+            </div>
+
+            <div class="result-display" id="resultDisplay"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="pauseGame()">一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>🎉 ゲーム終了！</h2>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <p>正解率: <span id="accuracy">0%</span></p>
+            <p>最高連続正解: <span id="maxStreak">0</span></p>
+            <p>平均反応時間: <span id="avgReactionTime">0ms</span></p>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 遊び方</h3>
+            <p>• 2枚のカードが表示されます</p>
+            <p>• より大きい数字のカードを素早くクリック</p>
+            <p>• A=1, J=11, Q=12, K=13として計算</p>
+            <p>• 連続正解でボーナスポイント獲得</p>
+            <p>• 反応速度が早いほど高スコア</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            isPaused: false,
+            score: 0,
+            correct: 0,
+            total: 0,
+            streak: 0,
+            maxStreak: 0,
+            timeLeft: 60,
+            gameTimer: null,
+            currentRound: {
+                leftValue: 0,
+                rightValue: 0,
+                startTime: 0
+            },
+            reactionTimes: []
+        };
+
+        const cardValues = {
+            'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
+        };
+
+        const cards = Object.keys(cardValues);
+
+        function startGame() {
+            if (gameState.isPlaying && !gameState.isPaused) return;
+
+            if (gameState.isPaused) {
+                // 一時停止から再開
+                gameState.isPaused = false;
+                gameState.gameTimer = setInterval(updateTimer, 1000);
+                return;
+            }
+
+            // 新しいゲーム開始
+            gameState = {
+                isPlaying: true,
+                isPaused: false,
+                score: 0,
+                correct: 0,
+                total: 0,
+                streak: 0,
+                maxStreak: 0,
+                timeLeft: 60,
+                gameTimer: null,
+                currentRound: {
+                    leftValue: 0,
+                    rightValue: 0,
+                    startTime: 0
+                },
+                reactionTimes: []
+            };
+
+            document.getElementById('startBtn').textContent = '再開';
+            document.getElementById('gameOver').style.display = 'none';
+
+            gameState.gameTimer = setInterval(updateTimer, 1000);
+            generateNewCards();
+            updateDisplay();
+        }
+
+        function pauseGame() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            gameState.isPaused = true;
+            clearInterval(gameState.gameTimer);
+            document.getElementById('startBtn').textContent = '再開';
+            document.getElementById('instruction').innerHTML = 'ゲーム一時停止中<br>再開ボタンを押してください';
+        }
+
+        function generateNewCards() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            let leftCard, rightCard;
+            
+            // 同じカードが出ないようにする
+            do {
+                leftCard = cards[Math.floor(Math.random() * cards.length)];
+                rightCard = cards[Math.floor(Math.random() * cards.length)];
+            } while (cardValues[leftCard] === cardValues[rightCard]);
+
+            gameState.currentRound.leftValue = cardValues[leftCard];
+            gameState.currentRound.rightValue = cardValues[rightCard];
+            gameState.currentRound.startTime = Date.now();
+
+            // カード表示
+            document.getElementById('leftCardValue').textContent = leftCard;
+            document.getElementById('rightCardValue').textContent = rightCard;
+
+            // カードの色設定（スペード・クラブ=黒、ハート・ダイヤ=赤）
+            const leftCardElement = document.getElementById('leftCard');
+            const rightCardElement = document.getElementById('rightCard');
+            
+            leftCardElement.className = 'card ' + (Math.random() > 0.5 ? 'red' : 'black');
+            rightCardElement.className = 'card ' + (Math.random() > 0.5 ? 'red' : 'black');
+
+            // 選択状態をリセット
+            leftCardElement.classList.remove('selected');
+            rightCardElement.classList.remove('selected');
+
+            // 指示を更新
+            document.getElementById('instruction').innerHTML = 'より大きい数字のカードを<br>クリックしよう！';
+            document.getElementById('resultDisplay').textContent = '';
+        }
+
+        function selectCard(side) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            const reactionTime = Date.now() - gameState.currentRound.startTime;
+            gameState.reactionTimes.push(reactionTime);
+
+            const selectedValue = side === 'left' ? gameState.currentRound.leftValue : gameState.currentRound.rightValue;
+            const otherValue = side === 'left' ? gameState.currentRound.rightValue : gameState.currentRound.leftValue;
+            const isCorrect = selectedValue > otherValue;
+
+            gameState.total++;
+
+            // 選択されたカードをハイライト
+            const selectedCard = document.getElementById(side + 'Card');
+            selectedCard.classList.add('selected');
+
+            if (isCorrect) {
+                gameState.correct++;
+                gameState.streak++;
+                
+                // スコア計算（反応時間とストリークボーナス）
+                let baseScore = 100;
+                let timeBonus = Math.max(0, 2000 - reactionTime);
+                let streakBonus = gameState.streak >= 5 ? gameState.streak * 20 : 0;
+                
+                let roundScore = Math.floor(baseScore + timeBonus / 10 + streakBonus);
+                gameState.score += roundScore;
+
+                // 最高ストリーク更新
+                if (gameState.streak > gameState.maxStreak) {
+                    gameState.maxStreak = gameState.streak;
+                }
+
+                // 結果表示
+                document.getElementById('resultDisplay').innerHTML = 
+                    `<span class="result-correct">✓ 正解! +${roundScore}pt</span>`;
+
+                // ストリークボーナス表示
+                if (gameState.streak >= 5) {
+                    document.getElementById('streakDisplay').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('streakDisplay').style.display = 'none';
+                    }, 2000);
+                }
+
+            } else {
+                gameState.streak = 0;
+                document.getElementById('resultDisplay').innerHTML = 
+                    '<span class="result-incorrect">✗ 不正解</span>';
+            }
+
+            // 反応時間表示
+            document.getElementById('reactionTime').textContent = `反応時間: ${reactionTime}ms`;
+
+            updateDisplay();
+
+            // 1秒後に次のカード
+            setTimeout(() => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    generateNewCards();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            gameState.timeLeft--;
+            updateDisplay();
+
+            if (gameState.timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = gameState.correct;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+
+            // 統計計算
+            const accuracy = gameState.total > 0 ? Math.round((gameState.correct / gameState.total) * 100) : 0;
+            const avgReactionTime = gameState.reactionTimes.length > 0 
+                ? Math.round(gameState.reactionTimes.reduce((a, b) => a + b, 0) / gameState.reactionTimes.length)
+                : 0;
+
+            // 結果表示
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('maxStreak').textContent = gameState.maxStreak;
+            document.getElementById('avgReactionTime').textContent = avgReactionTime + 'ms';
+            document.getElementById('gameOver').style.display = 'block';
+
+            document.getElementById('startBtn').textContent = 'ゲーム開始';
+            document.getElementById('instruction').innerHTML = 'ゲーム終了！<br>新しいゲームを開始しますか？';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            clearInterval(gameState.gameTimer);
+
+            gameState = {
+                isPlaying: false,
+                isPaused: false,
+                score: 0,
+                correct: 0,
+                total: 0,
+                streak: 0,
+                maxStreak: 0,
+                timeLeft: 60,
+                gameTimer: null,
+                currentRound: {
+                    leftValue: 0,
+                    rightValue: 0,
+                    startTime: 0
+                },
+                reactionTimes: []
+            };
+
+            document.getElementById('startBtn').textContent = 'ゲーム開始';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('streakDisplay').style.display = 'none';
+            document.getElementById('instruction').innerHTML = 'より大きい数字のカードを<br>クリックしよう！';
+            document.getElementById('resultDisplay').textContent = '';
+            document.getElementById('reactionTime').textContent = '反応時間: 0ms';
+
+            // 初期カード表示
+            document.getElementById('leftCardValue').textContent = 'A';
+            document.getElementById('rightCardValue').textContent = 'K';
+            document.getElementById('leftCard').className = 'card black';
+            document.getElementById('rightCard').className = 'card black';
+
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            window.close();
+            window.history.back();
+        }
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>

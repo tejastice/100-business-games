@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブラックジャック - ゲーム072</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .memory-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .memory-card.flipped {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            background: rgba(46, 204, 113, 0.8);
+            color: white;
+        }
+
+        .memory-card.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 15px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .skill-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .memory-card {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🃏 ブラックジャック</h1>
+        <p class="game-description">カードカウンティングと最適戦略による数学的思考力ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ハンド</div>
+                <div class="stat-value" id="currentHand">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">勝利数</div>
+                <div class="stat-value" id="winsCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">勝率</div>
+                <div class="stat-value" id="winRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 25ハンドのブラックジャックで基本戦略とカウンティング技術を習得する</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>ディーラーと1対1のブラックジャック</li>
+                        <li>手札の合計を21に近づけるが、21を超えてはいけない</li>
+                        <li>基本戦略ガイドに従って最適判断を行う</li>
+                    </ul>
+                </li>
+                <li><strong>カード価値:</strong> A=1または11、絵札=10、数字カード=表示通り</li>
+                <li><strong>勝利条件:</strong> 25ハンド中、勝率65%以上（16勝以上）でクリア</li>
+                <li><strong>評価システム:</strong> 基本戦略遵守: +100点、カウント活用: +50点、誤判断: -25点</li>
+                <li><strong>プレイのコツ:</strong> カードカウンティングと確率計算を活用する</li>
+            </ul>
+        </div>
+
+        <div class="blackjack-table" id="blackjackTable">
+            <div class="dealer-area">
+                <h4>🎩 ディーラー</h4>
+                <div class="dealer-cards" id="dealerCards"></div>
+                <div class="dealer-total" id="dealerTotal">合計: ?</div>
+            </div>
+            
+            <div class="player-area">
+                <h4>🎯 プレイヤー</h4>
+                <div class="player-cards" id="playerCards"></div>
+                <div class="player-total" id="playerTotal">合計: 0</div>
+            </div>
+            
+            <div class="count-info">
+                <div class="count-panels">
+                    <div class="count-panel">
+                        <strong>カウント:</strong><br>
+                        <span id="cardCount">0</span>
+                    </div>
+                    <div class="count-panel">
+                        <strong>残りカード:</strong><br>
+                        <span id="remainingCards">52</span>
+                    </div>
+                    <div class="count-panel">
+                        <strong>推奨アクション:</strong><br>
+                        <span id="recommendedAction">待機中</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="dealNewHand()" id="dealBtn">カード配布</button>
+            <button class="btn" onclick="playerHit()" id="hitBtn" disabled>ヒット</button>
+            <button class="btn" onclick="playerStand()" id="standBtn" disabled>スタンド</button>
+            <button class="btn" onclick="playerDouble()" id="doubleBtn" disabled>ダブル</button>
+            <button class="btn" onclick="showStrategy()">戦略ガイド</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+        </div>
+
+        <div class="skill-info">
+            <h3>🎯 ビジネススキル強化ポイント</h3>
+            <p><strong>確率計算:</strong> 数学的な期待値計算と統計的判断</p>
+            <p><strong>リスク管理:</strong> 不確実性下での意思決定とリスクアセスメント</p>
+            <p><strong>戦略的思考:</strong> 長期的視点での最適戦略の選択</p>
+            <p><strong>記憶術:</strong> カードカウンティング技術による情報管理</p>
+            <p><strong>数学的分析:</strong> データに基づく論理的な判断力</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            deck: [],
+            playerCards: [],
+            dealerCards: [],
+            playerTotal: 0,
+            dealerTotal: 0,
+            currentHand: 1,
+            winsCount: 0,
+            score: 0,
+            cardCount: 0,
+            remainingCards: 52,
+            gameActive: false,
+            handInProgress: false
+        };
+
+        const suits = ['♠', '♥', '♣', '♦'];
+        const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const colors = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
+
+        function createDeck() {
+            const deck = [];
+            for (let suit of suits) {
+                for (let rank of ranks) {
+                    deck.push({
+                        suit: suit,
+                        rank: rank,
+                        color: colors[suit],
+                        value: getCardValue(rank)
+                    });
+                }
+            }
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function getCardValue(rank) {
+            if (rank === 'A') return 11;
+            if (['J', 'Q', 'K'].includes(rank)) return 10;
+            return parseInt(rank);
+        }
+
+        function calculateHandValue(cards) {
+            let value = 0;
+            let aces = 0;
+            
+            for (let card of cards) {
+                if (card.rank === 'A') {
+                    aces++;
+                    value += 11;
+                } else {
+                    value += card.value;
+                }
+            }
+            
+            while (value > 21 && aces > 0) {
+                value -= 10;
+                aces--;
+            }
+            
+            return value;
+        }
+
+
+        function dealNewHand() {
+            if (gameState.currentHand > 25) {
+                endGame();
+                return;
+            }
+
+            gameState.deck = createDeck();
+            gameState.playerCards = [gameState.deck.pop(), gameState.deck.pop()];
+            gameState.dealerCards = [gameState.deck.pop(), gameState.deck.pop()];
+            gameState.handInProgress = true;
+            gameState.gameActive = true;
+
+            renderCards();
+            updateDisplay();
+            updateButtons(true);
+            
+            // Check for blackjack
+            if (calculateHandValue(gameState.playerCards) === 21) {
+                setTimeout(() => {
+                    playerStand();
+                }, 1000);
+            }
+        }
+
+        function playerHit() {
+            if (!gameState.gameActive) return;
+            
+            gameState.playerCards.push(gameState.deck.pop());
+            renderCards();
+            updateDisplay();
+            
+            if (calculateHandValue(gameState.playerCards) > 21) {
+                // Bust
+                gameState.gameActive = false;
+                setTimeout(() => {
+                    endHand(false);
+                }, 1000);
+            }
+        }
+
+        function playerStand() {
+            if (!gameState.gameActive) return;
+            
+            gameState.gameActive = false;
+            
+            // Dealer plays
+            while (calculateHandValue(gameState.dealerCards) < 17) {
+                gameState.dealerCards.push(gameState.deck.pop());
+            }
+            
+            renderCards(true);
+            updateDisplay();
+            
+            setTimeout(() => {
+                const playerValue = calculateHandValue(gameState.playerCards);
+                const dealerValue = calculateHandValue(gameState.dealerCards);
+                
+                let won = false;
+                if (dealerValue > 21) {
+                    won = true;
+                } else if (playerValue > dealerValue) {
+                    won = true;
+                } else if (playerValue === dealerValue) {
+                    // Push
+                }
+                
+                endHand(won);
+            }, 2000);
+        }
+
+        function playerDouble() {
+            if (!gameState.gameActive || gameState.playerCards.length !== 2) return;
+            
+            gameState.playerCards.push(gameState.deck.pop());
+            renderCards();
+            updateDisplay();
+            
+            setTimeout(() => {
+                if (calculateHandValue(gameState.playerCards) > 21) {
+                    endHand(false);
+                } else {
+                    playerStand();
+                }
+            }, 1000);
+        }
+
+        function endHand(won) {
+            if (won) {
+                gameState.winsCount++;
+                gameState.score += 100;
+            } else {
+                gameState.score -= 25;
+            }
+            
+            gameState.currentHand++;
+            gameState.handInProgress = false;
+            updateStats();
+            updateButtons(false);
+            
+            if (gameState.currentHand > 25) {
+                setTimeout(endGame, 2000);
+            }
+        }
+
+        function endGame() {
+            const winRate = Math.round((gameState.winsCount / 25) * 100);
+            
+            if (winRate >= 65) {
+                alert(`🎉 ブラックジャックマスター認定！\n勝率: ${winRate}%\nスコア: ${gameState.score}点`);
+            } else {
+                alert(`📚 戦略の練習を続けましょう\n勝率: ${winRate}%\nスコア: ${gameState.score}点`);
+            }
+        }
+
+        function renderCards(showDealerHole = false) {
+            // Render player cards
+            const playerContainer = document.getElementById('playerCards');
+            playerContainer.innerHTML = '';
+            gameState.playerCards.forEach(card => {
+                const cardElement = createCardElement(card);
+                playerContainer.appendChild(cardElement);
+            });
+            
+            // Render dealer cards  
+            const dealerContainer = document.getElementById('dealerCards');
+            dealerContainer.innerHTML = '';
+            gameState.dealerCards.forEach((card, index) => {
+                if (index === 1 && !showDealerHole && gameState.gameActive) {
+                    // Hide hole card
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card face-down';
+                    cardElement.textContent = '🂠';
+                    dealerContainer.appendChild(cardElement);
+                } else {
+                    const cardElement = createCardElement(card);
+                    dealerContainer.appendChild(cardElement);
+                }
+            });
+        }
+
+        function createCardElement(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.color}`;
+            cardElement.textContent = `${card.rank}${card.suit}`;
+            return cardElement;
+        }
+
+        function updateDisplay() {
+            gameState.playerTotal = calculateHandValue(gameState.playerCards);
+            document.getElementById('playerTotal').textContent = `合計: ${gameState.playerTotal}`;
+            
+            if (gameState.gameActive) {
+                document.getElementById('dealerTotal').textContent = '合計: ?';
+            } else {
+                gameState.dealerTotal = calculateHandValue(gameState.dealerCards);
+                document.getElementById('dealerTotal').textContent = `合計: ${gameState.dealerTotal}`;
+            }
+            
+            // Update recommendation
+            if (gameState.gameActive && gameState.playerCards.length >= 2) {
+                const recommendation = getBasicStrategyRecommendation();
+                document.getElementById('recommendedAction').textContent = recommendation;
+            } else {
+                document.getElementById('recommendedAction').textContent = '待機中';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('currentHand').textContent = gameState.currentHand;
+            document.getElementById('winsCount').textContent = gameState.winsCount;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const winRate = gameState.currentHand > 1 ? 
+                Math.round((gameState.winsCount / (gameState.currentHand - 1)) * 100) : 0;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            
+            document.getElementById('cardCount').textContent = gameState.cardCount;
+            document.getElementById('remainingCards').textContent = gameState.deck.length;
+            
+            // Update progress bar
+            const progress = ((gameState.currentHand - 1) / 25) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function getBasicStrategyRecommendation() {
+            const playerValue = calculateHandValue(gameState.playerCards);
+            const dealerUpCard = gameState.dealerCards[0];
+            const dealerValue = getCardValue(dealerUpCard.rank);
+            
+            // Simplified basic strategy
+            if (playerValue <= 11) return 'ヒット';
+            if (playerValue >= 17) return 'スタンド';
+            if (playerValue >= 13 && playerValue <= 16 && dealerValue <= 6) return 'スタンド';
+            if (playerValue >= 13 && playerValue <= 16 && dealerValue >= 7) return 'ヒット';
+            return 'ヒット';
+        }
+
+        function updateButtons(gameActive) {
+            document.getElementById('dealBtn').disabled = gameActive;
+            document.getElementById('hitBtn').disabled = !gameActive;
+            document.getElementById('standBtn').disabled = !gameActive;
+            document.getElementById('doubleBtn').disabled = !gameActive || gameState.playerCards.length !== 2;
+        }
+
+        function showStrategy() {
+            alert(`基本戦略ガイド:\n\n• ハード11以下: 常にヒット\n• ハード17以上: 常にスタンド\n• ハード13-16: ディーラー2-6でスタンド、7以上でヒット`);
+        }
+
+        function resetGame() {
+            gameState = {
+                deck: [],
+                playerCards: [],
+                dealerCards: [],
+                playerTotal: 0,
+                dealerTotal: 0,
+                currentHand: 1,
+                winsCount: 0,
+                score: 0,
+                cardCount: 0,
+                remainingCards: 52,
+                gameActive: false,
+                handInProgress: false
+            };
+            
+            updateStats();
+            updateButtons(false);
+            document.getElementById('playerCards').innerHTML = '';
+            document.getElementById('dealerCards').innerHTML = '';
+            document.getElementById('playerTotal').textContent = '合計: 0';
+            document.getElementById('dealerTotal').textContent = '合計: ?';
+            document.getElementById('recommendedAction').textContent = '待機中';
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // Initialize game on load
+        document.addEventListener('DOMContentLoaded', () => {
+            resetGame();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パターンマッチング - ゲーム047</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .demo-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .pattern-display {
+            margin-bottom: 20px;
+        }
+
+        .target-pattern {
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+            border: 3px solid #ffc107;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .pattern-item {
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pattern-item:hover {
+            transform: scale(1.05);
+            border-color: #4caf50;
+        }
+
+        .pattern-item.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+            animation: pulse 0.5s;
+        }
+
+        .pattern-item.wrong {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: #f44336;
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .timer-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🔍 パターンマッチ</h1>
+        <p class="game-description">パターン認識力を鍛えて分析力を向上させよう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>🎯 ゲームルール</h4>
+            <p>・提示されたパターンと同じものを見つけよう</p>
+            <p>・正解すると得点、間違えると減点</p>
+            <p>・制限時間内にできるだけ多く正解しよう</p>
+        </div>
+
+        <div class="game-area">
+            <div class="pattern-display">
+                <h4>🔍 見つけるパターン</h4>
+                <div class="target-pattern" id="targetPattern"></div>
+            </div>
+            
+            <div class="pattern-grid" id="patternGrid"></div>
+            
+            <div class="timer-display">
+                <span>残り時間: <span id="timeLeft">60</span>秒</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="showHint()">ヒント</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>思考力</h4>
+                    <p>論理的思考と問題解決</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>反応力</h4>
+                    <p>素早い判断と行動</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎨</div>
+                    <h4>創造力</h4>
+                    <p>新しいアイデアの発想</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>分析力</h4>
+                    <p>データの理解と活用</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="implementation-note">
+            <strong>📝 開発ノート:</strong> 
+            この画面は汎用テンプレートです。実際のゲームでは、カテゴリに応じた専用のUIとゲームロジックが実装されます。
+            営業デモ用として、ゲームの概念と価値提案を確認いただけます。
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            correct: 0,
+            timeLeft: 60,
+            isPlaying: false,
+            currentPattern: null,
+            patterns: ['🔴', '🔵', '🟡', '🟢', '🟠', '🟣', '⚫', '⚪', '🔺', '🔶'],
+            timer: null
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            gameState.timeLeft = 60;
+            
+            generateNewPattern();
+            startTimer();
+        }
+
+        function generateNewPattern() {
+            // ランダムなパターンを選択
+            gameState.currentPattern = gameState.patterns[Math.floor(Math.random() * gameState.patterns.length)];
+            
+            // ターゲットパターンを表示
+            document.getElementById('targetPattern').textContent = gameState.currentPattern;
+            
+            // 選択肢を生成（1つの正解 + 2つの間違い）
+            const choices = [gameState.currentPattern];
+            while (choices.length < 3) {
+                const randomChoice = gameState.patterns[Math.floor(Math.random() * gameState.patterns.length)];
+                if (!choices.includes(randomChoice)) {
+                    choices.push(randomChoice);
+                }
+            }
+            
+            // シャッフル
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+            
+            // グリッドに表示
+            const grid = document.getElementById('patternGrid');
+            grid.innerHTML = '';
+            
+            choices.forEach((pattern, index) => {
+                const item = document.createElement('div');
+                item.className = 'pattern-item';
+                item.textContent = pattern;
+                item.addEventListener('click', () => selectPattern(pattern, item));
+                grid.appendChild(item);
+            });
+        }
+
+        function selectPattern(selectedPattern, element) {
+            if (!gameState.isPlaying) return;
+            
+            const isCorrect = selectedPattern === gameState.currentPattern;
+            
+            if (isCorrect) {
+                element.classList.add('correct');
+                gameState.score += 10 * gameState.level;
+                gameState.correct++;
+                
+                // レベルアップチェック
+                if (gameState.correct % 5 === 0) {
+                    gameState.level++;
+                    alert(`レベルアップ！ レベル${gameState.level}になりました！`);
+                }
+                
+                setTimeout(() => {
+                    generateNewPattern();
+                }, 500);
+            } else {
+                element.classList.add('wrong');
+                gameState.score = Math.max(0, gameState.score - 5);
+                
+                setTimeout(() => {
+                    element.classList.remove('wrong');
+                }, 500);
+            }
+            
+            updateDisplay();
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timeLeft').textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            
+            alert(`ゲーム終了！\n最終スコア: ${gameState.score}点\n正解数: ${gameState.correct}問`);
+        }
+
+        function resetGame() {
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.level = 1;
+            gameState.timeLeft = 60;
+            gameState.isPlaying = false;
+            
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            document.getElementById('patternGrid').innerHTML = '';
+            document.getElementById('targetPattern').textContent = '';
+            document.getElementById('timeLeft').textContent = '60';
+            
+            updateDisplay();
+        }
+
+        function showHint() {
+            if (gameState.isPlaying && gameState.currentPattern) {
+                alert(`💡 ヒント: ${gameState.currentPattern} を探してください！`);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = gameState.correct;
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>

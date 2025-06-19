@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戦闘心理 - ゲーム037</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #2c1810 0%, #8b0000 50%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(139, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1000px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(139, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(139, 0, 0, 0.3);
+            border: 2px solid #ff4444;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(139, 0, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #ff6b6b;
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            color: #ffcccc;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(139, 0, 0, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: #ffcccc;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .game-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            border: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        .psychology-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .psychology-state {
+            background: rgba(139, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .state-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ff6b6b;
+        }
+
+        .state-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .state-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444 0%, #ff6b6b 50%, #ff9999 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .scenario-container {
+            background: rgba(139, 0, 0, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scenario-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        .scenario-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #ffcccc;
+        }
+
+        .tactics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tactic-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(139, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .tactic-card:hover {
+            background: rgba(139, 0, 0, 0.2);
+            border-color: #ff6b6b;
+            transform: translateY(-5px);
+        }
+
+        .tactic-card.selected {
+            background: rgba(139, 0, 0, 0.4);
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .tactic-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ff6b6b;
+        }
+
+        .tactic-description {
+            font-size: 0.9rem;
+            color: #ffcccc;
+            line-height: 1.4;
+        }
+
+        .tactic-effect {
+            font-size: 0.8rem;
+            color: #ff9999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(139, 0, 0, 0.3);
+            border: 2px solid #ff4444;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(139, 0, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .instructions h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+
+        .instructions ul {
+            text-align: left;
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            color: #ffcccc;
+        }
+
+        .phase-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .phase-step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .phase-step.active {
+            background: rgba(139, 0, 0, 0.6);
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .result-summary {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 2px solid rgba(139, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .psychology-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .tactics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🧠 戦闘心理</h1>
+        <p class="game-description">戦闘時の心理状態管理と精神的優位による戦闘パフォーマンス向上</p>
+        
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ラウンド</div>
+                <div class="stat-value" id="currentRound">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">心理安定度</div>
+                <div class="stat-value" id="stabilityScore">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">精神的優位</div>
+                <div class="stat-value" id="mentalAdvantage">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">総合評価</div>
+                <div class="stat-value" id="overallScore">0%</div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div id="gameStart">
+                <div class="instructions">
+                    <h3>🧠 戦闘心理 - ゲームルール</h3>
+                    <ul>
+                        <li><strong>目的:</strong> 戦闘時の心理状態を管理し、精神的優位を確立する</li>
+                        <li><strong>ゲームの流れ:</strong> 12ラウンドの心理制御実行</li>
+                        <li><strong>心理状態管理:</strong> 5種類の心理状態を適切に管理</li>
+                        <li><strong>評価システム:</strong> 心理安定度、ストレス耐性、冷静判断力を測定</li>
+                        <li><strong>勝利条件:</strong> 心理安定度80%以上でクリア</li>
+                        <li><strong>操作方法:</strong> 各シナリオで最適な心理戦術を選択</li>
+                        <li><strong>プレイのコツ:</strong> ストレス下での冷静な判断と心理的優位の確立</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-list">
+                    <div class="feature-item">🧠 心理状態監視システム</div>
+                    <div class="feature-item">⚡ ストレス管理機能</div>
+                    <div class="feature-item">🎯 冷静判断支援</div>
+                    <div class="feature-item">📊 安定度測定</div>
+                    <div class="feature-item">🏆 心理学習機能</div>
+                </div>
+            </div>
+            
+            <div id="gamePlay" style="display: none;">
+                <div class="phase-indicator">
+                    <div class="phase-step active" id="phase1">心理分析</div>
+                    <div class="phase-step" id="phase2">戦術選択</div>
+                    <div class="phase-step" id="phase3">実行</div>
+                    <div class="phase-step" id="phase4">評価</div>
+                </div>
+                
+                <div class="timer" id="timer">30</div>
+                
+                <div class="psychology-dashboard">
+                    <div class="psychology-state">
+                        <div class="state-title">集中力</div>
+                        <div class="state-bar">
+                            <div class="state-fill" id="concentration" style="width: 100%"></div>
+                        </div>
+                        <div id="concentrationText">最高状態</div>
+                    </div>
+                    <div class="psychology-state">
+                        <div class="state-title">冷静さ</div>
+                        <div class="state-bar">
+                            <div class="state-fill" id="calmness" style="width: 100%"></div>
+                        </div>
+                        <div id="calmnessText">完全に冷静</div>
+                    </div>
+                    <div class="psychology-state">
+                        <div class="state-title">自信</div>
+                        <div class="state-bar">
+                            <div class="state-fill" id="confidence" style="width: 100%"></div>
+                        </div>
+                        <div id="confidenceText">非常に自信あり</div>
+                    </div>
+                    <div class="psychology-state">
+                        <div class="state-title">ストレス耐性</div>
+                        <div class="state-bar">
+                            <div class="state-fill" id="stressResistance" style="width: 100%"></div>
+                        </div>
+                        <div id="stressResistanceText">最高耐性</div>
+                    </div>
+                </div>
+                
+                <div class="scenario-container" id="scenarioContainer">
+                    <div class="scenario-title" id="scenarioTitle">シナリオ読み込み中...</div>
+                    <div class="scenario-description" id="scenarioDescription">準備中...</div>
+                    
+                    <div class="tactics-grid" id="tacticsGrid">
+                        <!-- 戦術カードがここに動的に生成されます -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gameResult" style="display: none;">
+                <div class="result-summary">
+                    <h2>🧠 戦闘心理 - 最終結果</h2>
+                    <div id="finalResults"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="executeBtn" onclick="executeTactic()" style="display: none;" disabled>戦術実行</button>
+            <button class="btn" id="nextBtn" onclick="nextRound()" style="display: none;">次のラウンド</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentRound: 0,
+            maxRounds: 12,
+            isPlaying: false,
+            selectedTactic: null,
+            psychologyStates: {
+                concentration: 100,
+                calmness: 100,
+                confidence: 100,
+                stressResistance: 100,
+                mentalFocus: 100
+            },
+            mentalAdvantage: 0,
+            stabilityScore: 100,
+            roundResults: [],
+            currentPhase: 1,
+            timeLeft: 30,
+            timer: null
+        };
+
+        const scenarios = [
+            {
+                title: "敵の挑発的な行動",
+                description: "敵が意図的に挑発的な行動を取り、あなたの冷静さを奪おうとしています。適切な心理戦術を選択してください。",
+                stressLevel: 2,
+                tactics: [
+                    {
+                        name: "深呼吸と瞑想",
+                        description: "深呼吸をして心を落ち着け、瞑想状態に入る",
+                        effect: "冷静さ+20, 集中力+10",
+                        psychologyImpact: { calmness: 20, concentration: 10 }
+                    },
+                    {
+                        name: "挑発を無視",
+                        description: "相手の挑発を完全に無視し、自分の戦術に集中する",
+                        effect: "自信+15, ストレス耐性+10",
+                        psychologyImpact: { confidence: 15, stressResistance: 10 }
+                    },
+                    {
+                        name: "心理的反撃",
+                        description: "相手の心理的弱点を突いて、精神的圧迫を与える",
+                        effect: "精神的優位+25, 冷静さ-5",
+                        psychologyImpact: { calmness: -5, mentalAdvantage: 25 }
+                    }
+                ]
+            },
+            {
+                title: "劣勢な状況での判断",
+                description: "戦況が不利に傾き、プレッシャーが高まっています。この状況で最適な心理状態を保つ必要があります。",
+                stressLevel: 3,
+                tactics: [
+                    {
+                        name: "ポジティブ思考",
+                        description: "逆転の可能性に注目し、前向きな思考を維持する",
+                        effect: "自信+20, 集中力+15",
+                        psychologyImpact: { confidence: 20, concentration: 15 }
+                    },
+                    {
+                        name: "冷静な分析",
+                        description: "感情を排除し、客観的に状況を分析する",
+                        effect: "冷静さ+25, 精神的優位+10",
+                        psychologyImpact: { calmness: 25, mentalAdvantage: 10 }
+                    },
+                    {
+                        name: "プレッシャー利用",
+                        description: "プレッシャーをエネルギーに変換し、集中力を高める",
+                        effect: "集中力+30, ストレス耐性+20",
+                        psychologyImpact: { concentration: 30, stressResistance: 20 }
+                    }
+                ]
+            },
+            {
+                title: "敵の心理戦",
+                description: "敵が巧妙な心理戦を仕掛けてきています。精神的な揺さぶりに対抗する必要があります。",
+                stressLevel: 4,
+                tactics: [
+                    {
+                        name: "心理的防御",
+                        description: "心理的な攻撃を遮断し、内面の安定を保つ",
+                        effect: "ストレス耐性+25, 冷静さ+15",
+                        psychologyImpact: { stressResistance: 25, calmness: 15 }
+                    },
+                    {
+                        name: "逆心理戦",
+                        description: "相手の心理戦を逆手に取り、精神的優位を確立する",
+                        effect: "精神的優位+30, 自信+20",
+                        psychologyImpact: { confidence: 20, mentalAdvantage: 30 }
+                    },
+                    {
+                        name: "集中力の極大化",
+                        description: "外部の雑音を遮断し、極度の集中状態に入る",
+                        effect: "集中力+35, 冷静さ+10",
+                        psychologyImpact: { concentration: 35, calmness: 10 }
+                    }
+                ]
+            }
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.currentRound = 0;
+            gameState.roundResults = [];
+            gameState.mentalAdvantage = 0;
+            gameState.stabilityScore = 100;
+            
+            // 心理状態をリセット
+            gameState.psychologyStates = {
+                concentration: 100,
+                calmness: 100,
+                confidence: 100,
+                stressResistance: 100,
+                mentalFocus: 100
+            };
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('executeBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            nextRound();
+        }
+
+        function nextRound() {
+            if (gameState.currentRound >= gameState.maxRounds) {
+                endGame();
+                return;
+            }
+            
+            gameState.currentRound++;
+            gameState.selectedTactic = null;
+            gameState.currentPhase = 1;
+            gameState.timeLeft = 30;
+            
+            updateDisplay();
+            updatePhaseIndicator();
+            loadScenario();
+            startTimer();
+            
+            document.getElementById('executeBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('executeBtn').disabled = true;
+        }
+
+        function loadScenario() {
+            const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+            
+            document.getElementById('scenarioTitle').textContent = scenario.title;
+            document.getElementById('scenarioDescription').textContent = scenario.description;
+            
+            const tacticsGrid = document.getElementById('tacticsGrid');
+            tacticsGrid.innerHTML = '';
+            
+            scenario.tactics.forEach((tactic, index) => {
+                const tacticCard = document.createElement('div');
+                tacticCard.className = 'tactic-card';
+                tacticCard.onclick = () => selectTactic(index, tactic);
+                
+                tacticCard.innerHTML = `
+                    <div class="tactic-name">${tactic.name}</div>
+                    <div class="tactic-description">${tactic.description}</div>
+                    <div class="tactic-effect">${tactic.effect}</div>
+                `;
+                
+                tacticsGrid.appendChild(tacticCard);
+            });
+            
+            gameState.currentScenario = scenario;
+        }
+
+        function selectTactic(index, tactic) {
+            // 以前の選択を解除
+            document.querySelectorAll('.tactic-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // 新しい選択を設定
+            document.querySelectorAll('.tactic-card')[index].classList.add('selected');
+            gameState.selectedTactic = tactic;
+            document.getElementById('executeBtn').disabled = false;
+        }
+
+        function executeTactic() {
+            if (!gameState.selectedTactic) return;
+            
+            gameState.currentPhase = 3;
+            updatePhaseIndicator();
+            
+            // 心理状態を更新
+            const impact = gameState.selectedTactic.psychologyImpact;
+            for (let state in impact) {
+                if (state === 'mentalAdvantage') {
+                    gameState.mentalAdvantage += impact[state];
+                } else if (gameState.psychologyStates[state] !== undefined) {
+                    gameState.psychologyStates[state] = Math.min(100, 
+                        Math.max(0, gameState.psychologyStates[state] + impact[state]));
+                }
+            }
+            
+            // ストレスの影響を適用
+            const stressEffect = gameState.currentScenario.stressLevel * 5;
+            for (let state in gameState.psychologyStates) {
+                gameState.psychologyStates[state] = Math.max(0, 
+                    gameState.psychologyStates[state] - stressEffect);
+            }
+            
+            // 心理安定度を計算
+            const avgStability = Object.values(gameState.psychologyStates).reduce((a, b) => a + b, 0) / 5;
+            gameState.stabilityScore = Math.round(avgStability);
+            
+            // 結果を記録
+            gameState.roundResults.push({
+                round: gameState.currentRound,
+                tactic: gameState.selectedTactic.name,
+                stabilityBefore: gameState.stabilityScore,
+                stabilityAfter: gameState.stabilityScore,
+                mentalAdvantage: gameState.mentalAdvantage
+            });
+            
+            updateDisplay();
+            updatePsychologyStates();
+            
+            gameState.currentPhase = 4;
+            updatePhaseIndicator();
+            
+            document.getElementById('executeBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            
+            clearInterval(gameState.timer);
+        }
+
+        function updatePsychologyStates() {
+            const states = ['concentration', 'calmness', 'confidence', 'stressResistance'];
+            const stateNames = ['集中力', '冷静さ', '自信', 'ストレス耐性'];
+            const stateTexts = [
+                ['最高状態', '良好', '普通', '低下', '危険'],
+                ['完全に冷静', '冷静', 'やや興奮', '動揺', 'パニック'],
+                ['非常に自信あり', '自信あり', '普通', '不安', '自信喪失'],
+                ['最高耐性', '高耐性', '普通', '低耐性', 'ストレス過多']
+            ];
+            
+            states.forEach((state, index) => {
+                const value = gameState.psychologyStates[state];
+                const fill = document.getElementById(state);
+                const text = document.getElementById(state + 'Text');
+                
+                fill.style.width = value + '%';
+                
+                let textIndex = 0;
+                if (value >= 80) textIndex = 0;
+                else if (value >= 60) textIndex = 1;
+                else if (value >= 40) textIndex = 2;
+                else if (value >= 20) textIndex = 3;
+                else textIndex = 4;
+                
+                text.textContent = stateTexts[index][textIndex];
+                
+                // 色の変更
+                if (value >= 70) {
+                    fill.style.background = 'linear-gradient(90deg, #44ff44 0%, #66ff66 50%, #88ff88 100%)';
+                } else if (value >= 40) {
+                    fill.style.background = 'linear-gradient(90deg, #ffff44 0%, #ffff66 50%, #ffff88 100%)';
+                } else {
+                    fill.style.background = 'linear-gradient(90deg, #ff4444 0%, #ff6666 50%, #ff8888 100%)';
+                }
+            });
+        }
+
+        function updatePhaseIndicator() {
+            const phases = ['phase1', 'phase2', 'phase3', 'phase4'];
+            phases.forEach((phase, index) => {
+                const element = document.getElementById(phase);
+                if (index + 1 === gameState.currentPhase) {
+                    element.classList.add('active');
+                } else {
+                    element.classList.remove('active');
+                }
+            });
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timer);
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    if (!gameState.selectedTactic) {
+                        // 時間切れの場合、ランダムな戦術を選択
+                        const randomTactic = gameState.currentScenario.tactics[
+                            Math.floor(Math.random() * gameState.currentScenario.tactics.length)
+                        ];
+                        gameState.selectedTactic = randomTactic;
+                        executeTactic();
+                    }
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('gameResult').style.display = 'block';
+            
+            const avgStability = gameState.stabilityScore;
+            const mentalAdvantage = gameState.mentalAdvantage;
+            
+            let evaluation = '';
+            let grade = '';
+            
+            if (avgStability >= 80) {
+                evaluation = '🏆 優秀！心理的安定性を完璧に保ちました！';
+                grade = 'S';
+            } else if (avgStability >= 70) {
+                evaluation = '🎯 良好！心理状態を効果的に管理できました！';
+                grade = 'A';
+            } else if (avgStability >= 60) {
+                evaluation = '📈 普通！心理制御の改善が必要です。';
+                grade = 'B';
+            } else {
+                evaluation = '💪 心理的安定性の向上が必要です。';
+                grade = 'C';
+            }
+            
+            const resultHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 3rem; color: #ff6b6b; margin-bottom: 10px;">${grade}</div>
+                    <div style="font-size: 1.3rem; margin-bottom: 20px;">${evaluation}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: rgba(139, 0, 0, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #ff6b6b; font-size: 1.1rem; margin-bottom: 5px;">最終心理安定度</div>
+                        <div style="font-size: 2rem; font-weight: bold;">${avgStability}%</div>
+                    </div>
+                    <div style="background: rgba(139, 0, 0, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #ff6b6b; font-size: 1.1rem; margin-bottom: 5px;">精神的優位</div>
+                        <div style="font-size: 2rem; font-weight: bold;">${mentalAdvantage}%</div>
+                    </div>
+                    <div style="background: rgba(139, 0, 0, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #ff6b6b; font-size: 1.1rem; margin-bottom: 5px;">ラウンド完了</div>
+                        <div style="font-size: 2rem; font-weight: bold;">${gameState.currentRound}</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px; text-align: left;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 15px;">心理状態詳細</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        <div>集中力: ${gameState.psychologyStates.concentration}%</div>
+                        <div>冷静さ: ${gameState.psychologyStates.calmness}%</div>
+                        <div>自信: ${gameState.psychologyStates.confidence}%</div>
+                        <div>ストレス耐性: ${gameState.psychologyStates.stressResistance}%</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('finalResults').innerHTML = resultHTML;
+            
+            document.getElementById('executeBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            gameState.currentRound = 0;
+            gameState.selectedTactic = null;
+            gameState.mentalAdvantage = 0;
+            gameState.stabilityScore = 100;
+            gameState.roundResults = [];
+            
+            clearInterval(gameState.timer);
+            
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('gameResult').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('executeBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+            document.getElementById('stabilityScore').textContent = gameState.stabilityScore + '%';
+            document.getElementById('mentalAdvantage').textContent = gameState.mentalAdvantage + '%';
+            
+            const overallScore = Math.round((gameState.stabilityScore + gameState.mentalAdvantage) / 2);
+            document.getElementById('overallScore').textContent = overallScore + '%';
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // ページ読み込み時の初期化
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>軌道予測 - ゲーム017</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trajectory-field {
+            width: 600px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .moving-target {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #ff4444, #cc2222);
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .trajectory-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            transform-origin: left center;
+            pointer-events: none;
+        }
+
+        .prediction-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(33, 150, 243, 0.8);
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .accuracy-indicator {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            animation: fadeOut 2s ease-out forwards;
+        }
+
+        .accuracy-indicator.perfect {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .accuracy-indicator.good {
+            border-color: #8bc34a;
+            background: rgba(139, 195, 74, 0.2);
+        }
+
+        .accuracy-indicator.ok {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .accuracy-indicator.miss {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .target-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .prediction-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .prediction-timer {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(45deg, #45a049, #3d8b40);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #4caf50;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+
+            .trajectory-field {
+                width: 400px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 軌道予測</h1>
+        <p class="game-description">移動する物体の軌道を予測し、将来の位置にマウスカーソルを先回りして配置する予測技能ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">予測精度</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ターゲット</div>
+                <div class="stat-value" id="targetCount">1/25</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="game-instructions" id="instructions">
+                <h3>🎯 ゲームの遊び方</h3>
+                <p>動的ターゲットの軌道を観察し、将来の位置を予測してクリックしてください。</p>
+                <p>予測精度80%以上で25個のターゲットを攻略しましょう。</p>
+                <p>軌道予測能力はビジネスの戦略的思考と先読み能力を向上させます。</p>
+            </div>
+
+            <div class="trajectory-field" id="trajectoryField" style="display: none;">
+                <div class="target-info" id="targetInfo">
+                    ターゲット: 1 | 速度: 中速
+                </div>
+                
+                <div class="prediction-status" id="predictionStatus">
+                    軌道を観察してください
+                </div>
+                
+                <div class="prediction-timer" id="predictionTimer" style="display: none;">
+                    予測時間: 3秒
+                </div>
+                
+                <div class="moving-target" id="movingTarget" style="display: none;">
+                    1
+                </div>
+                
+                <div class="prediction-marker" id="predictionMarker"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" style="display: none;">一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🔮</div>
+                    <h4>予測精度</h4>
+                    <p>軌道から将来位置を正確に予測</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>反応速度</h4>
+                    <p>素早い判断と反応能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎓</div>
+                    <h4>学習効果</h4>
+                    <p>パターンから学習する能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <h4>適応能力</h4>
+                    <p>様々な軌道パターンへの対応</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <div class="game-over-content">
+            <h2>🎉 ゲーム終了！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="gameOverMessage">お疲れ様でした！</p>
+            <div style="margin: 20px 0;">
+                <p>最高レベル: <span id="maxLevel">1</span></p>
+                <p>最終精度: <span id="finalAccuracy">100%</span></p>
+                <p>完了ターゲット: <span id="completedTargets">0</span>/25</p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn primary" onclick="restartGame()">もう一度プレイ</button>
+                <button class="btn" onclick="closeGameOver()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            isPlaying: false,
+            isPaused: false,
+            targetIndex: 1,
+            totalTargets: 25,
+            accuracySum: 0,
+            currentTarget: null,
+            predictionPhase: false,
+            predictionTime: 3000,
+            maxLevel: 1,
+            targetPatterns: []
+        };
+
+        const trajectoryPatterns = [
+            // Linear patterns
+            { type: 'linear', angle: 0, speed: 2 },
+            { type: 'linear', angle: 45, speed: 2.5 },
+            { type: 'linear', angle: 90, speed: 2 },
+            { type: 'linear', angle: 135, speed: 2.5 },
+            { type: 'linear', angle: 180, speed: 2 },
+            { type: 'linear', angle: 225, speed: 2.5 },
+            { type: 'linear', angle: 270, speed: 2 },
+            { type: 'linear', angle: 315, speed: 2.5 },
+            
+            // Curved patterns
+            { type: 'parabolic', gravity: 0.1, speedX: 3, speedY: -3 },
+            { type: 'parabolic', gravity: 0.15, speedX: 4, speedY: -2 },
+            { type: 'circular', radius: 80, speed: 0.05 },
+            { type: 'circular', radius: 100, speed: 0.03 },
+            
+            // Bouncing patterns
+            { type: 'bouncing', speedX: 3, speedY: 2 },
+            { type: 'bouncing', speedX: 2, speedY: 3 },
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('trajectoryField').style.display = 'block';
+            
+            updateDisplay();
+            startNewTarget();
+        }
+
+        function pauseGame() {
+            if (gameState.isPlaying) {
+                gameState.isPaused = !gameState.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (gameState.isPaused) {
+                    pauseBtn.textContent = '再開';
+                } else {
+                    pauseBtn.textContent = '一時停止';
+                }
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                level: 1,
+                score: 0,
+                isPlaying: false,
+                isPaused: false,
+                targetIndex: 1,
+                totalTargets: 25,
+                accuracySum: 0,
+                currentTarget: null,
+                predictionPhase: false,
+                predictionTime: 3000,
+                maxLevel: Math.max(gameState.maxLevel, gameState.level),
+                targetPatterns: []
+            };
+
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('trajectoryField').style.display = 'none';
+            document.getElementById('movingTarget').style.display = 'none';
+            document.getElementById('predictionMarker').style.display = 'none';
+            document.getElementById('predictionTimer').style.display = 'none';
+            
+            // Clear any existing targets and animations
+            clearInterval(gameState.animationFrame);
+            
+            updateDisplay();
+        }
+
+        function startNewTarget() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const field = document.getElementById('trajectoryField');
+            const target = document.getElementById('movingTarget');
+            
+            // Generate random trajectory pattern
+            const patternIndex = Math.floor(Math.random() * trajectoryPatterns.length);
+            const pattern = trajectoryPatterns[patternIndex];
+            
+            // Set initial position
+            const startX = 50 + Math.random() * 500;
+            const startY = 50 + Math.random() * 300;
+            
+            gameState.currentTarget = {
+                x: startX,
+                y: startY,
+                pattern: pattern,
+                startTime: Date.now(),
+                startX: startX,
+                startY: startY,
+                predicted: false
+            };
+            
+            target.textContent = gameState.targetIndex;
+            target.style.left = startX + 'px';
+            target.style.top = startY + 'px';
+            target.style.display = 'block';
+            
+            document.getElementById('targetInfo').textContent = 
+                `ターゲット: ${gameState.targetIndex} | パターン: ${getPatternName(pattern)}`;
+            
+            document.getElementById('predictionStatus').textContent = '軌道を観察してください';
+            
+            // Start animation
+            animateTarget();
+            
+            // Start prediction phase after observation period
+            setTimeout(() => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    startPredictionPhase();
+                }
+            }, 2000);
+        }
+
+        function getPatternName(pattern) {
+            switch(pattern.type) {
+                case 'linear': return '直線';
+                case 'parabolic': return '放物線';
+                case 'circular': return '円軌道';
+                case 'bouncing': return '反射';
+                default: return '複合';
+            }
+        }
+
+        function animateTarget() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const target = document.getElementById('movingTarget');
+            const field = document.getElementById('trajectoryField');
+            const currentTime = Date.now();
+            const elapsed = (currentTime - gameState.currentTarget.startTime) / 1000;
+            
+            let newX, newY;
+            const pattern = gameState.currentTarget.pattern;
+            
+            switch(pattern.type) {
+                case 'linear':
+                    const radians = (pattern.angle * Math.PI) / 180;
+                    newX = gameState.currentTarget.startX + Math.cos(radians) * pattern.speed * elapsed * 20;
+                    newY = gameState.currentTarget.startY + Math.sin(radians) * pattern.speed * elapsed * 20;
+                    break;
+                    
+                case 'parabolic':
+                    newX = gameState.currentTarget.startX + pattern.speedX * elapsed * 20;
+                    newY = gameState.currentTarget.startY + pattern.speedY * elapsed * 20 + 0.5 * pattern.gravity * elapsed * elapsed * 400;
+                    break;
+                    
+                case 'circular':
+                    const centerX = gameState.currentTarget.startX;
+                    const centerY = gameState.currentTarget.startY;
+                    const angle = pattern.speed * elapsed * 100;
+                    newX = centerX + Math.cos(angle) * pattern.radius;
+                    newY = centerY + Math.sin(angle) * pattern.radius;
+                    break;
+                    
+                case 'bouncing':
+                    newX = gameState.currentTarget.startX + pattern.speedX * elapsed * 20;
+                    newY = gameState.currentTarget.startY + pattern.speedY * elapsed * 20;
+                    
+                    // Bounce off walls
+                    if (newX <= 0 || newX >= 570) pattern.speedX *= -1;
+                    if (newY <= 0 || newY >= 370) pattern.speedY *= -1;
+                    
+                    newX = Math.max(0, Math.min(570, newX));
+                    newY = Math.max(0, Math.min(370, newY));
+                    break;
+            }
+            
+            // Keep target within bounds
+            newX = Math.max(15, Math.min(585, newX));
+            newY = Math.max(15, Math.min(385, newY));
+            
+            gameState.currentTarget.x = newX;
+            gameState.currentTarget.y = newY;
+            
+            target.style.left = newX + 'px';
+            target.style.top = newY + 'px';
+            
+            // Continue animation
+            gameState.animationFrame = requestAnimationFrame(animateTarget);
+        }
+
+        function startPredictionPhase() {
+            gameState.predictionPhase = true;
+            gameState.predictionStartTime = Date.now();
+            
+            document.getElementById('predictionStatus').textContent = '予測位置をクリック！';
+            document.getElementById('predictionTimer').style.display = 'block';
+            
+            // Add click event to field
+            const field = document.getElementById('trajectoryField');
+            field.onclick = handlePredictionClick;
+            
+            // Start prediction timer
+            updatePredictionTimer();
+        }
+
+        function updatePredictionTimer() {
+            if (!gameState.predictionPhase) return;
+            
+            const elapsed = Date.now() - gameState.predictionStartTime;
+            const remaining = Math.max(0, gameState.predictionTime - elapsed);
+            
+            document.getElementById('predictionTimer').textContent = 
+                `予測時間: ${Math.ceil(remaining / 1000)}秒`;
+            
+            if (remaining <= 0) {
+                // Time's up
+                handlePredictionTimeout();
+            } else {
+                setTimeout(updatePredictionTimer, 100);
+            }
+        }
+
+        function handlePredictionClick(event) {
+            if (!gameState.predictionPhase) return;
+            
+            const field = document.getElementById('trajectoryField');
+            const rect = field.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            
+            // Show prediction marker
+            const marker = document.getElementById('predictionMarker');
+            marker.style.left = clickX + 'px';
+            marker.style.top = clickY + 'px';
+            marker.style.display = 'block';
+            
+            // Calculate prediction accuracy
+            const futureTime = 2; // Predict 2 seconds ahead
+            const predictedPos = predictFuturePosition(futureTime);
+            const distance = Math.sqrt(Math.pow(clickX - predictedPos.x, 2) + Math.pow(clickY - predictedPos.y, 2));
+            
+            let accuracy = Math.max(0, 100 - distance * 2);
+            gameState.accuracySum += accuracy;
+            
+            // Calculate score
+            let points = 0;
+            if (accuracy >= 90) {
+                points = 200;
+                showAccuracyIndicator(clickX, clickY, 'perfect');
+            } else if (accuracy >= 75) {
+                points = 150;
+                showAccuracyIndicator(clickX, clickY, 'good');
+            } else if (accuracy >= 60) {
+                points = 100;
+                showAccuracyIndicator(clickX, clickY, 'ok');
+            } else {
+                points = 50;
+                showAccuracyIndicator(clickX, clickY, 'miss');
+            }
+            
+            gameState.score += points;
+            gameState.currentTarget.predicted = true;
+            
+            // End prediction phase
+            endPredictionPhase();
+        }
+
+        function predictFuturePosition(seconds) {
+            const target = gameState.currentTarget;
+            const pattern = target.pattern;
+            const currentTime = (Date.now() - target.startTime) / 1000;
+            const futureTime = currentTime + seconds;
+            
+            let x, y;
+            
+            switch(pattern.type) {
+                case 'linear':
+                    const radians = (pattern.angle * Math.PI) / 180;
+                    x = target.startX + Math.cos(radians) * pattern.speed * futureTime * 20;
+                    y = target.startY + Math.sin(radians) * pattern.speed * futureTime * 20;
+                    break;
+                    
+                case 'parabolic':
+                    x = target.startX + pattern.speedX * futureTime * 20;
+                    y = target.startY + pattern.speedY * futureTime * 20 + 0.5 * pattern.gravity * futureTime * futureTime * 400;
+                    break;
+                    
+                case 'circular':
+                    const angle = pattern.speed * futureTime * 100;
+                    x = target.startX + Math.cos(angle) * pattern.radius;
+                    y = target.startY + Math.sin(angle) * pattern.radius;
+                    break;
+                    
+                case 'bouncing':
+                    // Simplified bouncing prediction
+                    x = target.startX + pattern.speedX * futureTime * 20;
+                    y = target.startY + pattern.speedY * futureTime * 20;
+                    break;
+            }
+            
+            return {
+                x: Math.max(15, Math.min(585, x)),
+                y: Math.max(15, Math.min(385, y))
+            };
+        }
+
+        function showAccuracyIndicator(x, y, type) {
+            const indicator = document.createElement('div');
+            indicator.className = `accuracy-indicator ${type}`;
+            indicator.style.left = x + 'px';
+            indicator.style.top = y + 'px';
+            
+            document.getElementById('trajectoryField').appendChild(indicator);
+            
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.remove();
+                }
+            }, 2000);
+        }
+
+        function handlePredictionTimeout() {
+            gameState.accuracySum += 0; // 0% accuracy for timeout
+            endPredictionPhase();
+        }
+
+        function endPredictionPhase() {
+            gameState.predictionPhase = false;
+            document.getElementById('predictionTimer').style.display = 'none';
+            document.getElementById('trajectoryField').onclick = null;
+            
+            clearInterval(gameState.animationFrame);
+            
+            // Hide target and marker after delay
+            setTimeout(() => {
+                document.getElementById('movingTarget').style.display = 'none';
+                document.getElementById('predictionMarker').style.display = 'none';
+                
+                gameState.targetIndex++;
+                
+                if (gameState.targetIndex > gameState.totalTargets) {
+                    endGame();
+                } else {
+                    // Level up check
+                    if (gameState.targetIndex % 5 === 1 && gameState.targetIndex > 1) {
+                        gameState.level++;
+                        gameState.maxLevel = Math.max(gameState.maxLevel, gameState.level);
+                        showLevelUpMessage();
+                    }
+                    
+                    setTimeout(() => {
+                        startNewTarget();
+                    }, 1000);
+                }
+                
+                updateDisplay();
+            }, 1500);
+        }
+
+        function showLevelUpMessage() {
+            const gameArea = document.getElementById('gameArea');
+            const levelUpDiv = document.createElement('div');
+            levelUpDiv.innerHTML = `<h2 style="color: #4caf50; font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 レベル ${gameState.level} 🎉</h2>`;
+            levelUpDiv.style.position = 'absolute';
+            levelUpDiv.style.top = '50%';
+            levelUpDiv.style.left = '50%';
+            levelUpDiv.style.transform = 'translate(-50%, -50%)';
+            levelUpDiv.style.zIndex = '100';
+            levelUpDiv.style.background = 'rgba(0,0,0,0.8)';
+            levelUpDiv.style.padding = '20px';
+            levelUpDiv.style.borderRadius = '15px';
+            
+            gameArea.style.position = 'relative';
+            gameArea.appendChild(levelUpDiv);
+            
+            setTimeout(() => {
+                if (levelUpDiv.parentNode) {
+                    gameArea.removeChild(levelUpDiv);
+                }
+            }, 2000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('targetCount').textContent = `${gameState.targetIndex}/${gameState.totalTargets}`;
+            
+            const averageAccuracy = gameState.targetIndex > 1 ? 
+                Math.round(gameState.accuracySum / (gameState.targetIndex - 1)) : 100;
+            document.getElementById('accuracy').textContent = averageAccuracy + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            showGameOverScreen();
+        }
+
+        function showGameOverScreen() {
+            const finalAccuracy = gameState.targetIndex > 1 ? 
+                Math.round(gameState.accuracySum / (gameState.targetIndex - 1)) : 100;
+
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('maxLevel').textContent = gameState.maxLevel;
+            document.getElementById('finalAccuracy').textContent = finalAccuracy + '%';
+            document.getElementById('completedTargets').textContent = 
+                Math.max(0, gameState.targetIndex - 1);
+            
+            let message = '';
+            if (finalAccuracy >= 90) {
+                message = '🏆 軌道予測マスター！ 完璧な予測能力です！';
+            } else if (finalAccuracy >= 80) {
+                message = '🥈 上級者レベル！ 優れた軌道読解力を発揮しました！';
+            } else if (finalAccuracy >= 70) {
+                message = '🥉 中級者レベル！ 良い予測感覚を持っています！';
+            } else {
+                message = '📈 練習を重ねて、軌道予測能力を向上させましょう！';
+            }
+            
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+
+        function restartGame() {
+            closeGameOver();
+            resetGame();
+            startGame();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

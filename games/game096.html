@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水泳フォーム - ゲーム096</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0288D1, #03A9F4, #29B6F6, #4FC3F7);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #0288D1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #FF5722, #FF9800);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .swimming-pool {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, #81D4FA 0%, #29B6F6 50%, #0288D1 100%);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #0277BD;
+            overflow: hidden;
+        }
+
+        .lane-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: repeating-linear-gradient(
+                0deg,
+                #1565C0,
+                #1565C0 10px,
+                transparent 10px,
+                transparent 20px
+            );
+        }
+
+        .lane-1 { left: 20%; }
+        .lane-2 { left: 40%; }
+        .lane-3 { left: 60%; }
+        .lane-4 { left: 80%; }
+
+        .swimmer {
+            width: 40px;
+            height: 25px;
+            background: linear-gradient(45deg, #FF5722, #FF9800);
+            border-radius: 15px;
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            transform: translateY(-50%);
+            transition: all 0.8s ease;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+            z-index: 10;
+        }
+
+        .pool-edge {
+            position: absolute;
+            right: 5%;
+            top: 10%;
+            bottom: 10%;
+            width: 4px;
+            background: #263238;
+            border-radius: 2px;
+        }
+
+        .breathing-meter {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, #F44336, #FFC107, #4CAF50);
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .breathing-indicator {
+            position: absolute;
+            width: 6px;
+            height: 100%;
+            background: white;
+            border-radius: 3px;
+            transition: left 0.1s ease;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        .form-zones {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .stroke-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stroke-button {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .stroke-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(33, 150, 243, 0.4);
+        }
+
+        .stroke-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stroke-button.active {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            animation: pulse 1s infinite;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #0288D1, #29B6F6);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(2, 136, 209, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes perfect-stroke {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .perfect-stroke {
+            animation: perfect-stroke 0.5s ease-in-out;
+        }
+
+        @keyframes swimming {
+            0%, 100% { transform: translateY(-50%) scaleY(1); }
+            50% { transform: translateY(-50%) scaleY(0.8); }
+        }
+
+        .swimming-animation {
+            animation: swimming 1s infinite;
+        }
+
+        @media (max-width: 600px) {
+            .stroke-controls { grid-template-columns: 1fr; }
+            .game-title { font-size: 2em; }
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🏊‍♀️ 水泳フォーム</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: 水泳技術・フォーム改善・呼吸法・持久力・技術向上
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>泳ぎ距離</div>
+                <div id="swimDistance">0m</div>
+            </div>
+            <div class="stat-item">
+                <div>フォーム評価</div>
+                <div id="formRating">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>呼吸効率</div>
+                <div id="breathingEfficiency">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>技術レベル</div>
+                <div id="techniqueLevel">1</div>
+            </div>
+        </div>
+
+        <div class="breathing-meter">
+            <div class="breathing-indicator" id="breathingIndicator"></div>
+        </div>
+        <div class="form-zones">
+            <span style="color: #F44336;">悪い</span>
+            <span style="color: #FFC107;">良い</span>
+            <span style="color: #4CAF50;">完璧</span>
+        </div>
+
+        <div class="swimming-pool">
+            <div class="lane-line lane-1"></div>
+            <div class="lane-line lane-2"></div>
+            <div class="lane-line lane-3"></div>
+            <div class="lane-line lane-4"></div>
+            <div class="pool-edge"></div>
+            <div class="swimmer" id="swimmer">🏊</div>
+        </div>
+
+        <div class="stroke-controls">
+            <button class="stroke-button" id="freestyleBtn" data-stroke="freestyle">自由形</button>
+            <button class="stroke-button" id="backstrokeBtn" data-stroke="backstroke">背泳ぎ</button>
+            <button class="stroke-button" id="breaststrokeBtn" data-stroke="breaststroke">平泳ぎ</button>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">練習開始</button>
+            <button class="control-btn" id="breathBtn" disabled>呼吸</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>継続的な技術改善・呼吸とリズムの管理・持久力と集中力・効率的な動作の習得を促進します</p>
+        </div>
+    </div>
+
+    <script>
+        class SwimmingFormGame {
+            constructor() {
+                this.swimDistance = 0;
+                this.totalSwims = 0;
+                this.formRating = 0;
+                this.breathingEfficiency = 0;
+                this.techniqueLevel = 1;
+                this.swimmingActive = false;
+                this.swimmerMoving = false;
+                this.swimStartTime = null;
+                this.currentStroke = 'freestyle';
+                this.breathingPosition = 0;
+                this.breathingDirection = 1;
+                this.animationId = null;
+                this.swimmerPosition = 10; // %
+                this.strokeCount = 0;
+                this.breathCount = 0;
+                this.formScores = [];
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.swimDistanceEl = document.getElementById('swimDistance');
+                this.formRatingEl = document.getElementById('formRating');
+                this.breathingEfficiencyEl = document.getElementById('breathingEfficiency');
+                this.techniqueLevelEl = document.getElementById('techniqueLevel');
+                this.breathingIndicatorEl = document.getElementById('breathingIndicator');
+                this.swimmerEl = document.getElementById('swimmer');
+                this.startBtn = document.getElementById('startBtn');
+                this.breathBtn = document.getElementById('breathBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.strokeButtons = document.querySelectorAll('.stroke-button');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startSwimming());
+                this.breathBtn.addEventListener('click', () => this.breathe());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+
+                this.strokeButtons.forEach(button => {
+                    button.addEventListener('click', (e) => this.changeStroke(e.target.dataset.stroke));
+                });
+            }
+
+            startSwimming() {
+                this.swimmingActive = true;
+                this.swimmerMoving = true;
+                this.swimStartTime = Date.now();
+                this.totalSwims++;
+                this.swimmerPosition = 10;
+                this.strokeCount = 0;
+                this.breathCount = 0;
+                this.formScores = [];
+                
+                this.startBreathingAnimation();
+                this.startSwimmingMotion();
+                
+                this.startBtn.textContent = '練習中...';
+                this.startBtn.disabled = true;
+                this.breathBtn.disabled = false;
+                
+                this.highlightCurrentStroke();
+            }
+
+            startBreathingAnimation() {
+                const animate = () => {
+                    if (!this.swimmingActive) return;
+
+                    const speed = 1.2;
+                    this.breathingPosition += this.breathingDirection * speed;
+                    
+                    if (this.breathingPosition >= 94) {
+                        this.breathingPosition = 94;
+                        this.breathingDirection = -1;
+                    } else if (this.breathingPosition <= 0) {
+                        this.breathingPosition = 0;
+                        this.breathingDirection = 1;
+                    }
+
+                    this.breathingIndicatorEl.style.left = this.breathingPosition + '%';
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            startSwimmingMotion() {
+                this.swimmerEl.classList.add('swimming-animation');
+                
+                // 自動的にスイマーを前進させる
+                const swimInterval = setInterval(() => {
+                    if (!this.swimmingActive || !this.swimmerMoving) {
+                        clearInterval(swimInterval);
+                        return;
+                    }
+                    
+                    // ストロークに応じた前進速度
+                    const strokeSpeed = this.getStrokeSpeed();
+                    this.swimmerPosition += strokeSpeed;
+                    this.swimmerEl.style.left = Math.min(this.swimmerPosition, 90) + '%';
+                    this.strokeCount++;
+                    
+                    // フォーム評価
+                    this.evaluateForm();
+                    
+                    // プールの端判定
+                    if (this.swimmerPosition >= 90) {
+                        this.finishLap();
+                        clearInterval(swimInterval);
+                    }
+                }, 500); // 0.5秒ごとにストローク
+
+                // 30秒でタイムアウト
+                setTimeout(() => {
+                    if (this.swimmerMoving) {
+                        this.finishLap();
+                        clearInterval(swimInterval);
+                    }
+                }, 30000);
+            }
+
+            getStrokeSpeed() {
+                const speeds = {
+                    'freestyle': Math.random() * 3 + 2, // 2-5%
+                    'backstroke': Math.random() * 2.5 + 1.5, // 1.5-4%
+                    'breaststroke': Math.random() * 2 + 1 // 1-3%
+                };
+                return speeds[this.currentStroke] || 2;
+            }
+
+            changeStroke(stroke) {
+                if (!this.swimmingActive) return;
+
+                this.currentStroke = stroke;
+                this.highlightCurrentStroke();
+                
+                // ストローク変更ボーナス
+                this.swimmerPosition += 2;
+                this.swimmerEl.style.left = Math.min(this.swimmerPosition, 90) + '%';
+                
+                // スイマーのアイコン変更
+                const icons = {
+                    'freestyle': '🏊',
+                    'backstroke': '🏊‍♂️',
+                    'breaststroke': '🏊‍♀️'
+                };
+                this.swimmerEl.textContent = icons[stroke] || '🏊';
+            }
+
+            highlightCurrentStroke() {
+                this.strokeButtons.forEach(button => {
+                    if (button.dataset.stroke === this.currentStroke) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+
+            breathe() {
+                if (!this.swimmingActive || !this.swimmerMoving) return;
+
+                this.breathCount++;
+                
+                // 呼吸タイミング評価
+                const breathingTiming = this.evaluateBreathingTiming();
+                if (breathingTiming > 70) {
+                    this.swimmerPosition += 1;
+                    this.swimmerEl.style.left = Math.min(this.swimmerPosition, 90) + '%';
+                    
+                    this.swimmerEl.classList.add('perfect-stroke');
+                    setTimeout(() => {
+                        this.swimmerEl.classList.remove('perfect-stroke');
+                    }, 500);
+                }
+                
+                // プールの端判定
+                if (this.swimmerPosition >= 90) {
+                    this.finishLap();
+                }
+            }
+
+            evaluateBreathingTiming() {
+                const position = this.breathingPosition;
+                const perfectCenter = 50;
+                const perfectRange = 15;
+                
+                const deviation = Math.abs(position - perfectCenter);
+                if (deviation <= perfectRange) {
+                    return 100 - (deviation / perfectRange) * 30;
+                } else {
+                    return Math.max(0, 70 - (deviation - perfectRange) * 2);
+                }
+            }
+
+            evaluateForm() {
+                // フォーム評価（ランダム要素 + 技術レベル）
+                const baseForm = Math.random() * 30 + 40; // 40-70の基本
+                const techniqueBonus = this.techniqueLevel * 5; // 技術レベルボーナス
+                const strokeBonus = this.getStrokeBonus();
+                
+                const formScore = Math.min(100, baseForm + techniqueBonus + strokeBonus);
+                this.formScores.push(formScore);
+                
+                this.formRating = this.formScores.reduce((a, b) => a + b, 0) / this.formScores.length;
+            }
+
+            getStrokeBonus() {
+                const bonuses = {
+                    'freestyle': Math.random() * 10,
+                    'backstroke': Math.random() * 8,
+                    'breaststroke': Math.random() * 12
+                };
+                return bonuses[this.currentStroke] || 0;
+            }
+
+            finishLap() {
+                this.swimmerMoving = false;
+                this.swimmingActive = false;
+                
+                const swimTime = (Date.now() - this.swimStartTime) / 1000;
+                const lapDistance = 50; // 50m
+                this.swimDistance += lapDistance;
+                
+                // 呼吸効率計算
+                this.breathingEfficiency = this.breathCount > 0 ? 
+                    Math.min(100, (this.strokeCount / this.breathCount) * 20) : 0;
+                
+                // 技術レベル向上判定
+                if (this.formRating > 80 && this.breathingEfficiency > 75) {
+                    this.techniqueLevel = Math.min(10, this.techniqueLevel + 1);
+                }
+                
+                this.updateDisplay();
+                
+                this.startBtn.textContent = '練習開始';
+                this.startBtn.disabled = false;
+                this.breathBtn.disabled = true;
+                
+                this.stopBreathingAnimation();
+                this.clearStrokeHighlight();
+                this.swimmerEl.classList.remove('swimming-animation');
+                
+                // プールの端に移動
+                this.swimmerEl.style.left = '90%';
+                
+                // 結果表示
+                alert(`🏊‍♀️ ラップ完了!\n\nタイム: ${swimTime.toFixed(1)}秒\nフォーム評価: ${this.formRating.toFixed(1)}%\n呼吸効率: ${this.breathingEfficiency.toFixed(1)}%\n技術レベル: ${this.techniqueLevel}`);
+            }
+
+            stopBreathingAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            clearStrokeHighlight() {
+                this.strokeButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+            }
+
+            resetGame() {
+                this.swimmingActive = false;
+                this.swimmerMoving = false;
+                this.swimDistance = 0;
+                this.totalSwims = 0;
+                this.formRating = 0;
+                this.breathingEfficiency = 0;
+                this.techniqueLevel = 1;
+                this.breathingPosition = 0;
+                this.currentStroke = 'freestyle';
+                this.swimmerPosition = 10;
+                this.strokeCount = 0;
+                this.breathCount = 0;
+                this.formScores = [];
+                
+                this.stopBreathingAnimation();
+                this.clearStrokeHighlight();
+                this.swimmerEl.classList.remove('swimming-animation');
+                
+                // スイマーをスタート位置に戻す
+                this.swimmerEl.style.left = '10%';
+                this.swimmerEl.textContent = '🏊';
+                
+                this.updateDisplay();
+                this.startBtn.textContent = '練習開始';
+                this.startBtn.disabled = false;
+                this.breathBtn.disabled = true;
+            }
+
+            updateDisplay() {
+                this.swimDistanceEl.textContent = this.swimDistance + 'm';
+                this.formRatingEl.textContent = this.formRating.toFixed(1) + '%';
+                this.breathingEfficiencyEl.textContent = this.breathingEfficiency.toFixed(1) + '%';
+                this.techniqueLevelEl.textContent = this.techniqueLevel;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new SwimmingFormGame();
+        });
+    </script>
+</body>
+</html>

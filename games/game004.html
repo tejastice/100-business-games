@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キーボード反射 - ゲーム004</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white;
+        }
+        .keyboard-reflex-game {
+            width: 800px;
+            height: 750px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .instruction-panel {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+        .game-area {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        .key-display {
+            text-align: center;
+            color: white;
+        }
+        .target-key {
+            font-size: 120px;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 0 0 20px #3498db;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #3498db;
+            border-radius: 20px;
+            width: 200px;
+            margin: 0 auto;
+            background: rgba(52, 152, 219, 0.1);
+            transition: all 0.2s ease;
+        }
+        .target-key.waiting {
+            color: #f39c12;
+            border-color: #f39c12;
+            text-shadow: 0 0 20px #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+            animation: waitingPulse 1s ease-in-out infinite;
+        }
+        .target-key.correct {
+            color: #27ae60;
+            border-color: #27ae60;
+            text-shadow: 0 0 20px #27ae60;
+            background: rgba(39, 174, 96, 0.2);
+            animation: correctFlash 0.3s ease;
+        }
+        .target-key.error {
+            color: #e74c3c;
+            border-color: #e74c3c;
+            text-shadow: 0 0 20px #e74c3c;
+            background: rgba(231, 76, 60, 0.2);
+            animation: errorShake 0.5s ease;
+        }
+        @keyframes waitingPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes correctFlash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .key-hint {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #bdc3c7;
+        }
+        .reaction-meter {
+            width: 400px;
+        }
+        .meter-label {
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .meter-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+            border-radius: 13px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .meter-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            pointer-events: none;
+        }
+        .marker {
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        .marker.excellent { color: #27ae60; }
+        .marker.good { color: #f39c12; }
+        .marker.slow { color: #e74c3c; }
+        .keyboard-visual {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .key {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .key:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .key.active {
+            background: #3498db;
+            border-color: #2980b9;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.8);
+        }
+        .key.pressed {
+            background: #27ae60;
+            border-color: #229954;
+            transform: scale(0.95);
+        }
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .reset-button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        .reset-button:hover {
+            background: linear-gradient(45deg, #c0392b, #e74c3c);
+            transform: translateY(-2px);
+        }
+        .game-results {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #333;
+        }
+        .speed-feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: feedbackFloat 1s ease-out forwards;
+            z-index: 10;
+        }
+        @keyframes feedbackFloat {
+            0% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(1.2) translateY(-20px); 
+            }
+        }
+        .victory-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none;
+            color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="keyboard-reflex-game">
+        <h1 class="game-title" style="color: white; text-align: center; margin-bottom: 20px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">⌨️ キーボード反射</h1>
+        <div class="game-header">
+            <div class="progress-display">進行: <span id="currentKey">0</span>/50</div>
+            <div class="speed-display">平均速度: <span id="avgSpeed">0</span>ms</div>
+            <div class="best-time-display">最速: <span id="bestTime">---</span>ms</div>
+        </div>
+        <div class="instruction-panel">
+            <div class="instruction-text">表示されたキーを素早く押してください</div>
+        </div>
+        <div class="game-area" id="gameArea">
+            <div class="key-display" id="keyDisplay">
+                <div class="target-key" id="targetKey">準備</div>
+                <div class="key-hint" id="keyHint">スペースキーを押してスタート</div>
+            </div>
+            <div class="reaction-meter" id="reactionMeter">
+                <div class="meter-label">反応時間</div>
+                <div class="meter-bar">
+                    <div class="meter-fill" id="meterFill"></div>
+                    <div class="meter-markers">
+                        <span class="marker excellent">200ms</span>
+                        <span class="marker good">400ms</span>
+                        <span class="marker slow">500ms</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="keyboard-visual" id="keyboardVisual">
+            <div class="keyboard-row">
+                <div class="key" data-key="1">1</div>
+                <div class="key" data-key="2">2</div>
+                <div class="key" data-key="3">3</div>
+                <div class="key" data-key="4">4</div>
+                <div class="key" data-key="5">5</div>
+                <div class="key" data-key="6">6</div>
+                <div class="key" data-key="7">7</div>
+                <div class="key" data-key="8">8</div>
+                <div class="key" data-key="9">9</div>
+                <div class="key" data-key="0">0</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="q">Q</div>
+                <div class="key" data-key="w">W</div>
+                <div class="key" data-key="e">E</div>
+                <div class="key" data-key="r">R</div>
+                <div class="key" data-key="t">T</div>
+                <div class="key" data-key="y">Y</div>
+                <div class="key" data-key="u">U</div>
+                <div class="key" data-key="i">I</div>
+                <div class="key" data-key="o">O</div>
+                <div class="key" data-key="p">P</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="a">A</div>
+                <div class="key" data-key="s">S</div>
+                <div class="key" data-key="d">D</div>
+                <div class="key" data-key="f">F</div>
+                <div class="key" data-key="g">G</div>
+                <div class="key" data-key="h">H</div>
+                <div class="key" data-key="j">J</div>
+                <div class="key" data-key="k">K</div>
+                <div class="key" data-key="l">L</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="z">Z</div>
+                <div class="key" data-key="x">X</div>
+                <div class="key" data-key="c">C</div>
+                <div class="key" data-key="v">V</div>
+                <div class="key" data-key="b">B</div>
+                <div class="key" data-key="n">N</div>
+                <div class="key" data-key="m">M</div>
+            </div>
+        </div>
+        <div class="game-controls">
+            <button id="resetBtn" class="reset-button">リセット</button>
+        </div>
+        <div class="game-results" id="results" style="display: none;">
+            <h3>結果</h3>
+            <p>完了キー数: <span id="finalCount">0</span>/50</p>
+            <p>平均反応時間: <span id="finalAvgSpeed">0</span>ms</p>
+            <p>最速反応時間: <span id="finalBestTime">0</span>ms</p>
+            <p>評価: <span id="speedRating">---</span></p>
+        </div>
+        <div class="instructions" style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left;">
+            <h3>⌨️ 詳細ルール・遊び方</h3>
+            <p><strong>目的:</strong> 50個のランダムキーをできるだけ素早く正確に入力</p>
+            <p><strong>ゲームの流れ:</strong></p>
+            <p>• スペースキーでゲーム開始（3秒カウントダウン後スタート）</p>
+            <p>• 画面中央に大きく表示される文字を確認</p>
+            <p>• キーボードで対応するキーを押す（物理キーまたは画面クリック）</p>
+            <p>• 正解で次のキーへ自動進行、不正解でエラー表示</p>
+            <p><strong>対象キー:</strong></p>
+            <p>• 英字: A-Z（26文字）</p>
+            <p>• 数字: 0-9（10文字）</p>
+            <p>• 合計: 36種類のキーからランダム選出</p>
+            <p><strong>操作方法:</strong></p>
+            <p>• キーボード入力: 直接対応キーを押す</p>
+            <p>• マウス操作: 画面下部の仮想キーボードをクリック</p>
+            <p><strong>反応時間評価:</strong></p>
+            <p>• 200ms未満: 超高速！（緑色）</p>
+            <p>• 200-300ms: 高速！（緑色）</p>
+            <p>• 300-400ms: 良好！（黄色）</p>
+            <p>• 400-500ms: 普通（オレンジ）</p>
+            <p>• 500ms以上: 遅い（赤色）</p>
+            <p><strong>勝利条件:</strong> 50個完了で平均反応時間400ms以下</p>
+            <p><strong>コツ:</strong> キーボードの位置を覚え、両手でタイピングしよう！</p>
+        </div>
+    </div>
+    <script>
+        class KeyboardReflexGame {
+            constructor() {
+                this.currentKeyIndex = 0;
+                this.totalKeys = 50;
+                this.reactionTimes = [];
+                this.currentTarget = '';
+                this.keyDisplayTime = 0;
+                this.gameActive = false;
+                this.waitingForKey = false;
+                
+                // 使用キー配列（A-Z, 0-9）
+                this.availableKeys = [
+                    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
+                ];
+                
+                this.initElements();
+                this.bindEvents();
+            }
+
+            initElements() {
+                this.gameArea = document.getElementById('gameArea');
+                this.targetKey = document.getElementById('targetKey');
+                this.keyHint = document.getElementById('keyHint');
+                this.currentKeyDisplay = document.getElementById('currentKey');
+                this.avgSpeedDisplay = document.getElementById('avgSpeed');
+                this.bestTimeDisplay = document.getElementById('bestTime');
+                this.reactionMeter = document.getElementById('reactionMeter');
+                this.meterFill = document.getElementById('meterFill');
+                this.keyboardVisual = document.getElementById('keyboardVisual');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.results = document.getElementById('results');
+            }
+
+            bindEvents() {
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+                
+                // 視覚キーボードのクリック
+                this.keyboardVisual.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('key')) {
+                        const key = e.target.dataset.key;
+                        this.simulateKeyPress(key);
+                    }
+                });
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.currentKeyIndex = 0;
+                this.reactionTimes = [];
+                this.results.style.display = 'none';
+                
+                this.targetKey.textContent = '準備...';
+                this.keyHint.textContent = '3秒後に開始します';
+                
+                // 3秒後にゲーム開始
+                setTimeout(() => {
+                    if (this.gameActive) {
+                        this.nextKey();
+                    }
+                }, 3000);
+            }
+
+            nextKey() {
+                if (this.currentKeyIndex >= this.totalKeys) {
+                    this.endGame();
+                    return;
+                }
+                
+                // ランダムキー選択
+                this.currentTarget = this.availableKeys[Math.floor(Math.random() * this.availableKeys.length)];
+                
+                // 表示更新
+                this.targetKey.textContent = this.currentTarget.toUpperCase();
+                this.targetKey.className = 'target-key waiting';
+                this.keyHint.textContent = `キー: ${this.currentTarget.toUpperCase()}`;
+                
+                // 視覚キーボードでアクティブキーをハイライト
+                this.highlightKey(this.currentTarget);
+                
+                // 反応時間計測開始
+                this.keyDisplayTime = Date.now();
+                this.waitingForKey = true;
+                
+                this.updateProgress();
+            }
+
+            handleKeyPress(e) {
+                if (!this.gameActive) {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.startGame();
+                    }
+                    return;
+                }
+                
+                if (!this.waitingForKey) return;
+                
+                e.preventDefault();
+                const pressedKey = e.key.toLowerCase();
+                
+                this.processKeyInput(pressedKey);
+            }
+
+            simulateKeyPress(key) {
+                if (!this.gameActive || !this.waitingForKey) return;
+                
+                this.processKeyInput(key);
+                
+                // 視覚的フィードバック
+                const keyElement = this.keyboardVisual.querySelector(`[data-key="${key}"]`);
+                if (keyElement) {
+                    keyElement.classList.add('pressed');
+                    setTimeout(() => {
+                        keyElement.classList.remove('pressed');
+                    }, 200);
+                }
+            }
+
+            processKeyInput(pressedKey) {
+                const reactionTime = Date.now() - this.keyDisplayTime;
+                
+                if (pressedKey === this.currentTarget) {
+                    // 正解
+                    this.reactionTimes.push(reactionTime);
+                    this.currentKeyIndex++;
+                    this.waitingForKey = false;
+                    
+                    this.targetKey.className = 'target-key correct';
+                    this.showSpeedFeedback(reactionTime);
+                    this.updateReactionMeter(reactionTime);
+                    this.updateDisplays();
+                    this.playCorrectSound();
+                    
+                    // 次のキーへ
+                    setTimeout(() => {
+                        this.clearKeyHighlight();
+                        this.nextKey();
+                    }, 800);
+                    
+                } else {
+                    // 不正解
+                    this.targetKey.className = 'target-key error';
+                    this.playErrorSound();
+                    
+                    // エラー状態を短時間表示してから元に戻す
+                    setTimeout(() => {
+                        this.targetKey.className = 'target-key waiting';
+                    }, 300);
+                }
+            }
+
+            highlightKey(key) {
+                // 前のハイライトをクリア
+                this.clearKeyHighlight();
+                
+                // 新しいキーをハイライト
+                const keyElement = this.keyboardVisual.querySelector(`[data-key="${key}"]`);
+                if (keyElement) {
+                    keyElement.classList.add('active');
+                }
+            }
+
+            clearKeyHighlight() {
+                const activeKeys = this.keyboardVisual.querySelectorAll('.key.active');
+                activeKeys.forEach(key => key.classList.remove('active'));
+            }
+
+            showSpeedFeedback(reactionTime) {
+                const feedback = document.createElement('div');
+                feedback.className = 'speed-feedback';
+                
+                let rating = '';
+                if (reactionTime < 200) {
+                    rating = '超高速！';
+                    feedback.style.color = '#27ae60';
+                } else if (reactionTime < 300) {
+                    rating = '高速！';
+                    feedback.style.color = '#2ecc71';
+                } else if (reactionTime < 400) {
+                    rating = '良好！';
+                    feedback.style.color = '#f39c12';
+                } else if (reactionTime < 500) {
+                    rating = '普通';
+                    feedback.style.color = '#e67e22';
+                } else {
+                    rating = '遅い';
+                    feedback.style.color = '#e74c3c';
+                }
+                
+                feedback.textContent = `${reactionTime}ms - ${rating}`;
+                this.gameArea.appendChild(feedback);
+                
+                setTimeout(() => {
+                    if (feedback.parentNode) {
+                        feedback.parentNode.removeChild(feedback);
+                    }
+                }, 1000);
+            }
+
+            updateReactionMeter(reactionTime) {
+                // 0-600msの範囲で表示（600ms以上は100%）
+                const percentage = Math.min((reactionTime / 600) * 100, 100);
+                this.meterFill.style.width = percentage + '%';
+            }
+
+            updateProgress() {
+                this.currentKeyDisplay.textContent = this.currentKeyIndex;
+            }
+
+            updateDisplays() {
+                if (this.reactionTimes.length > 0) {
+                    const avgTime = Math.round(
+                        this.reactionTimes.reduce((sum, time) => sum + time, 0) / this.reactionTimes.length
+                    );
+                    const bestTime = Math.min(...this.reactionTimes);
+                    
+                    this.avgSpeedDisplay.textContent = avgTime;
+                    this.bestTimeDisplay.textContent = bestTime;
+                }
+            }
+
+            playCorrectSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // 正解音: 高めのピッ音
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            playErrorSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // エラー音: 低いブザー音
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            endGame() {
+                this.gameActive = false;
+                this.waitingForKey = false;
+                this.clearKeyHighlight();
+                
+                // 結果計算
+                const avgTime = this.reactionTimes.length > 0
+                    ? Math.round(this.reactionTimes.reduce((sum, time) => sum + time, 0) / this.reactionTimes.length)
+                    : 0;
+                const bestTime = this.reactionTimes.length > 0 ? Math.min(...this.reactionTimes) : 0;
+                
+                // 評価計算
+                let rating = '';
+                if (avgTime < 200) {
+                    rating = 'エクセレント';
+                } else if (avgTime < 300) {
+                    rating = 'とても良い';
+                } else if (avgTime < 400) {
+                    rating = '良い';
+                } else if (avgTime < 500) {
+                    rating = '普通';
+                } else {
+                    rating = 'もう少し頑張ろう';
+                }
+                
+                // 結果表示
+                document.getElementById('finalCount').textContent = this.reactionTimes.length;
+                document.getElementById('finalAvgSpeed').textContent = avgTime;
+                document.getElementById('finalBestTime').textContent = bestTime;
+                document.getElementById('speedRating').textContent = rating;
+                
+                this.results.style.display = 'block';
+                
+                // 勝利判定（平均400ms以下）
+                if (avgTime <= 400 && this.reactionTimes.length >= this.totalKeys) {
+                    this.showVictoryMessage();
+                }
+                
+                // ゲーム終了状態に戻す
+                this.targetKey.textContent = '完了';
+                this.targetKey.className = 'target-key';
+                this.keyHint.textContent = 'スペースキーを押してリスタート';
+            }
+
+            showVictoryMessage() {
+                const victory = document.createElement('div');
+                victory.className = 'victory-message';
+                victory.innerHTML = '<h2>⌨️ クリア！ ⌨️</h2><p>素晴らしい反射神経です！</p>';
+                this.gameArea.appendChild(victory);
+                
+                setTimeout(() => {
+                    if (victory.parentNode) {
+                        victory.parentNode.removeChild(victory);
+                    }
+                }, 4000);
+            }
+
+            resetGame() {
+                this.gameActive = false;
+                this.waitingForKey = false;
+                this.currentKeyIndex = 0;
+                this.reactionTimes = [];
+                
+                this.clearKeyHighlight();
+                
+                this.targetKey.textContent = '準備';
+                this.targetKey.className = 'target-key';
+                this.keyHint.textContent = 'スペースキーを押してスタート';
+                
+                this.currentKeyDisplay.textContent = '0';
+                this.avgSpeedDisplay.textContent = '0';
+                this.bestTimeDisplay.textContent = '---';
+                this.meterFill.style.width = '0%';
+                
+                this.results.style.display = 'none';
+                
+                // エフェクト要素をクリア
+                const feedbacks = this.gameArea.querySelectorAll('.speed-feedback');
+                feedbacks.forEach(feedback => feedback.remove());
+                
+                // 勝利メッセージを削除
+                const victoryMsg = this.gameArea.querySelector('.victory-message');
+                if (victoryMsg) {
+                    victoryMsg.parentNode.removeChild(victoryMsg);
+                }
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new KeyboardReflexGame();
+        });
+
+        // メニューに戻る機能
+        function goBack() {
+            window.close(); 
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

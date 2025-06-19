@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戦略カード構築 - ゲーム084</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 600px;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            gap: 20px;
+        }
+
+        .deck-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .deck-progress {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f1c40f;
+            margin: 10px 0;
+        }
+
+        .construction-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        .card-pool {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .pool-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #f1c40f;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .deck-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .deck-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #f1c40f;
+        }
+
+        .strategy-card {
+            background: white;
+            color: #333;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .strategy-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .strategy-card.selected {
+            border-color: #f1c40f;
+            border-width: 3px;
+            transform: scale(1.08);
+        }
+
+        .strategy-card.in-deck {
+            background: #e8f5e8;
+            border-color: #27ae60;
+        }
+
+        .card-name {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-type {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .card-cost {
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin: 0 auto 5px;
+        }
+
+        .card-effect {
+            font-size: 0.7rem;
+            line-height: 1.2;
+            color: #444;
+        }
+
+        .synergy-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .synergy-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+
+        .synergy-indicators {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .synergy-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .synergy-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .synergy-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .construction-area {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                gap: 8px;
+            }
+
+            .strategy-card {
+                min-height: 80px;
+                padding: 8px;
+            }
+
+            .synergy-indicators {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 戦略カード構築</h1>
+        <p class="game-description">デッキ構築戦略とカード組み合わせによる構築的思考ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">構築数</div>
+                <div class="stat-value" id="deckCount">0/10</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">効率値</div>
+                <div class="stat-value" id="efficiency">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">シナジー</div>
+                <div class="stat-value" id="synergyScore">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">バランス</div>
+                <div class="stat-value" id="balanceScore">0%</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div id="gameStatus">新しいデッキ構築を開始してください</div>
+        </div>
+
+        <div class="game-board">
+            <div class="deck-info">
+                <div class="deck-progress">デッキ進捗: <span id="deckProgress">0/30</span> カード</div>
+                <div>30枚のバランスの取れたデッキを構築しよう</div>
+            </div>
+
+            <div class="construction-area">
+                <div class="card-pool">
+                    <div class="pool-title">🃏 利用可能カード</div>
+                    <div class="card-grid" id="cardPool"></div>
+                </div>
+                
+                <div class="deck-area">
+                    <div class="deck-title">📦 構築中デッキ</div>
+                    <div class="card-grid" id="constructedDeck"></div>
+                </div>
+            </div>
+
+            <div class="synergy-panel">
+                <div class="synergy-title">⚡ シナジー分析</div>
+                <div class="synergy-indicators">
+                    <div class="synergy-item">
+                        <div class="synergy-label">攻撃シナジー</div>
+                        <div class="synergy-value" id="attackSynergy">0</div>
+                    </div>
+                    <div class="synergy-item">
+                        <div class="synergy-label">防御シナジー</div>
+                        <div class="synergy-value" id="defenseSynergy">0</div>
+                    </div>
+                    <div class="synergy-item">
+                        <div class="synergy-label">特殊シナジー</div>
+                        <div class="synergy-value" id="specialSynergy">0</div>
+                    </div>
+                </div>
+                <div id="synergyAdvice" style="margin-top: 15px; font-size: 0.9rem;">
+                    カードを追加してシナジー効果を確認しましょう
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newDeck()">新規構築</button>
+            <button class="btn" onclick="addCard()" id="addBtn" disabled>追加</button>
+            <button class="btn danger" onclick="removeCard()" id="removeBtn" disabled>削除</button>
+            <button class="btn warning" onclick="analyzeDeck()">構築分析</button>
+            <button class="btn primary" onclick="completeDeck()" id="completeBtn" disabled>構築完了</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 10デッキ構築で90%以上の効率達成で構築マスター認定</li>
+                <li><strong>基本ルール:</strong>
+                    <ul>
+                        <li>30枚のバランスの取れたデッキを構築</li>
+                        <li>6種類のカードタイプから戦略的に選択</li>
+                        <li>攻撃・防御・特殊の3つのシナジーを考慮</li>
+                        <li>コスト配分とカード相性を最適化</li>
+                    </ul>
+                </li>
+                <li><strong>構築戦略:</strong>
+                    <ul>
+                        <li>低コスト・中コスト・高コストのバランス調整</li>
+                        <li>同タイプカードのシナジー効果活用</li>
+                        <li>相性の良いカード組み合わせ発見</li>
+                        <li>戦術に応じた特化型または汎用型選択</li>
+                    </ul>
+                </li>
+                <li><strong>評価要素:</strong> 構築効率、シナジー活用度、デッキバランス、戦略完成度</li>
+                <li><strong>クリア条件:</strong> 10デッキ構築で90%以上の効率達成で構築マスター認定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            availableCards: [],
+            currentDeck: [],
+            selectedCard: null,
+            deckCount: 0,
+            totalDecks: 10,
+            totalEfficiency: 0,
+            gameActive: false
+        };
+
+        const cardTypes = ['攻撃', '防御', '魔法', '罠', '装備', '特殊'];
+        const cardDatabase = [
+            {id: 1, name: '火炎斬り', type: '攻撃', cost: 3, effect: '直接ダメージ+2', synergy: 'attack'},
+            {id: 2, name: '氷結剣', type: '攻撃', cost: 4, effect: '敵の動き封じ', synergy: 'attack'},
+            {id: 3, name: '雷撃槍', type: '攻撃', cost: 5, effect: '範囲攻撃+3', synergy: 'attack'},
+            {id: 4, name: '鋼鉄盾', type: '防御', cost: 2, effect: 'ダメージ軽減-2', synergy: 'defense'},
+            {id: 5, name: '魔法障壁', type: '防御', cost: 3, effect: '魔法無効化', synergy: 'defense'},
+            {id: 6, name: '反射鎧', type: '防御', cost: 4, effect: 'ダメージ反射', synergy: 'defense'},
+            {id: 7, name: '治癒の光', type: '魔法', cost: 2, effect: 'HP回復+3', synergy: 'special'},
+            {id: 8, name: '強化魔法', type: '魔法', cost: 3, effect: '攻撃力+2', synergy: 'special'},
+            {id: 9, name: '時空魔法', type: '魔法', cost: 6, effect: 'ターン追加', synergy: 'special'},
+            {id: 10, name: '落とし穴', type: '罠', cost: 1, effect: '敵の行動阻害', synergy: 'defense'},
+            {id: 11, name: '爆発罠', type: '罠', cost: 3, effect: '範囲ダメージ', synergy: 'attack'},
+            {id: 12, name: '混乱罠', type: '罠', cost: 2, effect: '敵の判断力低下', synergy: 'special'},
+            {id: 13, name: '英雄の剣', type: '装備', cost: 5, effect: '全能力+1', synergy: 'attack'},
+            {id: 14, name: '賢者の杖', type: '装備', cost: 4, effect: '魔法効果+2', synergy: 'special'},
+            {id: 15, name: '守護の指輪', type: '装備', cost: 3, effect: '継続防御', synergy: 'defense'},
+            {id: 16, name: '奇跡の薬', type: '特殊', cost: 2, effect: '即座回復', synergy: 'special'},
+            {id: 17, name: '運命の鍵', type: '特殊', cost: 4, effect: '必殺技発動', synergy: 'special'},
+            {id: 18, name: '時の砂', type: '特殊', cost: 3, effect: 'ターン巻き戻し', synergy: 'special'},
+            {id: 19, name: '炎の精霊', type: '攻撃', cost: 4, effect: '継続炎ダメージ', synergy: 'attack'},
+            {id: 20, name: '水の加護', type: '防御', cost: 3, effect: '継続回復', synergy: 'defense'},
+            {id: 21, name: '風の刃', type: '攻撃', cost: 2, effect: '高速攻撃', synergy: 'attack'},
+            {id: 22, name: '大地の壁', type: '防御', cost: 5, effect: '完全防御', synergy: 'defense'},
+            {id: 23, name: '光の矢', type: '攻撃', cost: 3, effect: '貫通攻撃', synergy: 'attack'},
+            {id: 24, name: '闇の呪縛', type: '魔法', cost: 4, effect: '敵行動封印', synergy: 'special'},
+            {id: 25, name: '復活の石', type: '特殊', cost: 6, effect: '戦闘復帰', synergy: 'special'},
+            {id: 26, name: '分身の術', type: '特殊', cost: 5, effect: '攻撃回数倍化', synergy: 'attack'},
+            {id: 27, name: '瞬間移動', type: '特殊', cost: 3, effect: '位置変更', synergy: 'special'},
+            {id: 28, name: '毒の刃', type: '攻撃', cost: 3, effect: '継続毒ダメージ', synergy: 'attack'},
+            {id: 29, name: '聖なる光', type: '魔法', cost: 4, effect: '状態異常解除', synergy: 'special'},
+            {id: 30, name: '究極防壁', type: '防御', cost: 6, effect: '絶対防御', synergy: 'defense'}
+        ];
+
+        function initializeGame() {
+            gameState.availableCards = [...cardDatabase];
+            gameState.currentDeck = [];
+            gameState.selectedCard = null;
+            gameState.gameActive = true;
+            
+            renderCardPool();
+            renderDeck();
+            updateStats();
+            updateButtons();
+        }
+
+        function renderCardPool() {
+            const pool = document.getElementById('cardPool');
+            pool.innerHTML = gameState.availableCards.map(card => {
+                const cardElement = createCardElement(card);
+                cardElement.onclick = () => selectCard(card);
+                if (gameState.selectedCard && gameState.selectedCard.id === card.id) {
+                    cardElement.classList.add('selected');
+                }
+                return cardElement.outerHTML;
+            }).join('');
+        }
+
+        function renderDeck() {
+            const deck = document.getElementById('constructedDeck');
+            deck.innerHTML = gameState.currentDeck.map(card => {
+                const cardElement = createCardElement(card);
+                cardElement.classList.add('in-deck');
+                cardElement.onclick = () => selectDeckCard(card);
+                if (gameState.selectedCard && gameState.selectedCard.id === card.id && gameState.selectedCard.inDeck) {
+                    cardElement.classList.add('selected');
+                }
+                return cardElement.outerHTML;
+            }).join('');
+            
+            document.getElementById('deckProgress').textContent = `${gameState.currentDeck.length}/30`;
+        }
+
+        function createCardElement(card) {
+            const element = document.createElement('div');
+            element.className = 'strategy-card';
+            
+            element.innerHTML = `
+                <div class="card-cost">${card.cost}</div>
+                <div class="card-name">${card.name}</div>
+                <div class="card-type">${card.type}</div>
+                <div class="card-effect">${card.effect}</div>
+            `;
+            
+            return element;
+        }
+
+        function selectCard(card) {
+            gameState.selectedCard = gameState.selectedCard && gameState.selectedCard.id === card.id 
+                ? null : { ...card, inDeck: false };
+            renderCardPool();
+            renderDeck();
+            updateButtons();
+        }
+
+        function selectDeckCard(card) {
+            gameState.selectedCard = gameState.selectedCard && gameState.selectedCard.id === card.id && gameState.selectedCard.inDeck
+                ? null : { ...card, inDeck: true };
+            renderCardPool();
+            renderDeck();
+            updateButtons();
+        }
+
+        function addCard() {
+            if (!gameState.selectedCard || gameState.selectedCard.inDeck || gameState.currentDeck.length >= 30) return;
+            
+            const card = gameState.selectedCard;
+            gameState.currentDeck.push(card);
+            gameState.selectedCard = null;
+            
+            renderCardPool();
+            renderDeck();
+            updateSynergy();
+            updateButtons();
+        }
+
+        function removeCard() {
+            if (!gameState.selectedCard || !gameState.selectedCard.inDeck) return;
+            
+            const cardIndex = gameState.currentDeck.findIndex(c => c.id === gameState.selectedCard.id);
+            if (cardIndex !== -1) {
+                gameState.currentDeck.splice(cardIndex, 1);
+                gameState.selectedCard = null;
+                
+                renderCardPool();
+                renderDeck();
+                updateSynergy();
+                updateButtons();
+            }
+        }
+
+        function updateSynergy() {
+            const synergyCounts = { attack: 0, defense: 0, special: 0 };
+            
+            gameState.currentDeck.forEach(card => {
+                synergyCounts[card.synergy]++;
+            });
+            
+            // シナジー効果計算（同タイプ3枚以上でボーナス）
+            const attackSynergy = Math.floor(synergyCounts.attack / 3) * 25;
+            const defenseSynergy = Math.floor(synergyCounts.defense / 3) * 25;
+            const specialSynergy = Math.floor(synergyCounts.special / 3) * 25;
+            
+            document.getElementById('attackSynergy').textContent = attackSynergy;
+            document.getElementById('defenseSynergy').textContent = defenseSynergy;
+            document.getElementById('specialSynergy').textContent = specialSynergy;
+            
+            // アドバイス更新
+            updateSynergyAdvice(synergyCounts, attackSynergy + defenseSynergy + specialSynergy);
+        }
+
+        function updateSynergyAdvice(counts, totalSynergy) {
+            let advice = '';
+            
+            if (gameState.currentDeck.length < 10) {
+                advice = '🚀 序盤: バランス良くカードを追加しましょう';
+            } else if (gameState.currentDeck.length < 20) {
+                advice = '⚡ 中盤: シナジー効果を狙って同タイプを3枚以上集めよう';
+            } else {
+                advice = '🎯 終盤: デッキの最終調整でバランスを整えよう';
+            }
+            
+            if (totalSynergy >= 150) {
+                advice += ' | 🌟 優秀なシナジー効果！';
+            } else if (totalSynergy >= 75) {
+                advice += ' | ⭐ 良いシナジー効果';
+            } else {
+                advice += ' | 💡 シナジー効果を向上させよう';
+            }
+            
+            document.getElementById('synergyAdvice').textContent = advice;
+        }
+
+        function analyzeDeck() {
+            if (gameState.currentDeck.length === 0) {
+                alert('デッキにカードを追加してください');
+                return;
+            }
+            
+            const typeCounts = {};
+            const costCounts = { low: 0, mid: 0, high: 0 };
+            let totalCost = 0;
+            
+            cardTypes.forEach(type => typeCounts[type] = 0);
+            
+            gameState.currentDeck.forEach(card => {
+                typeCounts[card.type]++;
+                totalCost += card.cost;
+                
+                if (card.cost <= 2) costCounts.low++;
+                else if (card.cost <= 4) costCounts.mid++;
+                else costCounts.high++;
+            });
+            
+            const avgCost = (totalCost / gameState.currentDeck.length).toFixed(1);
+            
+            let analysis = '🎯 デッキ構築分析\\n\\n';
+            analysis += `カード数: ${gameState.currentDeck.length}/30\\n`;
+            analysis += `平均コスト: ${avgCost}\\n\\n`;
+            
+            analysis += 'カードタイプ構成:\\n';
+            Object.entries(typeCounts).forEach(([type, count]) => {
+                if (count > 0) analysis += `${type}: ${count}枚\\n`;
+            });
+            
+            analysis += '\\nコスト配分:\\n';
+            analysis += `低コスト(1-2): ${costCounts.low}枚\\n`;
+            analysis += `中コスト(3-4): ${costCounts.mid}枚\\n`;
+            analysis += `高コスト(5-6): ${costCounts.high}枚\\n`;
+            
+            analysis += '\\n推奨改善点:\\n';
+            if (costCounts.low < 8) analysis += '• 低コストカードを増やしましょう\\n';
+            if (costCounts.high > 8) analysis += '• 高コストカードを減らしましょう\\n';
+            if (gameState.currentDeck.length < 30) analysis += '• デッキを30枚まで完成させましょう\\n';
+            
+            alert(analysis);
+        }
+
+        function completeDeck() {
+            if (gameState.currentDeck.length !== 30) {
+                alert('デッキは30枚である必要があります');
+                return;
+            }
+            
+            // 効率計算
+            const efficiency = calculateDeckEfficiency();
+            gameState.totalEfficiency += efficiency;
+            gameState.deckCount++;
+            
+            const avgEfficiency = Math.round(gameState.totalEfficiency / gameState.deckCount);
+            const isComplete = gameState.deckCount >= gameState.totalDecks;
+            
+            let result = `デッキ構築完了！\\n\\n`;
+            result += `効率値: ${efficiency}%\\n`;
+            result += `構築数: ${gameState.deckCount}/${gameState.totalDecks}\\n`;
+            result += `平均効率: ${avgEfficiency}%\\n\\n`;
+            
+            if (isComplete) {
+                if (avgEfficiency >= 90) {
+                    result += `🏆 クリア達成！戦略カード構築マスター認定！`;
+                } else {
+                    result += `💪 クリア条件: 平均効率90%以上`;
+                }
+            } else {
+                result += `次のデッキ構築に進みます`;
+            }
+            
+            alert(result);
+            updateStats();
+            
+            if (!isComplete) {
+                setTimeout(() => newDeck(), 2000);
+            }
+        }
+
+        function calculateDeckEfficiency() {
+            const synergyCounts = { attack: 0, defense: 0, special: 0 };
+            const typeCounts = {};
+            const costCounts = { low: 0, mid: 0, high: 0 };
+            
+            cardTypes.forEach(type => typeCounts[type] = 0);
+            
+            gameState.currentDeck.forEach(card => {
+                synergyCounts[card.synergy]++;
+                typeCounts[card.type]++;
+                
+                if (card.cost <= 2) costCounts.low++;
+                else if (card.cost <= 4) costCounts.mid++;
+                else costCounts.high++;
+            });
+            
+            // シナジー評価（40点）
+            const synergyScore = Math.min(40, 
+                Math.floor(synergyCounts.attack / 3) * 10 +
+                Math.floor(synergyCounts.defense / 3) * 10 +
+                Math.floor(synergyCounts.special / 3) * 10
+            );
+            
+            // バランス評価（30点）
+            const typeBalance = Math.min(30, Object.values(typeCounts).filter(count => count > 0).length * 5);
+            
+            // コスト配分評価（30点）
+            const costBalance = Math.min(30, 
+                (costCounts.low >= 8 && costCounts.low <= 12 ? 10 : 0) +
+                (costCounts.mid >= 8 && costCounts.mid <= 15 ? 10 : 0) +
+                (costCounts.high >= 3 && costCounts.high <= 8 ? 10 : 0)
+            );
+            
+            return synergyScore + typeBalance + costBalance;
+        }
+
+        function updateButtons() {
+            const addBtn = document.getElementById('addBtn');
+            const removeBtn = document.getElementById('removeBtn');
+            const completeBtn = document.getElementById('completeBtn');
+            
+            addBtn.disabled = !gameState.selectedCard || gameState.selectedCard.inDeck || gameState.currentDeck.length >= 30;
+            removeBtn.disabled = !gameState.selectedCard || !gameState.selectedCard.inDeck;
+            completeBtn.disabled = gameState.currentDeck.length !== 30;
+        }
+
+        function updateStats() {
+            document.getElementById('deckCount').textContent = `${gameState.deckCount}/${gameState.totalDecks}`;
+            
+            const avgEfficiency = gameState.deckCount > 0 ? 
+                Math.round(gameState.totalEfficiency / gameState.deckCount) : 0;
+            document.getElementById('efficiency').textContent = `${avgEfficiency}%`;
+            
+            // 現在のデッキのシナジー・バランス表示
+            const currentEfficiency = gameState.currentDeck.length === 30 ? calculateDeckEfficiency() : 0;
+            document.getElementById('synergyScore').textContent = `${Math.min(100, currentEfficiency)}%`;
+            document.getElementById('balanceScore').textContent = `${Math.min(100, currentEfficiency)}%`;
+            
+            // ゲーム状況更新
+            let status = '';
+            if (gameState.deckCount === 0) {
+                status = '新しいデッキ構築を開始してください';
+            } else if (gameState.currentDeck.length < 30) {
+                status = `デッキ${gameState.deckCount + 1}構築中 - ${30 - gameState.currentDeck.length}枚追加が必要`;
+            } else {
+                status = `デッキ${gameState.deckCount + 1}完成 - 構築完了で評価`;
+            }
+            
+            document.getElementById('gameStatus').textContent = status;
+        }
+
+        function newDeck() {
+            gameState.currentDeck = [];
+            gameState.selectedCard = null;
+            
+            renderCardPool();
+            renderDeck();
+            updateSynergy();
+            updateButtons();
+            updateStats();
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

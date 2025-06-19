@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>威力調整 - ゲーム036</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px 25px; border-radius: 15px; min-width: 100px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .game-area { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 40px; margin-bottom: 30px; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        .click-target { width: 100px; height: 100px; border-radius: 50%; cursor: pointer; transition: all 0.2s ease; margin: 10px; }
+        .demo-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.8; }
+        .demo-text { font-size: 1.3rem; margin-bottom: 30px; line-height: 1.6; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">⚔️ 威力調整</h1>
+        <p class="game-description">攻撃威力の精密制御と状況に応じた適切な力加減による効率的戦闘ゲーム
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">レベル</div><div class="stat-value" id="level">1</div></div>
+            <div class="stat"><div class="stat-label">経験値</div><div class="stat-value" id="experience">0</div></div>
+            <div class="stat"><div class="stat-label">達成度</div><div class="stat-value" id="progress">0%</div></div>
+        </div>
+        <div class="game-area" id="gameArea">
+            <div id="gamePlay" style="display: none;">
+                <div id="targetArea" style="position: relative; width: 100%; height: 300px; background: rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden;"></div>
+                <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center;"><div>クリック数</div><div id="clicks" style="font-size: 1.5rem; font-weight: bold; color: #4caf50;">0</div></div>
+                    <div style="text-align: center;"><div>命中数</div><div id="hits" style="font-size: 1.5rem; font-weight: bold; color: #2196f3;">0</div></div>
+                    <div style="text-align: center;"><div>精度</div><div id="accuracy" style="font-size: 1.5rem; font-weight: bold; color: #ff9800;">100%</div></div>
+                    <div style="text-align: center;"><div>残り時間</div><div id="timeLeft" style="font-size: 1.5rem; font-weight: bold;">30s</div></div>
+                </div>
+            </div>
+            <div id="gameStart">
+                <div class="demo-icon">⚔️</div>
+                <div class="demo-text">威力レベルを精密に調整し、状況に応じた最適化を実現！<br>5段階の威力レベルで効率的な戦闘をマスターしよう</div>
+                <div class="feature-list">
+                    <div class="feature-item">⚔️ 5段階の威力レベル調整</div>
+                    <div class="feature-item">🎯 状況別最適威力の選択</div>
+                    <div class="feature-item">📈 15回の威力調整実行</div>
+                    <div class="feature-item">🏆 調整精度90%以上でクリア</div>
+                </div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+    </div>
+    <script>
+        let gameState = { level: 1, experience: 0, progress: 0, isPlaying: false, clicks: 0, hits: 0, timeLeft: 30, targets: [] };
+        function startGame() {
+            gameState.isPlaying = true; gameState.clicks = 0; gameState.hits = 0; gameState.timeLeft = 30; gameState.targets = [];
+            document.getElementById('gameStart').style.display = 'none'; document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none'; document.getElementById('resetBtn').style.display = 'inline-block';
+            spawnTarget(); startTimer();
+        }
+        function spawnTarget() {
+            if (!gameState.isPlaying) return;
+            const target = document.createElement('div'); target.className = 'click-target';
+            target.style.background = `hsl(${Math.random() * 360}, 70%, 50%)`; target.style.position = 'absolute';
+            target.style.left = Math.random() * 250 + 'px'; target.style.top = Math.random() * 200 + 'px';
+            target.onclick = () => { gameState.hits++; gameState.experience += 5; target.remove(); updateStats(); setTimeout(spawnTarget, 200); };
+            document.getElementById('targetArea').appendChild(target); gameState.targets.push(target);
+            setTimeout(() => { if (target.parentNode) target.remove(); }, 2000);
+        }
+        function startTimer() { const timer = setInterval(() => { if (!gameState.isPlaying) { clearInterval(timer); return; } gameState.timeLeft--; document.getElementById('timeLeft').textContent = gameState.timeLeft + 's'; if (gameState.timeLeft <= 0) { endGame(); clearInterval(timer); } }, 1000); }
+        function updateStats() { document.getElementById('clicks').textContent = gameState.clicks; document.getElementById('hits').textContent = gameState.hits; const accuracy = gameState.clicks > 0 ? Math.round((gameState.hits / gameState.clicks) * 100) : 100; document.getElementById('accuracy').textContent = accuracy + '%'; }
+        function endGame() { gameState.isPlaying = false; const accuracy = gameState.clicks > 0 ? Math.round((gameState.hits / gameState.clicks) * 100) : 100; let result = `ゲーム完了！\n\n命中数: ${gameState.hits}\nクリック数: ${gameState.clicks}\n精度: ${accuracy}%\n\n`; if (accuracy >= 90) { result += "🏆 素晴らしい！スピードクリックマスターです！"; gameState.level++; gameState.experience += 100; } else if (accuracy >= 70) { result += "🎯 良い結果です！さらなる精度向上を目指しましょう！"; gameState.experience += 50; } else { result += "📈 まだ改善の余地があります。集中力を高めましょう。"; gameState.experience += 25; } alert(result); resetGame(); }
+        function resetGame() { gameState.isPlaying = false; document.getElementById('gameStart').style.display = 'block'; document.getElementById('gamePlay').style.display = 'none'; document.getElementById('startBtn').style.display = 'inline-block'; document.getElementById('resetBtn').style.display = 'none'; document.getElementById('targetArea').innerHTML = ''; updateDisplay(); }
+        function updateDisplay() { document.getElementById('level').textContent = gameState.level; document.getElementById('experience').textContent = gameState.experience; document.getElementById('progress').textContent = Math.round((gameState.hits / 30) * 100) + '%'; }
+        function goBack() { window.close(); window.history.back(); }
+        document.getElementById('targetArea').addEventListener('click', (e) => { if (e.target.id === 'targetArea') { gameState.clicks++; updateStats(); } });
+        updateDisplay();
+    </script>
+</body>
+</html>

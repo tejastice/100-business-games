@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>確率計算 - ゲーム055</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .problem-display {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .scenario-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .scenario-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .scenario-text {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .probability-visual {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .probability-bars {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .probability-bar {
+            flex: 1;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #4caf50);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .question-area {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .answer-option.selected {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .answer-option.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+
+        .answer-option.incorrect {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: #f44336;
+        }
+
+        .calculation-area {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .calculation-steps {
+            list-style: decimal;
+            margin-left: 20px;
+        }
+
+        .calculation-steps li {
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .feedback {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        .risk-assessment {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .risk-level {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .risk-low { color: #4caf50; }
+        .risk-medium { color: #ff9800; }
+        .risk-high { color: #f44336; }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎲 確率計算</h1>
+        <p class="game-description">確率論的思考と期待値計算による意思決定支援能力ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">問題</div>
+                <div class="stat-value" id="currentProblem">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">精度</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 20の確率問題を解決し、期待値・条件付き確率計算とリスク評価を行う</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>各問題で実際的なシナリオが提示される</li>
+                        <li>確率計算の手順が視覚的に表示される</li>
+                        <li>最適な選択肢を選び、リスク評価を行う</li>
+                    </ul>
+                </li>
+                <li><strong>計算項目:</strong> 基本確率、期待値、条件付き確率、リスク評価、意思決定分析</li>
+                <li><strong>勝利条件:</strong> 20問中、計算精度85%以上（17問以上正解）でクリア</li>
+                <li><strong>評価システム:</strong> 正解: +100点、部分正解: +50点、不正解: -25点</li>
+                <li><strong>プレイのコツ:</strong> 計算過程を慎重に確認し、実際のリスクを正確に評価する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="problem-display" id="problemDisplay">
+                <!-- シナリオと確率問題がここに表示される -->
+            </div>
+
+            <div class="question-area" id="questionArea">
+                <!-- 質問がここに表示される -->
+            </div>
+
+            <div class="feedback" id="feedback">
+                <!-- フィードバックがここに表示される -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="generateNewProblem()">新しい問題</button>
+            <button class="btn primary" onclick="submitAnswer()" id="submitBtn" disabled>回答を提出</button>
+            <button class="btn" onclick="showCalculation()">計算過程を表示</button>
+            <button class="btn" onclick="resetGame()">ゲームリセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentProblem: 1,
+            totalProblems: 20,
+            correctAnswers: 0,
+            score: 0,
+            currentQuestion: null,
+            selectedAnswer: null,
+            isAnswered: false
+        };
+
+        const probabilityProblems = [
+            {
+                type: 'basic_probability',
+                generator: () => ({
+                    scenario: "営業チームの成約率分析",
+                    description: "営業チーム10人中、A級営業マン3人の成約率は80%、B級営業マン7人の成約率は40%です。",
+                    question: "ランダムに選んだ営業マンが契約を取る確率は？",
+                    calculation: () => {
+                        const probA = 0.8;
+                        const probB = 0.4;
+                        const weightA = 3/10;
+                        const weightB = 7/10;
+                        return (probA * weightA + probB * weightB).toFixed(3);
+                    }
+                })
+            },
+            {
+                type: 'expected_value',
+                generator: () => ({
+                    scenario: "投資プロジェクトの期待収益",
+                    description: "新製品開発プロジェクト：成功確率60%で利益500万円、失敗確率40%で損失200万円",
+                    question: "このプロジェクトの期待値は？",
+                    calculation: () => {
+                        const successProb = 0.6;
+                        const failProb = 0.4;
+                        const successValue = 500;
+                        const failValue = -200;
+                        return (successProb * successValue + failProb * failValue).toFixed(0);
+                    }
+                })
+            },
+            {
+                type: 'conditional_probability',
+                generator: () => ({
+                    scenario: "品質管理システム",
+                    description: "製品検査で不良品発見率は2%、検査精度は95%（不良品を正しく検出する確率）",
+                    question: "検査で不良と判定された製品が実際に不良品である確率は？",
+                    calculation: () => {
+                        const defectRate = 0.02;
+                        const accuracy = 0.95;
+                        const falsePositive = 0.05;
+                        const bayesNumerator = accuracy * defectRate;
+                        const bayesDenominator = accuracy * defectRate + falsePositive * (1 - defectRate);
+                        return (bayesNumerator / bayesDenominator).toFixed(3);
+                    }
+                })
+            },
+            {
+                type: 'risk_assessment',
+                generator: () => ({
+                    scenario: "リスク管理評価",
+                    description: "システム障害確率：5%、障害による損失：1000万円、予防対策費用：100万円",
+                    question: "予防対策を実施すべきか？（期待損失と比較）",
+                    calculation: () => {
+                        const riskProb = 0.05;
+                        const loss = 1000;
+                        const preventionCost = 100;
+                        const expectedLoss = riskProb * loss;
+                        return expectedLoss > preventionCost ? "実施すべき" : "不要";
+                    }
+                })
+            },
+            {
+                type: 'decision_analysis',
+                generator: () => ({
+                    scenario: "市場参入戦略",
+                    description: "市場A：成功確率70%、利益800万円。市場B：成功確率40%、利益1500万円",
+                    question: "期待値が高いのはどちらの市場？",
+                    calculation: () => {
+                        const marketA = 0.7 * 800;
+                        const marketB = 0.4 * 1500;
+                        return marketA > marketB ? "市場A" : "市場B";
+                    }
+                })
+            }
+        ];
+
+        function initializeGame() {
+            resetGameState();
+            generateNewProblem();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentProblem: 1,
+                totalProblems: 20,
+                correctAnswers: 0,
+                score: 0,
+                currentQuestion: null,
+                selectedAnswer: null,
+                isAnswered: false
+            };
+        }
+
+        function generateNewProblem() {
+            if (gameState.currentProblem > gameState.totalProblems) {
+                endGame();
+                return;
+            }
+
+            // ランダムな確率問題を選択
+            const problemType = probabilityProblems[Math.floor(Math.random() * probabilityProblems.length)];
+            gameState.currentQuestion = problemType.generator();
+            gameState.currentQuestion.correctAnswer = gameState.currentQuestion.calculation();
+            
+            gameState.selectedAnswer = null;
+            gameState.isAnswered = false;
+            
+            displayProblem();
+            displayQuestion();
+            hideFeedback();
+            updateDisplay();
+        }
+
+        function displayProblem() {
+            const problemDisplay = document.getElementById('problemDisplay');
+            const question = gameState.currentQuestion;
+            
+            problemDisplay.innerHTML = `
+                <div class="scenario-container">
+                    <div class="scenario-title">📊 ${question.scenario}</div>
+                    <div class="scenario-text">${question.description}</div>
+                </div>
+                
+                <div class="probability-visual">
+                    <h4>📈 確率の視覚化</h4>
+                    <div class="probability-bars">
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${Math.random() * 100}%">
+                                ${(Math.random() * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="risk-assessment">
+                    <div class="risk-level risk-${getRiskLevel()}">
+                        リスクレベル: ${getRiskLevelText()}
+                    </div>
+                    <div>期待値計算と条件付き確率を考慮した意思決定が重要です</div>
+                </div>
+            `;
+        }
+
+        function getRiskLevel() {
+            const levels = ['low', 'medium', 'high'];
+            return levels[Math.floor(Math.random() * levels.length)];
+        }
+
+        function getRiskLevelText() {
+            const risk = getRiskLevel();
+            return risk === 'low' ? '低' : risk === 'medium' ? '中' : '高';
+        }
+
+        function displayQuestion() {
+            const questionArea = document.getElementById('questionArea');
+            const question = gameState.currentQuestion;
+            
+            // 選択肢を生成
+            const options = generateOptions(question);
+            
+            questionArea.innerHTML = `
+                <div class="question-text">${question.question}</div>
+                <div class="answer-options" id="answerOptions">
+                    ${options.map((option, index) => 
+                        `<div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                            ${option}
+                        </div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function generateOptions(question) {
+            const correct = question.correctAnswer;
+            let options = [correct];
+            
+            // 問題の種類に応じて不正解選択肢を生成
+            if (question.question.includes('確率')) {
+                // 確率問題用の選択肢
+                for (let i = 0; i < 3; i++) {
+                    let wrong = (parseFloat(correct) + (Math.random() - 0.5) * 0.3).toFixed(3);
+                    if (wrong < 0) wrong = Math.abs(wrong);
+                    if (wrong > 1) wrong = (1 - Math.random() * 0.3).toFixed(3);
+                    if (!options.includes(wrong)) options.push(wrong);
+                }
+            } else if (question.question.includes('期待値')) {
+                // 期待値問題用の選択肢
+                for (let i = 0; i < 3; i++) {
+                    let wrong = (parseFloat(correct) + (Math.random() - 0.5) * 200).toFixed(0) + "万円";
+                    if (!options.includes(wrong)) options.push(wrong);
+                }
+            } else if (question.question.includes('市場')) {
+                options = ["市場A", "市場B", "どちらも同じ", "判断不可"];
+            } else if (question.question.includes('実施すべき')) {
+                options = ["実施すべき", "不要", "条件付きで実施", "追加調査が必要"];
+            } else {
+                // その他の選択肢
+                for (let i = 0; i < 3; i++) {
+                    let variation = (Math.random() - 0.5) * 0.2;
+                    let wrong = (parseFloat(correct) * (1 + variation)).toFixed(3);
+                    if (!options.includes(wrong)) options.push(wrong);
+                }
+            }
+            
+            // 選択肢をシャッフル
+            return shuffleArray(options);
+        }
+
+        function selectAnswer(index) {
+            if (gameState.isAnswered) return;
+            
+            // 全ての選択肢から選択状態を削除
+            document.querySelectorAll('.answer-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 選択された選択肢をハイライト
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+            
+            gameState.selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function submitAnswer() {
+            if (gameState.selectedAnswer === null || gameState.isAnswered) return;
+            
+            gameState.isAnswered = true;
+            
+            const options = Array.from(document.querySelectorAll('.answer-option')).map(el => el.textContent.trim());
+            const selectedOption = options[gameState.selectedAnswer];
+            const correctAnswer = gameState.currentQuestion.correctAnswer;
+            
+            const isCorrect = selectedOption === correctAnswer || 
+                             Math.abs(parseFloat(selectedOption) - parseFloat(correctAnswer)) < 0.01;
+            
+            // 回答の表示を更新
+            document.querySelectorAll('.answer-option').forEach((option, index) => {
+                const optionText = option.textContent.trim();
+                if (optionText === correctAnswer || Math.abs(parseFloat(optionText) - parseFloat(correctAnswer)) < 0.01) {
+                    option.classList.add('correct');
+                } else if (index === gameState.selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // スコアと統計の更新
+            if (isCorrect) {
+                gameState.correctAnswers++;
+                gameState.score += 100;
+                showFeedback(true, '正解です！確率計算が正確でした。');
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+                showFeedback(false, `不正解です。正解は「${correctAnswer}」でした。`);
+            }
+            
+            gameState.currentProblem++;
+            document.getElementById('submitBtn').disabled = true;
+            
+            updateDisplay();
+            
+            // 次の問題への自動進行
+            setTimeout(() => {
+                generateNewProblem();
+            }, 3000);
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">
+                    ${isCorrect ? '✅ 正解' : '❌ 不正解'}
+                </div>
+                <div>${message}</div>
+            `;
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function showCalculation() {
+            if (!gameState.currentQuestion) return;
+            
+            const question = gameState.currentQuestion;
+            let calculationSteps = [];
+            
+            if (question.question.includes('ランダムに選んだ営業マン')) {
+                calculationSteps = [
+                    "A級営業マンの重み: 3/10 = 0.3",
+                    "B級営業マンの重み: 7/10 = 0.7", 
+                    "A級の成約率: 80% = 0.8",
+                    "B級の成約率: 40% = 0.4",
+                    "期待確率 = 0.8 × 0.3 + 0.4 × 0.7 = 0.24 + 0.28 = 0.52"
+                ];
+            } else if (question.question.includes('期待値')) {
+                calculationSteps = [
+                    "成功確率: 60% = 0.6",
+                    "失敗確率: 40% = 0.4",
+                    "成功時利益: 500万円",
+                    "失敗時損失: -200万円",
+                    "期待値 = 0.6 × 500 + 0.4 × (-200) = 300 - 80 = 220万円"
+                ];
+            } else {
+                calculationSteps = ["計算過程はゲーム内で表示されます"];
+            }
+            
+            const calculationHTML = `
+                <div class="calculation-area">
+                    <h4>🧮 計算過程</h4>
+                    <ol class="calculation-steps">
+                        ${calculationSteps.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                </div>
+            `;
+            
+            const problemDisplay = document.getElementById('problemDisplay');
+            if (!problemDisplay.querySelector('.calculation-area')) {
+                problemDisplay.innerHTML += calculationHTML;
+            }
+        }
+
+        function resetGame() {
+            if (confirm('ゲームをリセットしますか？進行状況が失われます。')) {
+                initializeGame();
+            }
+        }
+
+        function endGame() {
+            const accuracy = ((gameState.correctAnswers / gameState.totalProblems) * 100).toFixed(1);
+            const passed = accuracy >= 85;
+            
+            let message = `🎊 確率計算ゲーム完了！\n\n`;
+            message += `正解数: ${gameState.correctAnswers} / ${gameState.totalProblems}\n`;
+            message += `精度: ${accuracy}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な確率計算能力と意思決定力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n85%以上の精度を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentProblem').textContent = Math.min(gameState.currentProblem, gameState.totalProblems);
+            document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.currentProblem > 1 ? 
+                ((gameState.correctAnswers / (gameState.currentProblem - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const progress = ((gameState.currentProblem - 1) / gameState.totalProblems) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

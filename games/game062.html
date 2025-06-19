@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回転図形 - ゲーム062</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .rotation-display {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .shape-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            color: #333;
+            text-align: center;
+        }
+
+        .shape-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .shape-canvas {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .rotation-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .rotation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .rotation-detail {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .question-area {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .answer-option.selected {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .answer-option.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+
+        .answer-option.incorrect {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: #f44336;
+        }
+
+        .feedback {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+
+            .shape-canvas {
+                width: 100%;
+                max-width: 300px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🔄 回転図形</h1>
+        <p class="game-description">図形の回転変換理解と空間的想像力による回転認識ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">問題</div>
+                <div class="stat-value" id="currentProblem">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">予測精度</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 15種類の図形回転問題を解決し、回転後の形状予測と角度・軸の正確な理解を行う</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>各問題で図形と回転角度・軸が提示される</li>
+                        <li>回転後の形状を予測し、正しい選択肢を選ぶ</li>
+                        <li>空間的想像力を活用して回転変換を理解する</li>
+                    </ul>
+                </li>
+                <li><strong>回転種類:</strong> X軸回転、Y軸回転、Z軸回転、複合回転</li>
+                <li><strong>勝利条件:</strong> 15問中、予測精度85%以上（13問以上正解）でクリア</li>
+                <li><strong>評価システム:</strong> 正解: +100点、部分正解: +50点、不正解: -25点</li>
+                <li><strong>プレイのコツ:</strong> 空間座標系を意識し、回転軸と角度の関係を正確に把握する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="rotation-display" id="rotationDisplay">
+                <!-- 回転図形問題がここに表示される -->
+            </div>
+
+            <div class="feedback" id="feedback">
+                <!-- フィードバックがここに表示される -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="generateNewProblem()">新しい問題</button>
+            <button class="btn primary" onclick="submitAnswer()" id="submitBtn" disabled>回答を提出</button>
+            <button class="btn" onclick="showRotationHelp()">回転ガイド</button>
+            <button class="btn" onclick="resetGame()">ゲームリセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentProblem: 1,
+            totalProblems: 15,
+            correctAnswers: 0,
+            score: 0,
+            currentShape: null,
+            selectedAnswer: null,
+            isAnswered: false
+        };
+
+        const rotationShapes = [
+            {
+                type: 'cube_rotation',
+                generator: () => {
+                    const rotations = ['X軸90°', 'Y軸90°', 'Z軸90°', 'X軸180°', 'Y軸180°'];
+                    const rotation = rotations[Math.floor(Math.random() * rotations.length)];
+                    return {
+                        name: '立方体回転',
+                        description: `立方体を${rotation}回転させた時の形状`,
+                        originalShape: 'cube',
+                        rotation: rotation,
+                        difficulty: 'normal'
+                    };
+                }
+            },
+            {
+                type: 'triangle_rotation',
+                generator: () => {
+                    const rotations = ['X軸120°', 'Y軸60°', 'Z軸180°', 'X軸240°'];
+                    const rotation = rotations[Math.floor(Math.random() * rotations.length)];
+                    return {
+                        name: '三角錐回転',
+                        description: `三角錐を${rotation}回転させた時の形状`,
+                        originalShape: 'pyramid',
+                        rotation: rotation,
+                        difficulty: 'hard'
+                    };
+                }
+            },
+            {
+                type: 'complex_rotation',
+                generator: () => {
+                    const rotations = ['XY軸45°', 'YZ軸30°', 'XZ軸60°', '複合回転90°'];
+                    const rotation = rotations[Math.floor(Math.random() * rotations.length)];
+                    return {
+                        name: 'L字型回転',
+                        description: `L字型立体を${rotation}回転させた時の形状`,
+                        originalShape: 'L-shape',
+                        rotation: rotation,
+                        difficulty: 'expert'
+                    };
+                }
+            }
+        ];
+
+        function initializeGame() {
+            resetGameState();
+            generateNewProblem();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentProblem: 1,
+                totalProblems: 15,
+                correctAnswers: 0,
+                score: 0,
+                currentShape: null,
+                selectedAnswer: null,
+                isAnswered: false
+            };
+        }
+
+        function generateNewProblem() {
+            if (gameState.currentProblem > gameState.totalProblems) {
+                endGame();
+                return;
+            }
+
+            const shapeType = rotationShapes[Math.floor(Math.random() * rotationShapes.length)];
+            gameState.currentShape = shapeType.generator();
+            
+            gameState.selectedAnswer = null;
+            gameState.isAnswered = false;
+            
+            displayShape();
+            displayQuestion();
+            hideFeedback();
+            updateDisplay();
+        }
+
+        function displayShape() {
+            const rotationDisplay = document.getElementById('rotationDisplay');
+            const shape = gameState.currentShape;
+            
+            rotationDisplay.innerHTML = `
+                <div class="shape-container">
+                    <div class="shape-title">🔄 ${shape.name}</div>
+                    <div>${shape.description}</div>
+                    <canvas class="shape-canvas" id="shapeCanvas" width="400" height="300"></canvas>
+                </div>
+                
+                <div class="rotation-info">
+                    <h4>🔧 回転情報</h4>
+                    <div class="rotation-details">
+                        <div class="rotation-detail">元の形状: ${shape.originalShape}</div>
+                        <div class="rotation-detail">回転: ${shape.rotation}</div>
+                        <div class="rotation-detail">難易度: ${shape.difficulty}</div>
+                        <div class="rotation-detail">空間軸: 3D座標系</div>
+                    </div>
+                </div>
+            `;
+            
+            drawOriginalShape();
+        }
+
+        function drawOriginalShape() {
+            const canvas = document.getElementById('shapeCanvas');
+            const ctx = canvas.getContext('2d');
+            const shape = gameState.currentShape;
+            
+            // 背景をクリア
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 3D風の描画設定
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = 80;
+            
+            // 元の形状の描画
+            if (shape.originalShape === 'cube') {
+                drawCube(ctx, centerX - 100, centerY, scale);
+                ctx.fillStyle = '#333';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('回転前', centerX - 100, centerY + scale + 30);
+                
+                // 回転後の形状（予測）
+                drawRotatedCube(ctx, centerX + 100, centerY, scale, shape.rotation);
+                ctx.fillText('回転後（予測してください）', centerX + 100, centerY + scale + 30);
+            } else if (shape.originalShape === 'pyramid') {
+                drawPyramid(ctx, centerX - 100, centerY, scale);
+                ctx.fillStyle = '#333';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('回転前', centerX - 100, centerY + scale + 30);
+                
+                drawRotatedPyramid(ctx, centerX + 100, centerY, scale, shape.rotation);
+                ctx.fillText('回転後（予測してください）', centerX + 100, centerY + scale + 30);
+            } else if (shape.originalShape === 'L-shape') {
+                drawLShape(ctx, centerX - 100, centerY, scale * 0.8);
+                ctx.fillStyle = '#333';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('回転前', centerX - 100, centerY + scale + 30);
+                
+                drawRotatedLShape(ctx, centerX + 100, centerY, scale * 0.8, shape.rotation);
+                ctx.fillText('回転後（予測してください）', centerX + 100, centerY + scale + 30);
+            }
+        }
+
+        function drawCube(ctx, x, y, size) {
+            const offset = size * 0.3;
+            
+            // 前面
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+            ctx.strokeRect(x - size/2, y - size/2, size, size);
+            
+            // 上面（立体感）
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(x - size/2, y - size/2);
+            ctx.lineTo(x - size/2 + offset, y - size/2 - offset);
+            ctx.lineTo(x + size/2 + offset, y - size/2 - offset);
+            ctx.lineTo(x + size/2, y - size/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 右面
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(x + size/2, y - size/2);
+            ctx.lineTo(x + size/2 + offset, y - size/2 - offset);
+            ctx.lineTo(x + size/2 + offset, y + size/2 - offset);
+            ctx.lineTo(x + size/2, y + size/2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function drawRotatedCube(ctx, x, y, size, rotation) {
+            // 回転後の形状のヒントとして疑問符を表示
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+            ctx.strokeStyle = '#ffc107';
+            ctx.strokeRect(x - size/2, y - size/2, size, size);
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', x, y + 15);
+        }
+
+        function drawPyramid(ctx, x, y, height) {
+            const base = height * 0.8;
+            
+            // ベース
+            ctx.fillStyle = 'rgba(156, 39, 176, 0.3)';
+            ctx.fillRect(x - base/2, y + height/4, base, base/2);
+            ctx.strokeRect(x - base/2, y + height/4, base, base/2);
+            
+            // 三角面
+            ctx.fillStyle = 'rgba(156, 39, 176, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(x - base/2, y + height/4);
+            ctx.lineTo(x, y - height/2);
+            ctx.lineTo(x + base/2, y + height/4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function drawRotatedPyramid(ctx, x, y, height, rotation) {
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
+            ctx.fillRect(x - height/2, y - height/4, height, height/2);
+            ctx.strokeStyle = '#ffc107';
+            ctx.strokeRect(x - height/2, y - height/4, height, height/2);
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', x, y + 15);
+        }
+
+        function drawLShape(ctx, x, y, size) {
+            ctx.fillStyle = 'rgba(244, 67, 54, 0.3)';
+            ctx.strokeStyle = '#f44336';
+            
+            // L字の縦棒
+            ctx.fillRect(x - size/4, y - size/2, size/2, size);
+            ctx.strokeRect(x - size/4, y - size/2, size/2, size);
+            
+            // L字の横棒
+            ctx.fillRect(x - size/4, y + size/4, size, size/2);
+            ctx.strokeRect(x - size/4, y + size/4, size, size/2);
+        }
+
+        function drawRotatedLShape(ctx, x, y, size, rotation) {
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
+            ctx.fillRect(x - size/2, y - size/2, size, size);
+            ctx.strokeStyle = '#ffc107';
+            ctx.strokeRect(x - size/2, y - size/2, size, size);
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', x, y + 15);
+        }
+
+        function displayQuestion() {
+            const rotationDisplay = document.getElementById('rotationDisplay');
+            const shape = gameState.currentShape;
+            
+            const options = generateOptions(shape);
+            
+            const questionHTML = `
+                <div class="question-area">
+                    <div class="question-text">この${shape.rotation}回転後の形状はどれですか？</div>
+                    <div class="answer-options" id="answerOptions">
+                        ${options.map((option, index) => 
+                            `<div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                                ${option}
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            
+            rotationDisplay.innerHTML += questionHTML;
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function generateOptions(shape) {
+            const correct = getCorrectRotationDescription(shape);
+            let options = [correct];
+            
+            const wrongOptions = [
+                '元の形状と同じ',
+                '上下反転した形状',
+                '左右反転した形状',
+                '45度傾いた形状',
+                '裏返しになった形状',
+                '縮小された形状'
+            ];
+            
+            for (let i = 0; i < 3; i++) {
+                const wrongOption = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+                if (!options.includes(wrongOption)) {
+                    options.push(wrongOption);
+                }
+            }
+            
+            return shuffleArray(options);
+        }
+
+        function getCorrectRotationDescription(shape) {
+            if (shape.rotation.includes('X軸90°')) {
+                return 'X軸周りに90度回転した形状';
+            } else if (shape.rotation.includes('Y軸90°')) {
+                return 'Y軸周りに90度回転した形状';
+            } else if (shape.rotation.includes('Z軸90°')) {
+                return 'Z軸周りに90度回転した形状';
+            } else if (shape.rotation.includes('180°')) {
+                return '180度回転した形状';
+            } else {
+                return '複合軸回転による変形した形状';
+            }
+        }
+
+        function selectAnswer(index) {
+            if (gameState.isAnswered) return;
+            
+            document.querySelectorAll('.answer-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+            
+            gameState.selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function submitAnswer() {
+            if (gameState.selectedAnswer === null || gameState.isAnswered) return;
+            
+            gameState.isAnswered = true;
+            
+            const options = Array.from(document.querySelectorAll('.answer-option')).map(el => el.textContent.trim());
+            const selectedOption = options[gameState.selectedAnswer];
+            const correctAnswer = getCorrectRotationDescription(gameState.currentShape);
+            
+            const isCorrect = selectedOption === correctAnswer;
+            
+            document.querySelectorAll('.answer-option').forEach((option, index) => {
+                const optionText = option.textContent.trim();
+                if (optionText === correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === gameState.selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            if (isCorrect) {
+                gameState.correctAnswers++;
+                gameState.score += 100;
+                showFeedback(true, '正解です！回転予測が正確でした。');
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+                showFeedback(false, `不正解です。正解は「${correctAnswer}」でした。`);
+            }
+            
+            gameState.currentProblem++;
+            document.getElementById('submitBtn').disabled = true;
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                generateNewProblem();
+            }, 3000);
+        }
+
+        function showRotationHelp() {
+            const helpHTML = `
+                <div class="rotation-info">
+                    <h4>🎮 回転軸ガイド</h4>
+                    <div class="rotation-details">
+                        <div class="rotation-detail">X軸回転: 左右軸を中心とした回転</div>
+                        <div class="rotation-detail">Y軸回転: 上下軸を中心とした回転</div>
+                        <div class="rotation-detail">Z軸回転: 奥行き軸を中心とした回転</div>
+                        <div class="rotation-detail">複合回転: 複数軸の組み合わせ</div>
+                        <div class="rotation-detail">90°: 直角回転</div>
+                        <div class="rotation-detail">180°: 半回転</div>
+                    </div>
+                </div>
+            `;
+            
+            const rotationDisplay = document.getElementById('rotationDisplay');
+            if (!rotationDisplay.querySelector('.rotation-info:last-child')) {
+                rotationDisplay.innerHTML += helpHTML;
+            }
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">
+                    ${isCorrect ? '✅ 正解' : '❌ 不正解'}
+                </div>
+                <div>${message}</div>
+            `;
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function resetGame() {
+            if (confirm('ゲームをリセットしますか？進行状況が失われます。')) {
+                initializeGame();
+            }
+        }
+
+        function endGame() {
+            const accuracy = ((gameState.correctAnswers / gameState.totalProblems) * 100).toFixed(1);
+            const passed = accuracy >= 85;
+            
+            let message = `🎊 回転図形ゲーム完了！\n\n`;
+            message += `正解数: ${gameState.correctAnswers} / ${gameState.totalProblems}\n`;
+            message += `予測精度: ${accuracy}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な空間認識能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n85%以上の予測精度を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentProblem').textContent = Math.min(gameState.currentProblem, gameState.totalProblems);
+            document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.currentProblem > 1 ? 
+                ((gameState.correctAnswers / (gameState.currentProblem - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const progress = ((gameState.currentProblem - 1) / gameState.totalProblems) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        initializeGame();
+    </script>
+</body>
+</html>

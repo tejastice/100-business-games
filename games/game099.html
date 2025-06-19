@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダンスリズム - ゲーム099</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2196F3, #21CBF3, #4FC3F7, #81D4FA);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2196F3;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .water-surface {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(to bottom, #2196F3, #1976D2, #1565C0);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #0D47A1;
+            overflow: hidden;
+        }
+
+        .wave-animation {
+            position: absolute;
+            width: 120%;
+            height: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: waves 3s ease-in-out infinite;
+        }
+
+        .wave-1 { top: 30%; animation-delay: 0s; }
+        .wave-2 { top: 50%; animation-delay: 1s; }
+        .wave-3 { top: 70%; animation-delay: 2s; }
+
+        .rowing-boat {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 60px;
+            background: linear-gradient(45deg, #8D6E63, #A1887F);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border: 3px solid #5D4037;
+        }
+
+        .rower {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+            border: 2px solid white;
+        }
+
+        .rower.rowing {
+            transform: scale(1.2);
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+        }
+
+        .rhythm-metronome {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(90deg, #E0E0E0, #BDBDBD, #E0E0E0);
+            border-radius: 30px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metronome-beat {
+            position: absolute;
+            width: 80px;
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            border-radius: 30px;
+            transition: left 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            animation: pulse 0.6s ease-in-out infinite;
+        }
+
+        .team-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .rower-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .rower-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(255, 107, 53, 0.4);
+        }
+
+        .rower-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .rower-btn.in-sync {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            animation: sync-success 0.5s ease-in-out;
+        }
+
+        .synchronization-meter {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, #F44336, #FF9800, #4CAF50);
+            border-radius: 15px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sync-indicator {
+            position: absolute;
+            width: 20px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            transition: left 0.3s ease;
+            border: 2px solid #333;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes waves {
+            0%, 100% { transform: translateX(-20%); }
+            50% { transform: translateX(0%); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes sync-success {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes boat-boost {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        .boat-boost {
+            animation: boat-boost 0.5s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .team-actions { grid-template-columns: repeat(2, 1fr); }
+            .rowing-boat { width: 250px; }
+            .game-title { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">💃 ダンスリズム</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: リズム感・表現力・チームハーモニー・創造性・感情表現・協調性
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>リズム精度</div>
+                <div id="rhythmAccuracy">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>連続ヒット</div>
+                <div id="consecutiveHits">0</div>
+            </div>
+            <div class="stat-item">
+                <div>ダンススコア</div>
+                <div id="danceScore">0</div>
+            </div>
+            <div class="stat-item">
+                <div>表現力</div>
+                <div id="expression">普通</div>
+            </div>
+        </div>
+
+        <div class="rhythm-metronome">
+            <div class="metronome-beat" id="metronomeBeat">♪ BEAT</div>
+        </div>
+        <div style="text-align: center; margin: 5px 0;">🎵 リズムに合わせてダンスを踊ろう</div>
+
+        <div class="synchronization-meter">
+            <div class="sync-indicator" id="syncIndicator"></div>
+        </div>
+        <div style="text-align: center; margin: 5px 0;">💃 ダンスリズムレベル</div>
+
+        <div class="water-surface">
+            <div class="wave-animation wave-1"></div>
+            <div class="wave-animation wave-2"></div>
+            <div class="wave-animation wave-3"></div>
+            
+            <div class="rowing-boat" id="danceStage">
+                <div class="rower" id="dancer1">💃</div>
+                <div class="rower" id="dancer2">🕺</div>
+                <div class="rower" id="dancer3">💃</div>
+                <div class="rower" id="dancer4">🕺</div>
+            </div>
+        </div>
+
+        <div class="team-actions">
+            <button class="rower-btn" id="action1" disabled>ダンサー1<br>💃</button>
+            <button class="rower-btn" id="action2" disabled>ダンサー2<br>🕺</button>
+            <button class="rower-btn" id="action3" disabled>ダンサー3<br>💃</button>
+            <button class="rower-btn" id="action4" disabled>ダンサー4<br>🕺</button>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">ダンス開始</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+            <button class="control-btn" id="tempoBtn" disabled>リズム変更</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>表現力とチームハーモニー・創造的コミュニケーション・リズム感とタイミング・協調性と感情表現・組織の一体感を強化します</p>
+        </div>
+    </div>
+
+    <script>
+        class DanceRhythm {
+            constructor() {
+                this.rhythmHits = 0;
+                this.totalMoves = 0;
+                this.consecutiveHits = 0;
+                this.maxConsecutiveHits = 0;
+                this.danceScore = 0;
+                this.gameActive = false;
+                this.beatPosition = 0;
+                this.beatDirection = 1;
+                this.tempo = 1000; // ミリ秒
+                this.animationId = null;
+                this.dancerStates = [false, false, false, false];
+                this.lastBeatTime = 0;
+                this.expressionLevel = '普通';
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.rhythmAccuracyEl = document.getElementById('rhythmAccuracy');
+                this.consecutiveHitsEl = document.getElementById('consecutiveHits');
+                this.danceScoreEl = document.getElementById('danceScore');
+                this.expressionEl = document.getElementById('expression');
+                this.metronomeBeatEl = document.getElementById('metronomeBeat');
+                this.syncIndicatorEl = document.getElementById('syncIndicator');
+                this.danceStageEl = document.getElementById('danceStage');
+                
+                this.dancers = [
+                    document.getElementById('dancer1'),
+                    document.getElementById('dancer2'),
+                    document.getElementById('dancer3'),
+                    document.getElementById('dancer4')
+                ];
+                
+                this.actionBtns = [
+                    document.getElementById('action1'),
+                    document.getElementById('action2'),
+                    document.getElementById('action3'),
+                    document.getElementById('action4')
+                ];
+                
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.tempoBtn = document.getElementById('tempoBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startDance());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.tempoBtn.addEventListener('click', () => this.changeRhythm());
+                
+                this.actionBtns.forEach((btn, index) => {
+                    btn.addEventListener('click', () => this.dancerMove(index));
+                });
+            }
+
+            startDance() {
+                this.gameActive = true;
+                this.startMetronome();
+                this.enableActions();
+                this.startBtn.textContent = 'ダンス中...';
+                this.startBtn.disabled = true;
+                this.tempoBtn.disabled = false;
+            }
+
+            startMetronome() {
+                const animate = () => {
+                    if (!this.gameActive) return;
+
+                    this.beatPosition += this.beatDirection * 2;
+                    
+                    if (this.beatPosition >= 80) {
+                        this.beatPosition = 80;
+                        this.beatDirection = -1;
+                        this.onBeat();
+                    } else if (this.beatPosition <= 0) {
+                        this.beatPosition = 0;
+                        this.beatDirection = 1;
+                    }
+
+                    this.metronomeBeatEl.style.left = this.beatPosition + '%';
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            stopMetronome() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            onBeat() {
+                this.lastBeatTime = Date.now();
+                this.evaluateDanceSync();
+                this.resetDancerStates();
+            }
+
+            dancerMove(dancerIndex) {
+                if (!this.gameActive) return;
+
+                this.dancerStates[dancerIndex] = true;
+                this.totalMoves++;
+                
+                // ビジュアルフィードバック
+                this.dancers[dancerIndex].classList.add('rowing');
+                this.actionBtns[dancerIndex].classList.add('in-sync');
+                
+                setTimeout(() => {
+                    this.dancers[dancerIndex].classList.remove('rowing');
+                    this.actionBtns[dancerIndex].classList.remove('in-sync');
+                }, 300);
+            }
+
+            evaluateDanceSync() {
+                const activeDancers = this.dancerStates.filter(state => state).length;
+                const syncThreshold = 3; // 最低3人が同期していればOK
+                
+                if (activeDancers >= syncThreshold) {
+                    this.rhythmHits++;
+                    this.consecutiveHits++;
+                    this.maxConsecutiveHits = Math.max(this.maxConsecutiveHits, this.consecutiveHits);
+                    this.danceScore += activeDancers * 10; // 同期度に応じてスコア増加
+                    this.celebrateSync();
+                    this.updateExpression(activeDancers);
+                } else {
+                    this.consecutiveHits = 0;
+                }
+                
+                this.updateRhythmMeter(activeDancers);
+                this.updateDisplay();
+            }
+
+            updateRhythmMeter(activeDancers) {
+                const rhythmLevel = (activeDancers / 4) * 100;
+                this.syncIndicatorEl.style.left = rhythmLevel + '%';
+            }
+
+            celebrateSync() {
+                this.danceStageEl.classList.add('boat-boost');
+                setTimeout(() => {
+                    this.danceStageEl.classList.remove('boat-boost');
+                }, 500);
+            }
+
+            updateExpression(activeDancers) {
+                if (this.consecutiveHits >= 10) {
+                    this.expressionLevel = '素晴らしい';
+                } else if (this.consecutiveHits >= 5) {
+                    this.expressionLevel = '良い';
+                } else if (activeDancers >= 3) {
+                    this.expressionLevel = '普通';
+                } else {
+                    this.expressionLevel = '要練習';
+                }
+            }
+
+            resetDancerStates() {
+                this.dancerStates = [false, false, false, false];
+            }
+
+            changeRhythm() {
+                const rhythms = [1200, 1000, 800, 600]; // 遅い→速い
+                const currentIndex = rhythms.indexOf(this.tempo);
+                const nextIndex = (currentIndex + 1) % rhythms.length;
+                this.tempo = rhythms[nextIndex];
+                
+                const rhythmNames = ['スロー', 'ノーマル', 'ファスト', 'エクストリーム'];
+                this.tempoBtn.textContent = `リズム: ${rhythmNames[nextIndex]}`;
+            }
+
+            enableActions() {
+                this.actionBtns.forEach(btn => {
+                    btn.disabled = false;
+                });
+            }
+
+            disableActions() {
+                this.actionBtns.forEach(btn => {
+                    btn.disabled = true;
+                });
+            }
+
+            resetGame() {
+                this.gameActive = false;
+                this.rhythmHits = 0;
+                this.totalMoves = 0;
+                this.consecutiveHits = 0;
+                this.maxConsecutiveHits = 0;
+                this.danceScore = 0;
+                this.beatPosition = 0;
+                this.beatDirection = 1;
+                this.tempo = 1000;
+                this.dancerStates = [false, false, false, false];
+                this.expressionLevel = '普通';
+                
+                this.stopMetronome();
+                this.disableActions();
+                this.updateDisplay();
+                
+                this.metronomeBeatEl.style.left = '0%';
+                this.syncIndicatorEl.style.left = '0%';
+                
+                this.dancers.forEach(dancer => {
+                    dancer.classList.remove('rowing');
+                });
+                
+                this.actionBtns.forEach(btn => {
+                    btn.classList.remove('in-sync');
+                });
+                
+                this.startBtn.textContent = 'ダンス開始';
+                this.startBtn.disabled = false;
+                this.tempoBtn.disabled = true;
+                this.tempoBtn.textContent = 'リズム変更';
+            }
+
+            updateDisplay() {
+                const rhythmAccuracy = this.totalMoves > 0 ? 
+                    ((this.rhythmHits / Math.ceil(this.totalMoves / 4)) * 100).toFixed(1) : '0';
+                
+                this.rhythmAccuracyEl.textContent = rhythmAccuracy + '%';
+                this.consecutiveHitsEl.textContent = this.consecutiveHits;
+                this.danceScoreEl.textContent = this.danceScore;
+                this.expressionEl.textContent = this.expressionLevel;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new DanceRhythm();
+        });
+    </script>
+</body>
+</html>

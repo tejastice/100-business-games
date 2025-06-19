@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サッカーキック - ゲーム087</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .soccer-field {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            background: linear-gradient(to bottom, #4caf50 0%, #2e7d32 100%);
+            border-radius: 15px;
+            position: relative;
+            border: 3px solid white;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        .goal {
+            position: absolute;
+            top: 10px;
+            left: 40%;
+            width: 20%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+        .goal-zones {
+            position: absolute;
+            top: 10px;
+            left: 40%;
+            width: 20%;
+            height: 30px;
+            display: flex;
+        }
+        .goal-zone {
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .goal-zone:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .goal-zone.left {
+            border-radius: 0 0 0 10px;
+        }
+        .goal-zone.right {
+            border-radius: 0 0 10px 0;
+        }
+        .ball {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, white, #333);
+            border-radius: 50%;
+            transition: all 0.5s ease;
+            z-index: 10;
+            cursor: pointer;
+        }
+        .ball.shooting {
+            animation: ballFly 0.8s ease-out;
+        }
+        @keyframes ballFly {
+            0% { bottom: 20px; transform: translateX(-50%) scale(1); }
+            50% { bottom: 180px; transform: translateX(-50%) scale(0.7); }
+            100% { bottom: 35px; transform: translateX(-50%) scale(0.5); }
+        }
+        .power-meter {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            border: 2px solid white;
+            overflow: hidden;
+        }
+        .power-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4caf50, #ffc107, #f44336);
+            transition: width 0.1s ease;
+        }
+        .field-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        .center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: white;
+            opacity: 0.7;
+        }
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid white;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+        .goal-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4caf50;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .goal-effect.show {
+            animation: goalCelebration 2s ease-out;
+        }
+        @keyframes goalCelebration {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .demo-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .coming-soon {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .implementation-note {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">⚽ サッカーキック</h1>
+        <p class="game-description">力加減と方向制御で正確なキック！集中力と精度でビジネスの目標達成力を鍛えよう！</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ゴール数</div>
+                <div class="stat-value" id="goals">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">成功率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ボール数</div>
+                <div class="stat-value" id="ballsLeft">10</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="soccer-field" id="soccerField">
+                <div class="goal"></div>
+                <div class="goal-zones">
+                    <div class="goal-zone left" onclick="shootBall('left')"></div>
+                    <div class="goal-zone center" onclick="shootBall('center')"></div>
+                    <div class="goal-zone right" onclick="shootBall('right')"></div>
+                </div>
+                <div class="field-lines">
+                    <div class="center-line"></div>
+                    <div class="center-circle"></div>
+                </div>
+                <div class="ball" id="ball" onclick="startPowerMeter()"></div>
+                <div class="power-meter" id="powerMeter" style="display: none;">
+                    <div class="power-fill" id="powerFill"></div>
+                </div>
+                <div class="goal-effect" id="goalEffect">🎉 GOAL! 🎉</div>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver" style="display: none; background: rgba(76, 175, 80, 0.2); padding: 30px; border-radius: 15px; margin-top: 20px; border: 2px solid #4caf50;">
+            <h2>🎉 ゲーム終了！</h2>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <p>ゴール数: <span id="finalGoals">0</span></p>
+            <p>成功率: <span id="finalAccuracy">0%</span></p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="instructions" style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left;">
+            <h3>🎯 遊び方</h3>
+            <p>• ボールをクリックしてパワーメーターを起動</p>
+            <p>• 適切なタイミングで再クリックしてシュートパワーを決定</p>
+            <p>• ゴールの左、中央、右を狙ってクリック</p>
+            <p>• 目標達成力と集中力でビジネス成果を向上</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            goals: 0,
+            shots: 0,
+            ballsLeft: 10,
+            isPowerCharging: false,
+            power: 0,
+            powerInterval: null
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                goals: 0,
+                shots: 0,
+                ballsLeft: 10,
+                isPowerCharging: false,
+                power: 0,
+                powerInterval: null
+            };
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('gameOver').style.display = 'none';
+            updateDisplay();
+        }
+
+        function startPowerMeter() {
+            if (!gameState.isPlaying || gameState.ballsLeft <= 0 || gameState.isPowerCharging) return;
+            
+            gameState.isPowerCharging = true;
+            gameState.power = 0;
+            
+            const powerMeter = document.getElementById('powerMeter');
+            const powerFill = document.getElementById('powerFill');
+            
+            powerMeter.style.display = 'block';
+            
+            gameState.powerInterval = setInterval(() => {
+                gameState.power += 2;
+                if (gameState.power > 100) {
+                    gameState.power = 0;
+                }
+                powerFill.style.width = gameState.power + '%';
+            }, 50);
+        }
+
+        function shootBall(direction) {
+            if (!gameState.isPowerCharging || !gameState.isPlaying) return;
+            
+            clearInterval(gameState.powerInterval);
+            gameState.isPowerCharging = false;
+            
+            const powerMeter = document.getElementById('powerMeter');
+            const ball = document.getElementById('ball');
+            const goalEffect = document.getElementById('goalEffect');
+            
+            powerMeter.style.display = 'none';
+            
+            gameState.shots++;
+            gameState.ballsLeft--;
+            
+            // シュートアニメーション
+            ball.classList.add('shooting');
+            
+            setTimeout(() => {
+                ball.classList.remove('shooting');
+                
+                // ゴール判定（パワーと方向による）
+                const isGoal = calculateGoal(direction, gameState.power);
+                
+                if (isGoal) {
+                    gameState.goals++;
+                    gameState.score += Math.floor(gameState.power / 10) * 100;
+                    
+                    goalEffect.classList.add('show');
+                    setTimeout(() => {
+                        goalEffect.classList.remove('show');
+                    }, 2000);
+                }
+                
+                updateDisplay();
+                
+                if (gameState.ballsLeft <= 0) {
+                    endGame();
+                }
+            }, 800);
+        }
+
+        function calculateGoal(direction, power) {
+            // ゴール成功率の計算
+            let successRate = 0;
+            
+            // 方向別の基本成功率
+            if (direction === 'center') {
+                successRate = 0.7; // 中央は難しい
+            } else {
+                successRate = 0.8; // 左右は比較的容易
+            }
+            
+            // パワーによる調整（適度なパワーが最適）
+            if (power >= 40 && power <= 80) {
+                successRate += 0.2;
+            } else if (power < 20 || power > 90) {
+                successRate -= 0.3;
+            }
+            
+            return Math.random() < successRate;
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('goals').textContent = gameState.goals;
+            document.getElementById('ballsLeft').textContent = gameState.ballsLeft;
+            
+            const accuracy = gameState.shots > 0 ? Math.round((gameState.goals / gameState.shots) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            document.getElementById('startBtn').disabled = false;
+            
+            const accuracy = gameState.shots > 0 ? Math.round((gameState.goals / gameState.shots) * 100) : 0;
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalGoals').textContent = gameState.goals;
+            document.getElementById('finalAccuracy').textContent = accuracy + '%';
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function resetGame() {
+            gameState = {
+                isPlaying: false,
+                score: 0,
+                goals: 0,
+                shots: 0,
+                ballsLeft: 10,
+                isPowerCharging: false,
+                power: 0,
+                powerInterval: null
+            };
+            
+            clearInterval(gameState.powerInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('powerMeter').style.display = 'none';
+            
+            const ball = document.getElementById('ball');
+            ball.classList.remove('shooting');
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 初期化
+        updateDisplay();
+    </script>
+</body>
+</html>

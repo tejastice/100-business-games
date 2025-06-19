@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポーカー戦略 - ゲーム071</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .poker-game {
+            width: 1000px;
+            height: 700px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .poker-table {
+            background: #1a472a;
+            border-radius: 150px;
+            width: 90%;
+            height: 60%;
+            margin: 20px auto;
+            position: relative;
+            border: 5px solid #8b4513;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .community-cards {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            width: 60px;
+            height: 85px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .card.red {
+            color: #e74c3c;
+        }
+
+        .card.black {
+            color: #2c3e50;
+        }
+
+        .card.hidden {
+            background: #3498db;
+            color: white;
+        }
+
+        .player-cards {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .pot-info {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .betting-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .bet-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .bet-btn.fold {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .bet-btn.call {
+            background: #f39c12;
+            color: white;
+        }
+
+        .bet-btn.raise {
+            background: #27ae60;
+            color: white;
+        }
+
+        .bet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .probability-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .hand-strength {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .strategy-advice {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px;
+            border: 2px solid #3498db;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .control-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .reset-button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-results {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #333;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .ai-opponent {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .chips-display {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .chip-stack {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="poker-game">
+        <div class="game-header">
+            <div class="hand-info">ハンド: <span id="handCount">1</span>/10</div>
+            <div class="win-rate">勝率: <span id="winRate">0</span>%</div>
+            <div class="total-winnings">獲得額: $<span id="totalWinnings">0</span></div>
+        </div>
+
+        <div class="ai-opponent">
+            <div>AI対戦相手</div>
+            <div>難易度: <span id="aiDifficulty">中級</span></div>
+        </div>
+
+        <div class="poker-table">
+            <div class="community-cards" id="communityCards">
+                <!-- コミュニティカードがここに表示される -->
+            </div>
+
+            <div class="pot-info">
+                <div>ポット: $<span id="potAmount">0</span></div>
+                <div>ベット額: $<span id="currentBet">0</span></div>
+            </div>
+
+            <div class="player-cards">
+                <h4>あなたの手札:</h4>
+                <div id="playerCards" style="display: flex; gap: 10px; margin-left: 10px;">
+                    <!-- プレイヤーのカードがここに表示される -->
+                </div>
+            </div>
+
+            <div class="probability-display">
+                <div class="hand-strength" id="handStrength">手札評価: 準備中</div>
+                <div>勝利確率: <span id="winProbability">--</span>%</div>
+                <div>推奨アクション: <span id="recommendedAction">--</span></div>
+            </div>
+
+            <div class="betting-controls" id="bettingControls" style="display: none;">
+                <button class="bet-btn fold" onclick="playerAction('fold')">フォールド</button>
+                <button class="bet-btn call" onclick="playerAction('call')">コール ($<span id="callAmount">0</span>)</button>
+                <button class="bet-btn raise" onclick="playerAction('raise')">レイズ ($<span id="raiseAmount">0</span>)</button>
+            </div>
+
+            <div class="chips-display">
+                <div class="chip-stack">
+                    <div>あなたのチップ</div>
+                    <div>$<span id="playerChips">1000</span></div>
+                </div>
+                <div class="chip-stack">
+                    <div>AIのチップ</div>
+                    <div>$<span id="aiChips">1000</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strategy-advice" id="strategyAdvice">
+            <h4>🎯 戦略アドバイス</h4>
+            <p id="adviceText">ゲームを開始して戦略的思考を鍛えましょう</p>
+        </div>
+
+        <div class="game-controls">
+            <button id="startBtn" class="control-btn start-button">新しいハンド開始</button>
+            <button id="resetBtn" class="control-btn reset-button">ゲームリセット</button>
+        </div>
+
+        <div class="game-results" id="results" style="display: none;">
+            <h1 class="game-title">🃏 ポーカー戦略</h1>
+            <p class="game-description">確率計算と心理戦による戦略的思考とリスク管理能力ゲーム</p>
+            <h3>最終結果</h3>
+            <p>勝率: <span id="finalWinRate">0</span>%</p>
+            <p>獲得総額: $<span id="finalWinnings">0</span></p>
+            <p>戦略評価: <span id="strategyRating">--</span></p>
+        </div>
+    </div>
+
+    <script>
+        class PokerGame {
+            constructor() {
+                this.suits = ['♠', '♥', '♣', '♦'];
+                this.ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+                this.deck = [];
+                this.playerCards = [];
+                this.aiCards = [];
+                this.communityCards = [];
+                this.playerChips = 1000;
+                this.aiChips = 1000;
+                this.pot = 0;
+                this.currentBet = 0;
+                this.handCount = 0;
+                this.wins = 0;
+                this.gameActive = false;
+
+                this.initElements();
+                this.bindEvents();
+                this.resetGame();
+            }
+
+            initElements() {
+                this.communityCardsEl = document.getElementById('communityCards');
+                this.playerCardsEl = document.getElementById('playerCards');
+                this.potAmountEl = document.getElementById('potAmount');
+                this.currentBetEl = document.getElementById('currentBet');
+                this.handStrengthEl = document.getElementById('handStrength');
+                this.winProbabilityEl = document.getElementById('winProbability');
+                this.recommendedActionEl = document.getElementById('recommendedAction');
+                this.bettingControlsEl = document.getElementById('bettingControls');
+                this.playerChipsEl = document.getElementById('playerChips');
+                this.aiChipsEl = document.getElementById('aiChips');
+                this.handCountEl = document.getElementById('handCount');
+                this.winRateEl = document.getElementById('winRate');
+                this.totalWinningsEl = document.getElementById('totalWinnings');
+                this.callAmountEl = document.getElementById('callAmount');
+                this.raiseAmountEl = document.getElementById('raiseAmount');
+                this.adviceTextEl = document.getElementById('adviceText');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.results = document.getElementById('results');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startNewHand());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+            }
+
+            createDeck() {
+                this.deck = [];
+                for (let suit of this.suits) {
+                    for (let rank of this.ranks) {
+                        this.deck.push({
+                            suit: suit,
+                            rank: rank,
+                            value: this.getCardValue(rank),
+                            color: (suit === '♥' || suit === '♦') ? 'red' : 'black'
+                        });
+                    }
+                }
+                this.shuffleDeck();
+            }
+
+            getCardValue(rank) {
+                if (rank === 'A') return 14;
+                if (rank === 'K') return 13;
+                if (rank === 'Q') return 12;
+                if (rank === 'J') return 11;
+                return parseInt(rank);
+            }
+
+            shuffleDeck() {
+                for (let i = this.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+                }
+            }
+
+            startNewHand() {
+                if (this.handCount >= 10) {
+                    this.endGame();
+                    return;
+                }
+
+                this.handCount++;
+                this.gameActive = true;
+                this.createDeck();
+                this.playerCards = [this.deck.pop(), this.deck.pop()];
+                this.aiCards = [this.deck.pop(), this.deck.pop()];
+                this.communityCards = [];
+                this.pot = 0;
+                this.currentBet = 20; // ブラインド
+
+                this.playerChips -= 10; // スモールブラインド
+                this.aiChips -= 20; // ビッグブラインド
+                this.pot = 30;
+
+                this.updateDisplay();
+                this.analyzeHand();
+                this.bettingControlsEl.style.display = 'flex';
+
+                this.updateAdvice('プリフロップ: ポケットカードの強さを評価してアクションを決定しましょう');
+            }
+
+            updateDisplay() {
+                this.handCountEl.textContent = this.handCount;
+                this.winRateEl.textContent = this.handCount > 0 ? Math.round((this.wins / this.handCount) * 100) : 0;
+                this.totalWinningsEl.textContent = 1000 - this.playerChips;
+                this.playerChipsEl.textContent = this.playerChips;
+                this.aiChipsEl.textContent = this.aiChips;
+                this.potAmountEl.textContent = this.pot;
+                this.currentBetEl.textContent = this.currentBet;
+                this.callAmountEl.textContent = this.currentBet;
+                this.raiseAmountEl.textContent = this.currentBet * 2;
+
+                // プレイヤーカード表示
+                this.playerCardsEl.innerHTML = '';
+                this.playerCards.forEach(card => {
+                    const cardEl = this.createCardElement(card);
+                    this.playerCardsEl.appendChild(cardEl);
+                });
+
+                // コミュニティカード表示
+                this.communityCardsEl.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    if (i < this.communityCards.length) {
+                        const cardEl = this.createCardElement(this.communityCards[i]);
+                        this.communityCardsEl.appendChild(cardEl);
+                    } else {
+                        const hiddenCard = document.createElement('div');
+                        hiddenCard.className = 'card hidden';
+                        hiddenCard.textContent = '?';
+                        this.communityCardsEl.appendChild(hiddenCard);
+                    }
+                }
+            }
+
+            createCardElement(card) {
+                const cardEl = document.createElement('div');
+                cardEl.className = `card ${card.color}`;
+                cardEl.textContent = `${card.rank}${card.suit}`;
+                return cardEl;
+            }
+
+            analyzeHand() {
+                const handStrength = this.calculateHandStrength(this.playerCards, this.communityCards);
+                const winProbability = this.calculateWinProbability();
+                const recommendedAction = this.getRecommendedAction(handStrength, winProbability);
+
+                this.handStrengthEl.textContent = `手札評価: ${handStrength.name}`;
+                this.winProbabilityEl.textContent = winProbability;
+                this.recommendedActionEl.textContent = recommendedAction;
+            }
+
+            calculateHandStrength(pocket, community) {
+                const allCards = [...pocket, ...community];
+                
+                // 簡易手札評価
+                if (pocket[0].rank === pocket[1].rank) {
+                    const pairValue = pocket[0].value;
+                    if (pairValue >= 10) {
+                        return { name: '強いペア', strength: 8 };
+                    } else {
+                        return { name: 'ペア', strength: 6 };
+                    }
+                }
+
+                const suited = pocket[0].suit === pocket[1].suit;
+                const connected = Math.abs(pocket[0].value - pocket[1].value) <= 4;
+                const highCard = Math.max(pocket[0].value, pocket[1].value);
+
+                if (suited && connected && highCard >= 10) {
+                    return { name: 'スーテッドコネクター', strength: 7 };
+                } else if (highCard >= 12) {
+                    return { name: 'ハイカード', strength: 5 };
+                } else {
+                    return { name: '弱い手', strength: 3 };
+                }
+            }
+
+            calculateWinProbability() {
+                // 簡易確率計算
+                const handStrength = this.calculateHandStrength(this.playerCards, this.communityCards);
+                const baseProb = handStrength.strength * 10;
+                const randomFactor = Math.random() * 20 - 10; // ±10の変動
+                return Math.max(10, Math.min(90, Math.round(baseProb + randomFactor)));
+            }
+
+            getRecommendedAction(handStrength, winProbability) {
+                if (winProbability > 70) return 'レイズ推奨';
+                if (winProbability > 45) return 'コール推奨';
+                return 'フォールド推奨';
+            }
+
+            playerAction(action) {
+                if (!this.gameActive) return;
+
+                switch (action) {
+                    case 'fold':
+                        this.aiChips += this.pot;
+                        this.updateAdvice('フォールド: 損失を最小限に抑える賢明な判断です');
+                        this.endHand(false);
+                        break;
+                    case 'call':
+                        this.playerChips -= this.currentBet;
+                        this.pot += this.currentBet;
+                        this.dealCommunityCards();
+                        break;
+                    case 'raise':
+                        const raiseAmount = this.currentBet * 2;
+                        this.playerChips -= raiseAmount;
+                        this.pot += raiseAmount;
+                        this.currentBet = raiseAmount;
+                        this.aiAction();
+                        break;
+                }
+
+                this.updateDisplay();
+            }
+
+            aiAction() {
+                // 簡易AI判断
+                const random = Math.random();
+                if (random < 0.3) {
+                    // AIフォールド
+                    this.playerChips += this.pot;
+                    this.updateAdvice('AIがフォールド: あなたの勝利です！');
+                    this.endHand(true);
+                } else {
+                    // AIコール
+                    this.aiChips -= this.currentBet;
+                    this.pot += this.currentBet;
+                    this.dealCommunityCards();
+                }
+            }
+
+            dealCommunityCards() {
+                if (this.communityCards.length === 0) {
+                    // フロップ
+                    this.communityCards.push(this.deck.pop(), this.deck.pop(), this.deck.pop());
+                    this.updateAdvice('フロップ: 3枚のコミュニティカードで戦略を再評価しましょう');
+                } else if (this.communityCards.length === 3) {
+                    // ターン
+                    this.communityCards.push(this.deck.pop());
+                    this.updateAdvice('ターン: 4枚目のカードで手札の可能性が変わりました');
+                } else if (this.communityCards.length === 4) {
+                    // リバー
+                    this.communityCards.push(this.deck.pop());
+                    this.updateAdvice('リバー: 最後のカードが出ました。最終判断です');
+                    setTimeout(() => this.showdown(), 1000);
+                    return;
+                }
+
+                this.analyzeHand();
+                this.updateDisplay();
+            }
+
+            showdown() {
+                const playerStrength = this.calculateHandStrength(this.playerCards, this.communityCards);
+                const aiStrength = this.calculateHandStrength(this.aiCards, this.communityCards);
+                
+                const playerWins = playerStrength.strength > aiStrength.strength || 
+                                 (playerStrength.strength === aiStrength.strength && Math.random() > 0.5);
+
+                if (playerWins) {
+                    this.playerChips += this.pot;
+                    this.updateAdvice('ショーダウン勝利: 優れた戦略判断でした！');
+                    this.endHand(true);
+                } else {
+                    this.aiChips += this.pot;
+                    this.updateAdvice('ショーダウン敗北: 次のハンドで巻き返しましょう');
+                    this.endHand(false);
+                }
+            }
+
+            endHand(playerWon) {
+                if (playerWon) this.wins++;
+                this.gameActive = false;
+                this.bettingControlsEl.style.display = 'none';
+                
+                setTimeout(() => {
+                    if (this.handCount < 10) {
+                        this.startBtn.textContent = `次のハンド (${this.handCount + 1}/10)`;
+                    } else {
+                        this.endGame();
+                    }
+                }, 2000);
+
+                this.updateDisplay();
+            }
+
+            updateAdvice(text) {
+                this.adviceTextEl.textContent = text;
+            }
+
+            resetGame() {
+                this.handCount = 0;
+                this.wins = 0;
+                this.playerChips = 1000;
+                this.aiChips = 1000;
+                this.pot = 0;
+                this.currentBet = 0;
+                this.gameActive = false;
+                this.playerCards = [];
+                this.aiCards = [];
+                this.communityCards = [];
+                
+                this.bettingControlsEl.style.display = 'none';
+                this.results.style.display = 'none';
+                this.startBtn.textContent = '新しいハンド開始';
+                
+                this.updateDisplay();
+                this.updateAdvice('ゲームリセット完了。戦略的思考でポーカーに挑戦しましょう！');
+            }
+
+            endGame() {
+                const winRate = Math.round((this.wins / this.handCount) * 100);
+                const netWinnings = this.playerChips - 1000;
+                let strategyRating;
+
+                if (winRate >= 70) strategyRating = '優秀な戦略家';
+                else if (winRate >= 50) strategyRating = '戦略的思考良好';
+                else if (winRate >= 30) strategyRating = '戦略改善の余地あり';
+                else strategyRating = '戦略学習推奨';
+
+                document.getElementById('finalWinRate').textContent = winRate;
+                document.getElementById('finalWinnings').textContent = netWinnings;
+                document.getElementById('strategyRating').textContent = strategyRating;
+                
+                this.results.style.display = 'block';
+                this.bettingControlsEl.style.display = 'none';
+                this.startBtn.textContent = '新しいゲーム開始';
+                this.handCount = 0; // リセット準備
+            }
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new PokerGame();
+        });
+    </script>
+</body>
+</html>

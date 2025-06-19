@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独 - ゲーム041</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .sudoku-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 2px;
+            background: #333;
+            border: 3px solid #333;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .sudoku-cell {
+            width: 40px;
+            height: 40px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #333;
+        }
+
+        .sudoku-cell:hover {
+            background: #e3f2fd;
+        }
+
+        .sudoku-cell.selected {
+            background: #2196f3;
+            color: white;
+        }
+
+        .sudoku-cell.fixed {
+            background: #f0f0f0;
+            color: #333;
+            cursor: not-allowed;
+        }
+
+        .sudoku-cell.error {
+            background: #ffcdd2;
+            color: #d32f2f;
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+        }
+
+        .number-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .number-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-complete {
+            display: none;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 2px solid #4caf50;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .sudoku-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .sudoku-cell {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+            
+            .number-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧩 数独</h1>
+        <p class="game-description">論理的思考力を鍛える古典的なパズルゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">経過時間</div>
+                <div class="stat-value" id="timeElapsed">00:00</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">入力数</div>
+                <div class="stat-value" id="inputCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ヒント使用</div>
+                <div class="stat-value" id="hintsUsed">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">完成度</div>
+                <div class="stat-value" id="completion">0%</div>
+            </div>
+        </div>
+
+        <div class="sudoku-container">
+            <div class="sudoku-grid" id="sudokuGrid">
+                <!-- セルはJavaScriptで生成 -->
+            </div>
+            
+            <div class="number-pad">
+                <button class="number-btn" onclick="placeNumber(1)">1</button>
+                <button class="number-btn" onclick="placeNumber(2)">2</button>
+                <button class="number-btn" onclick="placeNumber(3)">3</button>
+                <button class="number-btn" onclick="placeNumber(4)">4</button>
+                <button class="number-btn" onclick="placeNumber(5)">5</button>
+                <button class="number-btn" onclick="placeNumber(6)">6</button>
+                <button class="number-btn" onclick="placeNumber(7)">7</button>
+                <button class="number-btn" onclick="placeNumber(8)">8</button>
+                <button class="number-btn" onclick="placeNumber(9)">9</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="clearCell()">消去</button>
+            <button class="btn" onclick="showHint()">ヒント</button>
+            <button class="btn" onclick="checkSolution()">答え合わせ</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="game-complete" id="gameComplete">
+            <h2>🎉 完成おめでとうございます！</h2>
+            <p>論理的思考力が向上しました！</p>
+            <p>経過時間: <span id="finalTime">00:00</span></p>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 遊び方</h3>
+            <p>• 9×9のマスに1〜9の数字を入れるパズルです</p>
+            <p>• 縦・横・3×3のブロック内に同じ数字は入りません</p>
+            <p>• セルをクリックして選択し、数字ボタンで入力</p>
+            <p>• 論理的推論でビジネスの問題解決能力を向上させます</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            grid: Array(9).fill().map(() => Array(9).fill(0)),
+            solution: Array(9).fill().map(() => Array(9).fill(0)),
+            fixed: Array(9).fill().map(() => Array(9).fill(false)),
+            selectedCell: null,
+            startTime: null,
+            inputCount: 0,
+            hintsUsed: 0,
+            gameTimer: null
+        };
+
+        // 初期化
+        function initGame() {
+            createGrid();
+            newGame();
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('sudokuGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'sudoku-cell';
+                    cell.id = `cell-${i}-${j}`;
+                    cell.onclick = () => selectCell(i, j);
+                    
+                    // 3x3ブロックの境界線
+                    if (j % 3 === 2 && j !== 8) cell.style.borderRight = '3px solid #333';
+                    if (i % 3 === 2 && i !== 8) cell.style.borderBottom = '3px solid #333';
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function newGame() {
+            // 簡単な数独パターン
+            const pattern = [
+                [5,3,0,0,7,0,0,0,0],
+                [6,0,0,1,9,5,0,0,0],
+                [0,9,8,0,0,0,0,6,0],
+                [8,0,0,0,6,0,0,0,3],
+                [4,0,0,8,0,3,0,0,1],
+                [7,0,0,0,2,0,0,0,6],
+                [0,6,0,0,0,0,2,8,0],
+                [0,0,0,4,1,9,0,0,5],
+                [0,0,0,0,8,0,0,7,9]
+            ];
+
+            const solutionPattern = [
+                [5,3,4,6,7,8,9,1,2],
+                [6,7,2,1,9,5,3,4,8],
+                [1,9,8,3,4,2,5,6,7],
+                [8,5,9,7,6,1,4,2,3],
+                [4,2,6,8,5,3,7,9,1],
+                [7,1,3,9,2,4,8,5,6],
+                [9,6,1,5,3,7,2,8,4],
+                [2,8,7,4,1,9,6,3,5],
+                [3,4,5,2,8,6,1,7,9]
+            ];
+
+            gameState.grid = pattern.map(row => [...row]);
+            gameState.solution = solutionPattern.map(row => [...row]);
+            gameState.fixed = pattern.map(row => row.map(cell => cell !== 0));
+            gameState.selectedCell = null;
+            gameState.startTime = Date.now();
+            gameState.inputCount = 0;
+            gameState.hintsUsed = 0;
+
+            // タイマー開始
+            if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            gameState.gameTimer = setInterval(updateDisplay, 1000);
+
+            updateGrid();
+            updateDisplay();
+            document.getElementById('gameComplete').style.display = 'none';
+        }
+
+        function selectCell(row, col) {
+            // 前の選択を解除
+            if (gameState.selectedCell) {
+                const [oldRow, oldCol] = gameState.selectedCell;
+                const oldCell = document.getElementById(`cell-${oldRow}-${oldCol}`);
+                oldCell.classList.remove('selected');
+            }
+
+            // 固定セルは選択不可
+            if (gameState.fixed[row][col]) return;
+
+            gameState.selectedCell = [row, col];
+            const cell = document.getElementById(`cell-${row}-${col}`);
+            cell.classList.add('selected');
+        }
+
+        function placeNumber(num) {
+            if (!gameState.selectedCell) return;
+
+            const [row, col] = gameState.selectedCell;
+            if (gameState.fixed[row][col]) return;
+
+            gameState.grid[row][col] = num;
+            gameState.inputCount++;
+            
+            updateGrid();
+            updateDisplay();
+            checkCompletion();
+        }
+
+        function clearCell() {
+            if (!gameState.selectedCell) return;
+
+            const [row, col] = gameState.selectedCell;
+            if (gameState.fixed[row][col]) return;
+
+            gameState.grid[row][col] = 0;
+            updateGrid();
+            updateDisplay();
+        }
+
+        function showHint() {
+            if (!gameState.selectedCell) return;
+
+            const [row, col] = gameState.selectedCell;
+            if (gameState.fixed[row][col] || gameState.grid[row][col] !== 0) return;
+
+            gameState.grid[row][col] = gameState.solution[row][col];
+            gameState.hintsUsed++;
+            
+            updateGrid();
+            updateDisplay();
+            checkCompletion();
+        }
+
+        function updateGrid() {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    cell.textContent = gameState.grid[i][j] || '';
+                    
+                    // セルのスタイル更新
+                    cell.className = 'sudoku-cell';
+                    
+                    if (gameState.fixed[i][j]) {
+                        cell.classList.add('fixed');
+                    }
+                    
+                    if (gameState.selectedCell && 
+                        gameState.selectedCell[0] === i && 
+                        gameState.selectedCell[1] === j) {
+                        cell.classList.add('selected');
+                    }
+
+                    // エラーチェック
+                    if (gameState.grid[i][j] !== 0 && !isValidPlacement(i, j, gameState.grid[i][j])) {
+                        cell.classList.add('error');
+                    }
+                }
+            }
+        }
+
+        function isValidPlacement(row, col, num) {
+            // 現在の値を一時的に保存
+            const original = gameState.grid[row][col];
+            gameState.grid[row][col] = 0;
+
+            // 行チェック
+            for (let j = 0; j < 9; j++) {
+                if (gameState.grid[row][j] === num) {
+                    gameState.grid[row][col] = original;
+                    return false;
+                }
+            }
+
+            // 列チェック
+            for (let i = 0; i < 9; i++) {
+                if (gameState.grid[i][col] === num) {
+                    gameState.grid[row][col] = original;
+                    return false;
+                }
+            }
+
+            // 3x3ブロックチェック
+            const blockRow = Math.floor(row / 3) * 3;
+            const blockCol = Math.floor(col / 3) * 3;
+            for (let i = blockRow; i < blockRow + 3; i++) {
+                for (let j = blockCol; j < blockCol + 3; j++) {
+                    if (gameState.grid[i][j] === num) {
+                        gameState.grid[row][col] = original;
+                        return false;
+                    }
+                }
+            }
+
+            gameState.grid[row][col] = original;
+            return true;
+        }
+
+        function checkCompletion() {
+            let filledCells = 0;
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (gameState.grid[i][j] !== 0) filledCells++;
+                }
+            }
+
+            if (filledCells === 81) {
+                // 完成チェック
+                let isComplete = true;
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        if (gameState.grid[i][j] !== gameState.solution[i][j]) {
+                            isComplete = false;
+                            break;
+                        }
+                    }
+                    if (!isComplete) break;
+                }
+
+                if (isComplete) {
+                    clearInterval(gameState.gameTimer);
+                    const finalTime = formatTime(Date.now() - gameState.startTime);
+                    document.getElementById('finalTime').textContent = finalTime;
+                    document.getElementById('gameComplete').style.display = 'block';
+                }
+            }
+        }
+
+        function checkSolution() {
+            let errors = 0;
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (gameState.grid[i][j] !== 0 && 
+                        gameState.grid[i][j] !== gameState.solution[i][j]) {
+                        errors++;
+                    }
+                }
+            }
+
+            if (errors === 0) {
+                alert('完璧です！すべて正解です！');
+            } else {
+                alert(`${errors}個のエラーがあります。赤くハイライトされたセルを確認してください。`);
+            }
+        }
+
+        function updateDisplay() {
+            const elapsed = gameState.startTime ? Date.now() - gameState.startTime : 0;
+            document.getElementById('timeElapsed').textContent = formatTime(elapsed);
+            document.getElementById('inputCount').textContent = gameState.inputCount;
+            document.getElementById('hintsUsed').textContent = gameState.hintsUsed;
+
+            let filledCells = 0;
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (gameState.grid[i][j] !== 0) filledCells++;
+                }
+            }
+            const completion = Math.round((filledCells / 81) * 100);
+            document.getElementById('completion').textContent = completion + '%';
+        }
+
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function goBack() {
+            if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            window.close();
+            window.history.back();
+        }
+
+        // 初期化実行
+        initGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗号解読 - ゲーム045</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2E8B57 0%, #8B4513 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .cipher-game {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .cipher-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            border: 2px solid #FFD700;
+        }
+
+        .cipher-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .cipher-type {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cipher-type:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+        }
+
+        .cipher-type.selected {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+
+        .analysis-tools {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tool-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .frequency-chart {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+            gap: 2px;
+            margin: 10px 0;
+        }
+
+        .frequency-bar {
+            background: linear-gradient(to top, #FF6B6B, #4ECDC4);
+            border-radius: 2px;
+            min-height: 10px;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .decryption-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .decryption-input {
+            width: 100%;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        .decryption-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .key-input {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .key-field {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 1rem;
+            width: 60px;
+            text-align: center;
+        }
+
+        .key-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFD700);
+            transition: width 0.3s ease;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .cipher-type-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-tools {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🔐 暗号解読</h1>
+        <p class="game-description">パターン認識と暗号理論による暗号解読スキル向上ゲーム</p>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <p><strong>🎯 目的:</strong> 8種類の暗号方式を解読し、暗号解読スキルを向上させよう</p>
+            
+            <p><strong>🎮 ゲームの流れ:</strong></p>
+            <ul>
+                <li>暗号方式を特定する（シーザー、置換、転置など）</li>
+                <li>パターン分析機能を使用して文字頻度を調査</li>
+                <li>段階的に難易度が上昇する暗号に挑戦</li>
+                <li>解読率85%以上でクリア</li>
+                <li>8つの暗号方式をマスターして専門家レベル到達</li>
+            </ul>
+            
+            <p><strong>⭐ 評価システム:</strong></p>
+            <ul>
+                <li>暗号解読率: 正確な解読成功率</li>
+                <li>パターン認識力: 文字パターンの識別能力</li>
+                <li>分析精度: 暗号方式の特定精度</li>
+                <li>解読効率: 解読にかかる時間と試行回数</li>
+            </ul>
+            
+            <p><strong>🔍 プレイのコツ:</strong></p>
+            <ul>
+                <li>文字頻度分析を活用する（E、T、A、Oが英語で高頻度）</li>
+                <li>短い単語から解読を始める</li>
+                <li>文脈から推測して検証する</li>
+                <li>暗号タイプの特徴を覚える</li>
+            </ul>
+        </div>
+
+        <div class="cipher-game">
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="current-level">1</div>
+                    <div class="stat-label">現在レベル</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="decoded-count">0</div>
+                    <div class="stat-label">解読成功数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy-rate">100</div>
+                    <div class="stat-label">解読精度(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="time-remaining">300</div>
+                    <div class="stat-label">残り時間(秒)</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+
+            <h3>🔤 暗号文</h3>
+            <div class="cipher-display" id="cipher-text">
+                ゲームを開始して暗号解読に挑戦しよう！
+            </div>
+
+            <h3>🧩 暗号方式の推定</h3>
+            <div class="cipher-type-selector" id="cipher-types">
+                <div class="cipher-type" data-type="caesar">シーザー暗号</div>
+                <div class="cipher-type" data-type="substitution">単一換字暗号</div>
+                <div class="cipher-type" data-type="vigenere">ヴィジュネル暗号</div>
+                <div class="cipher-type" data-type="transposition">転置暗号</div>
+                <div class="cipher-type" data-type="atbash">アトバシュ暗号</div>
+                <div class="cipher-type" data-type="morse">モールス信号</div>
+                <div class="cipher-type" data-type="binary">二進暗号</div>
+                <div class="cipher-type" data-type="rail-fence">レールフェンス暗号</div>
+            </div>
+
+            <div class="analysis-tools">
+                <div class="tool-panel">
+                    <h4>📊 文字頻度分析</h4>
+                    <div class="frequency-chart" id="frequency-chart">
+                        <!-- 文字頻度チャートがJavaScriptで生成される -->
+                    </div>
+                </div>
+                <div class="tool-panel">
+                    <h4>🔑 キー入力</h4>
+                    <div class="key-input" id="key-input">
+                        <!-- キー入力フィールドがJavaScriptで生成される -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="decryption-area">
+                <h3>📝 解読結果</h3>
+                <textarea class="decryption-input" id="decryption-input" 
+                          placeholder="解読結果をここに入力してください..."></textarea>
+            </div>
+
+            <div class="game-controls">
+                <button class="btn" onclick="startGame()" id="start-btn">ゲーム開始</button>
+                <button class="btn" onclick="analyzeFrequency()" id="analyze-btn" disabled>頻度分析</button>
+                <button class="btn" onclick="applyCipher()" id="apply-btn" disabled>暗号適用</button>
+                <button class="btn" onclick="checkSolution()" id="check-btn" disabled>解読確認</button>
+                <button class="btn" onclick="getHint()" id="hint-btn" disabled>ヒント</button>
+                <button class="btn" onclick="nextLevel()" id="next-btn" disabled>次のレベル</button>
+                <button class="btn" onclick="resetGame()" id="reset-btn">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            currentLevel: 1,
+            decodedCount: 0,
+            totalAttempts: 0,
+            accuracyRate: 100,
+            timeRemaining: 300,
+            timer: null,
+            selectedCipherType: null,
+            currentCipher: {},
+            hintsUsed: 0,
+            cipherData: [
+                {
+                    level: 1,
+                    type: 'caesar',
+                    shift: 3,
+                    plaintext: 'HELLO WORLD',
+                    ciphertext: 'KHOOR ZRUOG',
+                    hint: 'シーザー暗号: アルファベットを一定数ずらす暗号'
+                },
+                {
+                    level: 2,
+                    type: 'substitution',
+                    plaintext: 'SECRET MESSAGE',
+                    ciphertext: 'PBPEBO JBPPNXB',
+                    hint: '単一換字暗号: 各文字を別の文字に置き換える'
+                },
+                {
+                    level: 3,
+                    type: 'vigenere',
+                    key: 'KEY',
+                    plaintext: 'ATTACKATDAWN',
+                    ciphertext: 'KIAWDKGMTOGI',
+                    hint: 'ヴィジュネル暗号: キーワードを使った多表暗号'
+                },
+                {
+                    level: 4,
+                    type: 'transposition',
+                    plaintext: 'MEETMEATMIDNIGHT',
+                    ciphertext: 'MEMATIGMNEHTDIET',
+                    hint: '転置暗号: 文字の位置を入れ替える暗号'
+                },
+                {
+                    level: 5,
+                    type: 'atbash',
+                    plaintext: 'ATBASH CIPHER',
+                    ciphertext: 'ZGYZHS XRKSVI',
+                    hint: 'アトバシュ暗号: A=Z, B=Y...と逆順に対応'
+                },
+                {
+                    level: 6,
+                    type: 'morse',
+                    plaintext: 'SOS',
+                    ciphertext: '... --- ...',
+                    hint: 'モールス信号: 点と線で文字を表現'
+                },
+                {
+                    level: 7,
+                    type: 'binary',
+                    plaintext: 'HI',
+                    ciphertext: '01001000 01001001',
+                    hint: '二進暗号: 文字をバイナリで表現'
+                },
+                {
+                    level: 8,
+                    type: 'rail-fence',
+                    plaintext: 'CRYPTOGRAPHY',
+                    ciphertext: 'CRPTGAHYOYPR',
+                    hint: 'レールフェンス暗号: ジグザグ配置で暗号化'
+                }
+            ]
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.currentLevel = 1;
+            gameState.decodedCount = 0;
+            gameState.totalAttempts = 0;
+            gameState.accuracyRate = 100;
+            gameState.timeRemaining = 300;
+            gameState.hintsUsed = 0;
+
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = false;
+            document.getElementById('check-btn').disabled = false;
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = false;
+
+            loadLevel(1);
+            startTimer();
+            updateDisplay();
+            setupCipherTypeSelection();
+        }
+
+        function loadLevel(level) {
+            const cipher = gameState.cipherData.find(c => c.level === level);
+            if (!cipher) return;
+
+            gameState.currentCipher = cipher;
+            document.getElementById('cipher-text').textContent = cipher.ciphertext;
+            document.getElementById('decryption-input').value = '';
+            
+            // キー入力フィールドをクリア
+            const keyInput = document.getElementById('key-input');
+            keyInput.innerHTML = '';
+            
+            // 暗号タイプ選択をクリア
+            document.querySelectorAll('.cipher-type').forEach(type => {
+                type.classList.remove('selected');
+            });
+            gameState.selectedCipherType = null;
+            
+            generateKeyInputFields(cipher.type);
+            updateDisplay();
+        }
+
+        function setupCipherTypeSelection() {
+            document.querySelectorAll('.cipher-type').forEach(type => {
+                type.onclick = () => selectCipherType(type.dataset.type);
+            });
+        }
+
+        function selectCipherType(type) {
+            document.querySelectorAll('.cipher-type').forEach(t => {
+                t.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+            gameState.selectedCipherType = type;
+            
+            document.getElementById('apply-btn').disabled = false;
+            generateKeyInputFields(type);
+        }
+
+        function generateKeyInputFields(type) {
+            const keyInput = document.getElementById('key-input');
+            keyInput.innerHTML = '';
+
+            switch(type) {
+                case 'caesar':
+                    keyInput.innerHTML = '<input class="key-field" type="number" placeholder="シフト数" min="1" max="25" id="caesar-shift">';
+                    break;
+                case 'vigenere':
+                    keyInput.innerHTML = '<input class="key-field" type="text" placeholder="キーワード" id="vigenere-key" style="width: 150px;">';
+                    break;
+                case 'transposition':
+                    keyInput.innerHTML = '<input class="key-field" type="text" placeholder="キー配列" id="transposition-key" style="width: 150px;">';
+                    break;
+                default:
+                    keyInput.innerHTML = '<span style="color: rgba(255,255,255,0.7);">この暗号方式にはキーは不要です</span>';
+            }
+        }
+
+        function analyzeFrequency() {
+            if (!gameState.isPlaying) return;
+
+            const cipherText = gameState.currentCipher.ciphertext.replace(/[^A-Z]/g, '');
+            const frequency = {};
+            
+            // 文字頻度を計算
+            for (let char of cipherText) {
+                frequency[char] = (frequency[char] || 0) + 1;
+            }
+
+            // チャートを生成
+            const chart = document.getElementById('frequency-chart');
+            chart.innerHTML = '';
+
+            const maxFreq = Math.max(...Object.values(frequency));
+            const sortedChars = Object.keys(frequency).sort();
+
+            sortedChars.forEach(char => {
+                const bar = document.createElement('div');
+                bar.className = 'frequency-bar';
+                const height = (frequency[char] / maxFreq) * 50 + 10;
+                bar.style.height = height + 'px';
+                bar.textContent = char;
+                bar.title = `${char}: ${frequency[char]}回`;
+                chart.appendChild(bar);
+            });
+        }
+
+        function applyCipher() {
+            if (!gameState.selectedCipherType || !gameState.isPlaying) return;
+
+            const cipherType = gameState.selectedCipherType;
+            const cipherText = gameState.currentCipher.ciphertext;
+            let decrypted = '';
+
+            try {
+                switch(cipherType) {
+                    case 'caesar':
+                        const shift = parseInt(document.getElementById('caesar-shift').value) || 0;
+                        decrypted = applyCaesarCipher(cipherText, -shift);
+                        break;
+                    case 'atbash':
+                        decrypted = applyAtbashCipher(cipherText);
+                        break;
+                    case 'morse':
+                        decrypted = applyMorseCipher(cipherText);
+                        break;
+                    case 'binary':
+                        decrypted = applyBinaryCipher(cipherText);
+                        break;
+                    default:
+                        decrypted = '選択した暗号方式の解読機能は開発中です。手動で解読してください。';
+                }
+
+                document.getElementById('decryption-input').value = decrypted;
+            } catch(error) {
+                alert('解読エラー: ' + error.message);
+            }
+        }
+
+        function applyCaesarCipher(text, shift) {
+            return text.replace(/[A-Z]/g, char => {
+                const code = char.charCodeAt(0) - 65;
+                const newCode = ((code + shift) % 26 + 26) % 26;
+                return String.fromCharCode(newCode + 65);
+            });
+        }
+
+        function applyAtbashCipher(text) {
+            return text.replace(/[A-Z]/g, char => {
+                const code = char.charCodeAt(0) - 65;
+                const newCode = 25 - code;
+                return String.fromCharCode(newCode + 65);
+            });
+        }
+
+        function applyMorseCipher(text) {
+            const morseToChar = {
+                '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+                '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+                '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+                '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+                '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+                '--..': 'Z'
+            };
+            
+            return text.split(' ').map(morse => morseToChar[morse] || '?').join('');
+        }
+
+        function applyBinaryCipher(text) {
+            return text.split(' ').map(binary => {
+                const decimal = parseInt(binary, 2);
+                return String.fromCharCode(decimal);
+            }).join('');
+        }
+
+        function checkSolution() {
+            if (!gameState.isPlaying) return;
+
+            const userInput = document.getElementById('decryption-input').value.toUpperCase().trim();
+            const correctAnswer = gameState.currentCipher.plaintext.toUpperCase().trim();
+            
+            gameState.totalAttempts++;
+            
+            if (userInput === correctAnswer) {
+                gameState.decodedCount++;
+                
+                const successMessage = `🎉 正解です！\n\n暗号文: ${gameState.currentCipher.ciphertext}\n平文: ${correctAnswer}\n\n素晴らしい解読能力です！`;
+                alert(successMessage);
+                
+                if (gameState.currentLevel < gameState.cipherData.length) {
+                    document.getElementById('next-btn').disabled = false;
+                } else {
+                    // ゲーム完了
+                    completeGame();
+                }
+            } else {
+                gameState.accuracyRate = Math.max(0, Math.floor((gameState.decodedCount / gameState.totalAttempts) * 100));
+                alert(`❌ 不正解です。\n\n正解: ${correctAnswer}\nあなたの回答: ${userInput}\n\nもう一度挑戦してください！`);
+            }
+            
+            updateDisplay();
+        }
+
+        function getHint() {
+            if (!gameState.isPlaying) return;
+
+            const hint = gameState.currentCipher.hint;
+            gameState.hintsUsed++;
+            
+            alert(`💡 ヒント ${gameState.hintsUsed}:\n\n${hint}`);
+            
+            // ヒント使用によるペナルティ
+            gameState.accuracyRate = Math.max(0, gameState.accuracyRate - 5);
+            updateDisplay();
+        }
+
+        function nextLevel() {
+            if (gameState.currentLevel < gameState.cipherData.length) {
+                gameState.currentLevel++;
+                loadLevel(gameState.currentLevel);
+                document.getElementById('next-btn').disabled = true;
+                document.getElementById('apply-btn').disabled = true;
+            }
+        }
+
+        function completeGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+
+            const finalScore = Math.floor(
+                (gameState.decodedCount / gameState.cipherData.length) * 100 -
+                (gameState.hintsUsed * 5) +
+                (gameState.timeRemaining > 60 ? 10 : 0)
+            );
+
+            const completionMessage = `🏆 ゲーム完了！\n\n` +
+                `解読成功: ${gameState.decodedCount}/${gameState.cipherData.length}\n` +
+                `最終スコア: ${Math.max(0, finalScore)}%\n` +
+                `ヒント使用: ${gameState.hintsUsed}回\n\n` +
+                `${finalScore >= 85 ? '🎖️ エクセレント！暗号解読の専門家です！' : 
+                  finalScore >= 70 ? '🥉 グッド！優秀な解読能力です！' : 
+                  '📚 もっと練習して暗号マスターを目指しましょう！'}`;
+
+            alert(completionMessage);
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('check-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('apply-btn').disabled = true;
+            document.getElementById('hint-btn').disabled = true;
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateDisplay();
+
+                if (gameState.timeRemaining <= 0) {
+                    gameState.isPlaying = false;
+                    clearInterval(gameState.timer);
+                    alert('⏰ 時間切れです！\n\n暗号解読は未完了に終わりました...');
+                    
+                    // ゲーム終了処理
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('check-btn').disabled = true;
+                    document.getElementById('analyze-btn').disabled = true;
+                    document.getElementById('apply-btn').disabled = true;
+                    document.getElementById('hint-btn').disabled = true;
+                    document.getElementById('next-btn').disabled = true;
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('current-level').textContent = gameState.currentLevel;
+            document.getElementById('decoded-count').textContent = gameState.decodedCount;
+            document.getElementById('accuracy-rate').textContent = Math.max(0, gameState.accuracyRate);
+            document.getElementById('time-remaining').textContent = gameState.timeRemaining;
+            
+            const progress = (gameState.decodedCount / gameState.cipherData.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+
+            gameState.currentLevel = 1;
+            gameState.decodedCount = 0;
+            gameState.totalAttempts = 0;
+            gameState.accuracyRate = 100;
+            gameState.timeRemaining = 300;
+            gameState.hintsUsed = 0;
+            gameState.selectedCipherType = null;
+
+            document.getElementById('cipher-text').textContent = 'ゲームを開始して暗号解読に挑戦しよう！';
+            document.getElementById('decryption-input').value = '';
+            document.getElementById('frequency-chart').innerHTML = '';
+            document.getElementById('key-input').innerHTML = '';
+
+            // 暗号タイプ選択をクリア
+            document.querySelectorAll('.cipher-type').forEach(type => {
+                type.classList.remove('selected');
+            });
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('apply-btn').disabled = true;
+            document.getElementById('check-btn').disabled = true;
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('reset-btn').disabled = false;
+
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 初期化
+        updateDisplay();
+</script>
+</body>
+</html>

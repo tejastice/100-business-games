@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>立体積み木 - ゲーム066</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .building-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .construction-zone {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .construction-zone h4 {
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .block-palette {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .block-palette h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .block-item {
+            width: 80px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .block-item:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .block-item:active {
+            cursor: grabbing;
+        }
+
+        .block-item.cube {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .block-item.rect {
+            background: rgba(33, 150, 243, 0.7);
+            border-color: #2196f3;
+        }
+
+        .block-item.l-shape {
+            background: rgba(255, 193, 7, 0.7);
+            border-color: #ffc107;
+        }
+
+        .block-item.t-shape {
+            background: rgba(156, 39, 176, 0.7);
+            border-color: #9c27b0;
+        }
+
+        .construction-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .logic-grid {
+                grid-template-columns: repeat(4, 50px);
+            }
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧱 立体積み木</h1>
+        <p class="game-description">立体ブロックの組み合わせと構造理解による空間構築ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ブロック</div>
+                <div class="stat-value" id="blocksPlaced">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">成功率</div>
+                <div class="stat-value" id="successRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">安定性</div>
+                <div class="stat-value" id="stability">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 30個のブロックを使って安定した立体構造を構築し、指定形状を完成させる</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>異なる形状・サイズのブロックが提供される</li>
+                        <li>ブロックをドラッグ&ドロップで配置し、積み上げる</li>
+                        <li>重力とバランスを考慮して安定した構造を作る</li>
+                    </ul>
+                </li>
+                <li><strong>ブロック種類:</strong> 立方体、直方体、L字型、T字型、三角柱など多種多様</li>
+                <li><strong>勝利条件:</strong> 30個中、組み立て成功玅85%以上（25個以上成功）でクリア</li>
+                <li><strong>評価システム:</strong> 成功配置: +100点、安定性ボーナス: +50点、失敗: -25点</li>
+                <li><strong>プレイのコツ:</strong> 重心とバランスを意識し、底面から積み上げて安定した構造を構築する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="building-area" id="buildingArea">
+                <div class="construction-zone">
+                    <h4>🏗️ 構築エリア</h4>
+                    <canvas id="constructionCanvas" width="600" height="400" style="border: 2px solid #fff; border-radius: 10px; background: rgba(255,255,255,0.1);"></canvas>
+                </div>
+                
+                <div class="block-palette">
+                    <h4>🧩 ブロックパレット</h4>
+                    <div id="blockPalette" class="palette-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newChallenge()">新しいチャレンジ</button>
+            <button class="btn" onclick="checkStability()">安定性チェック</button>
+            <button class="btn" onclick="showBuildingTips()">構築ヒント</button>
+            <button class="btn" onclick="clearConstruction()">クリア</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            blocksPlaced: 0,
+            totalBlocks: 30,
+            successfulPlacements: 0,
+            score: 0,
+            currentStability: 100,
+            placedBlocks: [],
+            availableBlocks: [],
+            currentChallenge: null,
+            canvas: null,
+            ctx: null
+        };
+
+        const blockTypes = [
+            { type: 'cube', name: '立方体', width: 40, height: 40, color: '#4caf50', stability: 10 },
+            { type: 'rect', name: '直方体', width: 60, height: 30, color: '#2196f3', stability: 8 },
+            { type: 'l-shape', name: 'L字型', width: 40, height: 60, color: '#ffc107', stability: 6 },
+            { type: 't-shape', name: 'T字型', width: 50, height: 50, color: '#9c27b0', stability: 7 },
+            { type: 'triangle', name: '三角柱', width: 45, height: 40, color: '#ff5722', stability: 5 }
+        ];
+
+        function initializeGame() {
+            gameState.canvas = document.getElementById('constructionCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resetGameState();
+            generateNewChallenge();
+            setupBlockPalette();
+            setupCanvasEvents();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                blocksPlaced: 0,
+                totalBlocks: 30,
+                successfulPlacements: 0,
+                score: 0,
+                currentStability: 100,
+                placedBlocks: [],
+                availableBlocks: [],
+                currentChallenge: null,
+                canvas: gameState.canvas,
+                ctx: gameState.ctx
+            };
+        }
+
+        function generateNewChallenge() {
+            const challenges = [
+                { name: 'タワー建設', target: '高さ200px以上のタワーを構築', difficulty: 'normal' },
+                { name: 'ブリッジ構築', target: '幅300px以上の橋を構築', difficulty: 'hard' },
+                { name: '安定構造', target: '10個以上のブロックで安定した構造', difficulty: 'expert' },
+                { name: '複合建築', target: '異なる4種類のブロックを使用', difficulty: 'normal' },
+                { name: 'バランス重視', target: '安定性90%以上を維持', difficulty: 'hard' }
+            ];
+            
+            gameState.currentChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+            
+            // 利用可能ブロックを生成
+            gameState.availableBlocks = [];
+            for (let i = 0; i < gameState.totalBlocks; i++) {
+                const blockType = blockTypes[Math.floor(Math.random() * blockTypes.length)];
+                gameState.availableBlocks.push({
+                    id: i,
+                    ...blockType,
+                    placed: false
+                });
+            }
+            
+            displayChallenge();
+            drawCanvas();
+        }
+
+        function displayChallenge() {
+            const challengeInfo = `
+                <div class="construction-info">
+                    <div class="info-item">
+                        <strong>チャレンジ:</strong><br>${gameState.currentChallenge.name}
+                    </div>
+                    <div class="info-item">
+                        <strong>目標:</strong><br>${gameState.currentChallenge.target}
+                    </div>
+                    <div class="info-item">
+                        <strong>難易度:</strong><br>${gameState.currentChallenge.difficulty}
+                    </div>
+                    <div class="info-item">
+                        <strong>利用可能:</strong><br>${gameState.availableBlocks.filter(b => !b.placed).length}ブロック
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.construction-zone').innerHTML = `
+                <h4>🏗️ 構築エリア - ${gameState.currentChallenge.name}</h4>
+                <canvas id="constructionCanvas" width="600" height="400" style="border: 2px solid #fff; border-radius: 10px; background: rgba(255,255,255,0.1);"></canvas>
+                ${challengeInfo}
+            `;
+            
+            // Canvas要素を再取得
+            gameState.canvas = document.getElementById('constructionCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            setupCanvasEvents();
+        }
+
+        function setupBlockPalette() {
+            const palette = document.getElementById('blockPalette');
+            palette.innerHTML = '';
+            
+            const uniqueTypes = [...new Set(gameState.availableBlocks.map(b => b.type))];
+            
+            uniqueTypes.forEach(type => {
+                const count = gameState.availableBlocks.filter(b => b.type === type && !b.placed).length;
+                const blockType = blockTypes.find(bt => bt.type === type);
+                
+                const blockItem = document.createElement('div');
+                blockItem.className = `block-item ${type}`;
+                blockItem.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.8rem;">${blockType.name}</div>
+                        <div style="font-size: 0.7rem;">×${count}</div>
+                    </div>
+                `;
+                blockItem.draggable = true;
+                blockItem.dataset.blockType = type;
+                
+                blockItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', type);
+                });
+                
+                palette.appendChild(blockItem);
+            });
+        }
+
+        function setupCanvasEvents() {
+            gameState.canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            gameState.canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const blockType = e.dataTransfer.getData('text/plain');
+                const rect = gameState.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                placeBlock(blockType, x, y);
+            });
+        }
+
+        function placeBlock(blockType, x, y) {
+            const availableBlock = gameState.availableBlocks.find(b => b.type === blockType && !b.placed);
+            if (!availableBlock) {
+                alert('このタイプのブロックはもうありません！');
+                return;
+            }
+            
+            // 物理演算（簡易版）
+            const groundY = gameState.canvas.height - 20;
+            const finalY = Math.min(y, groundY - availableBlock.height);
+            
+            // 他のブロックとの衝突検出
+            let collision = false;
+            for (let placedBlock of gameState.placedBlocks) {
+                if (x < placedBlock.x + placedBlock.width && 
+                    x + availableBlock.width > placedBlock.x &&
+                    finalY < placedBlock.y + placedBlock.height && 
+                    finalY + availableBlock.height > placedBlock.y) {
+                    collision = true;
+                    break;
+                }
+            }
+            
+            if (collision) {
+                // ブロックを積み上げる
+                const supportingBlocks = gameState.placedBlocks.filter(b => 
+                    x < b.x + b.width && x + availableBlock.width > b.x
+                );
+                if (supportingBlocks.length > 0) {
+                    const highestBlock = supportingBlocks.reduce((prev, current) => 
+                        (prev.y < current.y) ? prev : current
+                    );
+                    const newY = highestBlock.y - availableBlock.height;
+                    
+                    if (newY >= 0) {
+                        addBlockToConstruction(availableBlock, x, newY);
+                    }
+                }
+            } else {
+                addBlockToConstruction(availableBlock, x, finalY);
+            }
+        }
+
+        function addBlockToConstruction(block, x, y) {
+            block.placed = true;
+            block.x = x;
+            block.y = y;
+            
+            gameState.placedBlocks.push(block);
+            gameState.blocksPlaced++;
+            gameState.successfulPlacements++;
+            gameState.score += 100;
+            
+            // 安定性計算
+            calculateStability();
+            
+            setupBlockPalette();
+            drawCanvas();
+            updateDisplay();
+            
+            // 安定性ボーナス
+            if (gameState.currentStability > 80) {
+                gameState.score += 50;
+            }
+        }
+
+        function calculateStability() {
+            let totalStability = 0;
+            let stabilityCount = 0;
+            
+            for (let block of gameState.placedBlocks) {
+                let blockStability = block.stability;
+                
+                // 下にサポートがあるかチェック
+                const supportingBlocks = gameState.placedBlocks.filter(b => 
+                    b !== block &&
+                    block.x < b.x + b.width && 
+                    block.x + block.width > b.x &&
+                    Math.abs(block.y + block.height - b.y) < 5
+                );
+                
+                if (supportingBlocks.length > 0) {
+                    blockStability += 5;
+                } else if (block.y + block.height < gameState.canvas.height - 25) {
+                    blockStability -= 3; // 空中に浮いているペナルティ
+                }
+                
+                totalStability += blockStability;
+                stabilityCount++;
+            }
+            
+            gameState.currentStability = stabilityCount > 0 ? 
+                Math.max(0, Math.min(100, (totalStability / stabilityCount) * 10)) : 100;
+        }
+
+        function drawCanvas() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // 地面を描画
+            gameState.ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
+            gameState.ctx.fillRect(0, gameState.canvas.height - 20, gameState.canvas.width, 20);
+            
+            // ブロックを描画
+            for (let block of gameState.placedBlocks) {
+                gameState.ctx.fillStyle = block.color;
+                gameState.ctx.fillRect(block.x, block.y, block.width, block.height);
+                
+                gameState.ctx.strokeStyle = '#333';
+                gameState.ctx.lineWidth = 2;
+                gameState.ctx.strokeRect(block.x, block.y, block.width, block.height);
+                
+                // ブロック名を表示
+                gameState.ctx.fillStyle = '#fff';
+                gameState.ctx.font = '10px Arial';
+                gameState.ctx.textAlign = 'center';
+                gameState.ctx.fillText(block.name, block.x + block.width/2, block.y + block.height/2 + 3);
+            }
+            
+            // 構築情報表示
+            gameState.ctx.fillStyle = '#fff';
+            gameState.ctx.font = '14px Arial';
+            gameState.ctx.textAlign = 'left';
+            gameState.ctx.fillText(`安定性: ${gameState.currentStability.toFixed(1)}%`, 10, 25);
+            gameState.ctx.fillText(`配置済み: ${gameState.blocksPlaced}/${gameState.totalBlocks}`, 10, 45);
+        }
+
+        function checkStability() {
+            calculateStability();
+            let message = `現在の安定性: ${gameState.currentStability.toFixed(1)}%\n`;
+            message += `配置済みブロック: ${gameState.blocksPlaced}個\n`;
+            message += `成功率: ${((gameState.successfulPlacements / gameState.blocksPlaced) * 100).toFixed(1)}%\n\n`;
+            
+            if (gameState.currentStability >= 85) {
+                message += '🏆 優秀な安定性です！';
+                gameState.score += 100;
+            } else if (gameState.currentStability >= 70) {
+                message += '👍 良好な安定性です。';
+            } else {
+                message += '⚠️ 安定性を改善してください。';
+            }
+            
+            alert(message);
+            updateDisplay();
+        }
+
+        function showBuildingTips() {
+            const tips = [
+                '💡 重いブロックは下に配置しましょう',
+                '🏗️ 基礎を広く作ると安定します',
+                '⚖️ 重心のバランスを考慮しましょう',
+                '🧱 ブロック同士の接触面を増やしましょう',
+                '📐 対称的な構造は安定性が高いです'
+            ];
+            
+            const randomTip = tips[Math.floor(Math.random() * tips.length)];
+            alert(`建築のコツ:\n${randomTip}`);
+        }
+
+        function clearConstruction() {
+            if (confirm('構築物をクリアしますか？進行状況が失われます。')) {
+                gameState.placedBlocks = [];
+                gameState.blocksPlaced = 0;
+                gameState.currentStability = 100;
+                
+                // ブロックを未配置状態に戻す
+                gameState.availableBlocks.forEach(block => {
+                    block.placed = false;
+                    delete block.x;
+                    delete block.y;
+                });
+                
+                setupBlockPalette();
+                drawCanvas();
+                updateDisplay();
+            }
+        }
+
+        function newChallenge() {
+            if (confirm('新しいチャレンジを始めますか？現在の進行状況が失われます。')) {
+                resetGameState();
+                generateNewChallenge();
+                setupBlockPalette();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('blocksPlaced').textContent = gameState.blocksPlaced;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const successRate = gameState.blocksPlaced > 0 ? 
+                ((gameState.successfulPlacements / gameState.blocksPlaced) * 100).toFixed(1) : 0;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+            document.getElementById('stability').textContent = `${gameState.currentStability.toFixed(1)}%`;
+            
+            const progress = (gameState.blocksPlaced / gameState.totalBlocks) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // ゲーム終了チェック
+            if (gameState.blocksPlaced >= gameState.totalBlocks) {
+                setTimeout(endGame, 1000);
+            }
+        }
+
+        function endGame() {
+            const successRate = ((gameState.successfulPlacements / gameState.totalBlocks) * 100).toFixed(1);
+            const passed = successRate >= 85;
+            
+            let message = `🎊 立体積み木ゲーム完了！\n\n`;
+            message += `配置ブロック: ${gameState.blocksPlaced} / ${gameState.totalBlocks}\n`;
+            message += `組み立て成功率: ${successRate}%\n`;
+            message += `最終安定性: ${gameState.currentStability.toFixed(1)}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な空間構築能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n85%以上の成功率を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                newChallenge();
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

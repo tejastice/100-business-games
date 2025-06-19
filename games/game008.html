@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動体視力 - ゲーム008</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .dynamic-vision-game {
+            width: 900px;
+            height: 800px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .game-header {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .instruction-panel {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: white;
+        }
+
+        .instruction-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .speed-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .speed-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .speed-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, #10B981, #F59E0B, #EF4444);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .speed-text {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .game-area {
+            width: 860px;
+            height: 400px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tracking-zone {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .moving-target {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #FF6B6B, #FF8E53);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
+            z-index: 2;
+        }
+
+        .target-trail {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 1s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            from { opacity: 0.6; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.5); }
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .crosshair-h, .crosshair-v {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .crosshair-h {
+            width: 40px;
+            height: 2px;
+            top: -1px;
+            left: -20px;
+        }
+
+        .crosshair-v {
+            width: 2px;
+            height: 40px;
+            top: -20px;
+            left: -1px;
+        }
+
+        .identification-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            min-width: 400px;
+        }
+
+        .identification-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .identification-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .identification-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .identification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .identification-timer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-bar {
+            width: 300px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timer-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #10B981, #F59E0B, #EF4444);
+            animation: timerCountdown 3s linear forwards;
+        }
+
+        @keyframes timerCountdown {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .timer-text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tracking-stats {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .stats-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #10B981;
+        }
+
+        .performance-chart {
+            text-align: center;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .start-button, .pause-button, .reset-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .start-button {
+            background: linear-gradient(145deg, #10B981, #059669);
+            color: white;
+        }
+
+        .pause-button {
+            background: linear-gradient(145deg, #F59E0B, #D97706);
+            color: white;
+        }
+
+        .reset-button {
+            background: linear-gradient(145deg, #EF4444, #DC2626);
+            color: white;
+        }
+
+        .start-button:hover, .pause-button:hover, .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .game-results {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-width: 350px;
+            z-index: 20;
+        }
+
+        .game-results h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .game-results p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .game-results span {
+            font-weight: bold;
+            color: #10B981;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="dynamic-vision-game">
+        <div class="game-header">
+            <div class="target-display">ターゲット: <span id="currentTarget">0</span>/25</div>
+            <div class="speed-display">速度レベル: <span id="speedLevel">1</span></div>
+            <div class="accuracy-display">識別率: <span id="accuracy">100</span>%</div>
+            <div class="score-display">スコア: <span id="score">0</span></div>
+        </div>
+        
+        <div class="instruction-panel">
+            <div class="instruction-text" id="instructionText">移動するターゲット内の文字を読み取ってください</div>
+            <div class="speed-indicator" id="speedIndicator">
+                <div class="speed-bar" id="speedBar"></div>
+                <span class="speed-text">低速 ← → 高速</span>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="tracking-zone" id="trackingZone">
+                <!-- 移動ターゲットが動的に生成される -->
+            </div>
+            <div class="crosshair" id="crosshair">
+                <div class="crosshair-h"></div>
+                <div class="crosshair-v"></div>
+            </div>
+        </div>
+        
+        <div class="identification-panel" id="identificationPanel" style="display: none;">
+            <div class="identification-title">移動中に見えた内容は？</div>
+            <div class="identification-options" id="identificationOptions">
+                <!-- 選択肢が動的に生成される -->
+            </div>
+            <div class="identification-timer">
+                <div class="timer-bar" id="timerBar"></div>
+                <span class="timer-text">残り: <span id="timerText">3.0</span>秒</span>
+            </div>
+        </div>
+        
+        <div class="tracking-stats" id="trackingStats">
+            <div class="stats-title">動体視力統計</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">平均追跡精度</span>
+                    <span class="stat-value" id="avgTrackingAccuracy">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">識別成功率</span>
+                    <span class="stat-value" id="identificationRate">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最高速度対応</span>
+                    <span class="stat-value" id="maxSpeed">レベル1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">連続成功</span>
+                    <span class="stat-value" id="consecutiveSuccess">0回</span>
+                </div>
+            </div>
+            <div class="performance-chart">
+                <canvas id="performanceChart" width="500" height="100"></canvas>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <button id="startBtn" class="start-button">スタート</button>
+            <button id="pauseBtn" class="pause-button">一時停止</button>
+            <button id="resetBtn" class="reset-button">リセット</button>
+        </div>
+        
+        <div class="game-results" id="results" style="display: none;">
+            <h3>結果</h3>
+            <p>完了ターゲット: <span id="finalTarget">0</span>/25</p>
+            <p>総合識別率: <span id="finalAccuracy">0</span>%</p>
+            <p>最高到達速度: <span id="finalMaxSpeed">レベル1</span></p>
+            <p>平均追跡精度: <span id="finalTrackingAccuracy">0</span>%</p>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <p>動体視力評価: <span id="visionRating">---</span></p>
+        </div>
+    </div>
+
+    <script>
+        class DynamicVisionGame {
+            constructor() {
+                this.currentTarget = 0;
+                this.totalTargets = 25;
+                this.correctIdentifications = 0;
+                this.currentSpeedLevel = 1;
+                this.maxSpeedLevel = 10;
+                this.gameActive = false;
+                this.isPaused = false;
+                this.responses = [];
+                this.currentTargetElement = null;
+                this.targetContent = '';
+                this.targetOptions = [];
+                this.trackingAccuracy = [];
+                this.consecutiveSuccess = 0;
+                this.maxConsecutiveSuccess = 0;
+                this.trackingStartTime = null;
+                this.identificationTimeout = null;
+                this.movementAnimationId = null;
+                this.trailElements = [];
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+                this.initializeChart();
+            }
+            
+            initializeElements() {
+                this.elements = {
+                    currentTarget: document.getElementById('currentTarget'),
+                    speedLevel: document.getElementById('speedLevel'),
+                    accuracy: document.getElementById('accuracy'),
+                    score: document.getElementById('score'),
+                    speedBar: document.getElementById('speedBar'),
+                    gameArea: document.getElementById('gameArea'),
+                    trackingZone: document.getElementById('trackingZone'),
+                    crosshair: document.getElementById('crosshair'),
+                    identificationPanel: document.getElementById('identificationPanel'),
+                    identificationOptions: document.getElementById('identificationOptions'),
+                    timerBar: document.getElementById('timerBar'),
+                    timerText: document.getElementById('timerText'),
+                    avgTrackingAccuracy: document.getElementById('avgTrackingAccuracy'),
+                    identificationRate: document.getElementById('identificationRate'),
+                    maxSpeed: document.getElementById('maxSpeed'),
+                    consecutiveSuccess: document.getElementById('consecutiveSuccess'),
+                    performanceChart: document.getElementById('performanceChart'),
+                    startBtn: document.getElementById('startBtn'),
+                    pauseBtn: document.getElementById('pauseBtn'),
+                    resetBtn: document.getElementById('resetBtn'),
+                    results: document.getElementById('results')
+                };
+            }
+            
+            bindEvents() {
+                this.elements.startBtn.addEventListener('click', () => this.startGame());
+                this.elements.pauseBtn.addEventListener('click', () => this.pauseGame());
+                this.elements.resetBtn.addEventListener('click', () => this.resetGame());
+                
+                this.elements.trackingZone.addEventListener('mousemove', (e) => this.updateCrosshair(e));
+                
+                document.addEventListener('keydown', (e) => {
+                    if (!this.gameActive) return;
+                    
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        this.pauseGame();
+                    }
+                });
+            }
+            
+            initializeChart() {
+                this.chartContext = this.elements.performanceChart.getContext('2d');
+                this.drawChart();
+            }
+            
+            startGame() {
+                this.gameActive = true;
+                this.isPaused = false;
+                this.currentTarget = 0;
+                this.correctIdentifications = 0;
+                this.currentSpeedLevel = 1;
+                this.responses = [];
+                this.trackingAccuracy = [];
+                this.consecutiveSuccess = 0;
+                this.maxConsecutiveSuccess = 0;
+                
+                this.elements.startBtn.style.display = 'none';
+                this.elements.pauseBtn.style.display = 'inline-block';
+                this.elements.results.style.display = 'none';
+                this.elements.identificationPanel.style.display = 'none';
+                
+                this.nextTarget();
+            }
+            
+            nextTarget() {
+                if (this.currentTarget >= this.totalTargets) {
+                    this.endGame();
+                    return;
+                }
+                
+                this.currentTarget++;
+                this.updateSpeedLevel();
+                this.createTarget();
+                this.updateDisplay();
+            }
+            
+            updateSpeedLevel() {
+                this.currentSpeedLevel = Math.min(
+                    Math.floor(this.currentTarget / 3) + 1,
+                    this.maxSpeedLevel
+                );
+                
+                const speedPercentage = (this.currentSpeedLevel / this.maxSpeedLevel) * 100;
+                this.elements.speedBar.style.setProperty('--speed-width', speedPercentage + '%');
+                this.elements.speedBar.style.width = speedPercentage + '%';
+            }
+            
+            createTarget() {
+                this.clearCurrentTarget();
+                
+                this.targetContent = this.generateTargetContent();
+                this.targetOptions = this.generateOptions(this.targetContent);
+                
+                this.currentTargetElement = document.createElement('div');
+                this.currentTargetElement.className = 'moving-target';
+                this.currentTargetElement.textContent = this.targetContent;
+                this.elements.trackingZone.appendChild(this.currentTargetElement);
+                
+                this.startTargetMovement();
+                this.trackingStartTime = performance.now();
+            }
+            
+            generateTargetContent() {
+                const types = ['number', 'letter', 'symbol'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                switch (type) {
+                    case 'number':
+                        return Math.floor(Math.random() * 100).toString();
+                    case 'letter':
+                        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                        return letters[Math.floor(Math.random() * letters.length)];
+                    case 'symbol':
+                        const symbols = ['★', '♦', '♠', '♥', '●', '■', '▲', '♪'];
+                        return symbols[Math.floor(Math.random() * symbols.length)];
+                }
+            }
+            
+            generateOptions(correct) {
+                const options = [correct];
+                
+                while (options.length < 4) {
+                    let option;
+                    if (/^\d+$/.test(correct)) {
+                        option = Math.floor(Math.random() * 100).toString();
+                    } else if (/^[A-Z]$/.test(correct)) {
+                        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                        option = letters[Math.floor(Math.random() * letters.length)];
+                    } else {
+                        const symbols = ['★', '♦', '♠', '♥', '●', '■', '▲', '♪'];
+                        option = symbols[Math.floor(Math.random() * symbols.length)];
+                    }
+                    
+                    if (!options.includes(option)) {
+                        options.push(option);
+                    }
+                }
+                
+                return this.shuffleArray(options);
+            }
+            
+            shuffleArray(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+            
+            startTargetMovement() {
+                const zoneRect = this.elements.trackingZone.getBoundingClientRect();
+                const targetSize = 80;
+                
+                const startX = Math.random() * (zoneRect.width - targetSize);
+                const startY = Math.random() * (zoneRect.height - targetSize);
+                const endX = Math.random() * (zoneRect.width - targetSize);
+                const endY = Math.random() * (zoneRect.height - targetSize);
+                
+                this.currentTargetElement.style.left = startX + 'px';
+                this.currentTargetElement.style.top = startY + 'px';
+                
+                const speed = this.currentSpeedLevel * 0.5 + 0.5;
+                const duration = 3000 / speed;
+                
+                const startTime = performance.now();
+                const animate = (currentTime) => {
+                    if (!this.gameActive || this.isPaused) return;
+                    
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    const currentX = startX + (endX - startX) * progress;
+                    const currentY = startY + (endY - startY) * progress;
+                    
+                    this.currentTargetElement.style.left = currentX + 'px';
+                    this.currentTargetElement.style.top = currentY + 'px';
+                    
+                    this.createTrail(currentX + targetSize/2, currentY + targetSize/2);
+                    
+                    if (progress < 1) {
+                        this.movementAnimationId = requestAnimationFrame(animate);
+                    } else {
+                        this.showIdentificationPanel();
+                    }
+                };
+                
+                this.movementAnimationId = requestAnimationFrame(animate);
+            }
+            
+            createTrail(x, y) {
+                const trail = document.createElement('div');
+                trail.className = 'target-trail';
+                trail.style.left = x + 'px';
+                trail.style.top = y + 'px';
+                this.elements.trackingZone.appendChild(trail);
+                this.trailElements.push(trail);
+                
+                setTimeout(() => {
+                    if (trail.parentNode) {
+                        trail.parentNode.removeChild(trail);
+                    }
+                    const index = this.trailElements.indexOf(trail);
+                    if (index > -1) {
+                        this.trailElements.splice(index, 1);
+                    }
+                }, 1000);
+                
+                if (this.trailElements.length > 50) {
+                    const oldTrail = this.trailElements.shift();
+                    if (oldTrail.parentNode) {
+                        oldTrail.parentNode.removeChild(oldTrail);
+                    }
+                }
+            }
+            
+            updateCrosshair(e) {
+                if (!this.currentTargetElement) return;
+                
+                const zoneRect = this.elements.trackingZone.getBoundingClientRect();
+                const mouseX = e.clientX - zoneRect.left;
+                const mouseY = e.clientY - zoneRect.top;
+                
+                this.elements.crosshair.style.left = mouseX + 'px';
+                this.elements.crosshair.style.top = mouseY + 'px';
+                
+                const targetRect = this.currentTargetElement.getBoundingClientRect();
+                const targetX = targetRect.left - zoneRect.left + targetRect.width / 2;
+                const targetY = targetRect.top - zoneRect.top + targetRect.height / 2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - targetX, 2) + Math.pow(mouseY - targetY, 2)
+                );
+                
+                const accuracy = Math.max(0, 100 - distance);
+                this.trackingAccuracy.push(accuracy);
+            }
+            
+            showIdentificationPanel() {
+                this.clearCurrentTarget();
+                this.elements.identificationPanel.style.display = 'block';
+                
+                this.elements.identificationOptions.innerHTML = '';
+                this.targetOptions.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'identification-btn';
+                    button.textContent = option;
+                    button.addEventListener('click', () => this.selectOption(option));
+                    this.elements.identificationOptions.appendChild(button);
+                });
+                
+                this.startIdentificationTimer();
+            }
+            
+            startIdentificationTimer() {
+                this.elements.timerBar.style.animation = 'none';
+                this.elements.timerBar.offsetHeight;
+                this.elements.timerBar.style.animation = 'timerCountdown 3s linear forwards';
+                
+                let timeLeft = 3.0;
+                const timerInterval = setInterval(() => {
+                    timeLeft -= 0.1;
+                    this.elements.timerText.textContent = timeLeft.toFixed(1);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                    }
+                }, 100);
+                
+                this.identificationTimeout = setTimeout(() => {
+                    this.selectOption(null);
+                }, 3000);
+            }
+            
+            selectOption(selectedOption) {
+                clearTimeout(this.identificationTimeout);
+                this.elements.identificationPanel.style.display = 'none';
+                
+                const trackingTime = performance.now() - this.trackingStartTime;
+                const avgTrackingAccuracy = this.trackingAccuracy.length > 0 ? 
+                    this.trackingAccuracy.reduce((sum, acc) => sum + acc, 0) / this.trackingAccuracy.length : 0;
+                
+                const isCorrect = selectedOption === this.targetContent;
+                if (isCorrect) {
+                    this.correctIdentifications++;
+                    this.consecutiveSuccess++;
+                    this.maxConsecutiveSuccess = Math.max(this.maxConsecutiveSuccess, this.consecutiveSuccess);
+                } else {
+                    this.consecutiveSuccess = 0;
+                }
+                
+                this.responses.push({
+                    target: this.currentTarget,
+                    speedLevel: this.currentSpeedLevel,
+                    correct: isCorrect,
+                    trackingTime: trackingTime,
+                    avgTrackingAccuracy: avgTrackingAccuracy,
+                    selectedOption: selectedOption,
+                    correctOption: this.targetContent
+                });
+                
+                this.trackingAccuracy = [];
+                this.updateDisplay();
+                this.updateStats();
+                this.drawChart();
+                
+                setTimeout(() => {
+                    this.nextTarget();
+                }, 500);
+            }
+            
+            clearCurrentTarget() {
+                if (this.currentTargetElement) {
+                    if (this.movementAnimationId) {
+                        cancelAnimationFrame(this.movementAnimationId);
+                    }
+                    this.currentTargetElement.remove();
+                    this.currentTargetElement = null;
+                }
+            }
+            
+            updateStats() {
+                const avgTrackingAccuracy = this.responses.length > 0 ? 
+                    this.responses.reduce((sum, r) => sum + r.avgTrackingAccuracy, 0) / this.responses.length : 0;
+                
+                const identificationRate = this.currentTarget > 0 ? 
+                    (this.correctIdentifications / this.currentTarget) * 100 : 100;
+                
+                this.elements.avgTrackingAccuracy.textContent = avgTrackingAccuracy.toFixed(0) + '%';
+                this.elements.identificationRate.textContent = identificationRate.toFixed(0) + '%';
+                this.elements.maxSpeed.textContent = 'レベル' + Math.max(...this.responses.map(r => r.speedLevel));
+                this.elements.consecutiveSuccess.textContent = this.maxConsecutiveSuccess + '回';
+            }
+            
+            pauseGame() {
+                if (!this.gameActive) return;
+                
+                this.isPaused = !this.isPaused;
+                if (this.isPaused) {
+                    this.elements.pauseBtn.textContent = '再開';
+                    if (this.movementAnimationId) {
+                        cancelAnimationFrame(this.movementAnimationId);
+                    }
+                    clearTimeout(this.identificationTimeout);
+                } else {
+                    this.elements.pauseBtn.textContent = '一時停止';
+                    if (this.currentTargetElement && this.elements.identificationPanel.style.display === 'none') {
+                        this.startTargetMovement();
+                    }
+                }
+            }
+            
+            resetGame() {
+                this.gameActive = false;
+                this.isPaused = false;
+                this.currentTarget = 0;
+                this.correctIdentifications = 0;
+                this.currentSpeedLevel = 1;
+                this.responses = [];
+                this.trackingAccuracy = [];
+                this.consecutiveSuccess = 0;
+                this.maxConsecutiveSuccess = 0;
+                
+                this.clearCurrentTarget();
+                clearTimeout(this.identificationTimeout);
+                
+                this.trailElements.forEach(trail => {
+                    if (trail.parentNode) {
+                        trail.parentNode.removeChild(trail);
+                    }
+                });
+                this.trailElements = [];
+                
+                this.elements.startBtn.style.display = 'inline-block';
+                this.elements.pauseBtn.style.display = 'none';
+                this.elements.pauseBtn.textContent = '一時停止';
+                this.elements.results.style.display = 'none';
+                this.elements.identificationPanel.style.display = 'none';
+                
+                this.updateDisplay();
+                this.updateStats();
+                this.drawChart();
+            }
+            
+            endGame() {
+                this.gameActive = false;
+                this.clearCurrentTarget();
+                
+                const avgTrackingAccuracy = this.responses.length > 0 ? 
+                    this.responses.reduce((sum, r) => sum + r.avgTrackingAccuracy, 0) / this.responses.length : 0;
+                const identificationRate = (this.correctIdentifications / this.totalTargets) * 100;
+                const maxSpeed = Math.max(...this.responses.map(r => r.speedLevel));
+                const score = Math.round(identificationRate * 10 + avgTrackingAccuracy * 5 + maxSpeed * 50);
+                
+                document.getElementById('finalTarget').textContent = this.currentTarget;
+                document.getElementById('finalAccuracy').textContent = identificationRate.toFixed(1);
+                document.getElementById('finalMaxSpeed').textContent = 'レベル' + maxSpeed;
+                document.getElementById('finalTrackingAccuracy').textContent = avgTrackingAccuracy.toFixed(1);
+                document.getElementById('finalScore').textContent = score;
+                
+                let rating;
+                if (identificationRate >= 90 && avgTrackingAccuracy >= 80 && maxSpeed >= 8) {
+                    rating = '動体視力エキスパート';
+                } else if (identificationRate >= 80 && avgTrackingAccuracy >= 70 && maxSpeed >= 6) {
+                    rating = '優秀な動体視力';
+                } else if (identificationRate >= 70 && avgTrackingAccuracy >= 60) {
+                    rating = '良好な動体視力';
+                } else if (identificationRate >= 60) {
+                    rating = '平均的動体視力';
+                } else {
+                    rating = '要練習';
+                }
+                
+                document.getElementById('visionRating').textContent = rating;
+                
+                this.elements.results.style.display = 'block';
+                this.elements.startBtn.style.display = 'inline-block';
+                this.elements.pauseBtn.style.display = 'none';
+            }
+            
+            updateDisplay() {
+                this.elements.currentTarget.textContent = this.currentTarget;
+                this.elements.speedLevel.textContent = this.currentSpeedLevel;
+                
+                const accuracy = this.currentTarget > 0 ? 
+                    (this.correctIdentifications / this.currentTarget) * 100 : 100;
+                this.elements.accuracy.textContent = accuracy.toFixed(1);
+                
+                const score = Math.round(accuracy * this.currentTarget + this.currentSpeedLevel * 10);
+                this.elements.score.textContent = score;
+            }
+            
+            drawChart() {
+                const ctx = this.chartContext;
+                const width = ctx.canvas.width;
+                const height = ctx.canvas.height;
+                
+                ctx.clearRect(0, 0, width, height);
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 4; i++) {
+                    const y = (height / 4) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+                
+                if (this.responses.length > 1) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#10B981';
+                    ctx.lineWidth = 2;
+                    
+                    let correctCount = 0;
+                    for (let i = 0; i < this.responses.length; i++) {
+                        if (this.responses[i].correct) correctCount++;
+                        const accuracy = (correctCount / (i + 1)) * 100;
+                        const x = (width / this.totalTargets) * (i + 1);
+                        const y = height - (height / 100) * accuracy;
+                        
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#F59E0B';
+                    ctx.lineWidth = 2;
+                    
+                    for (let i = 0; i < this.responses.length; i++) {
+                        const speedLevel = this.responses[i].speedLevel;
+                        const x = (width / this.totalTargets) * (i + 1);
+                        const y = height - (height / this.maxSpeedLevel) * speedLevel;
+                        
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText('識別率・速度', 5, 15);
+                ctx.fillText('100%', 5, 25);
+                ctx.fillText('0%', 5, height - 5);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new DynamicVisionGame();
+        });
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ソリティア - ゲーム079</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .solitaire-board {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            gap: 20px;
+        }
+
+        .top-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .foundation-area {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tableau-area {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            min-height: 350px;
+        }
+
+        .card-pile {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px;
+            position: relative;
+        }
+
+        .card-pile.foundation {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ecc71;
+        }
+
+        .card-pile.waste {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+        }
+
+        .playing-card {
+            background: white;
+            color: #333;
+            border: 1px solid #333;
+            border-radius: 6px;
+            width: 60px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px;
+            margin-top: -60px;
+            position: relative;
+        }
+
+        .playing-card:first-child {
+            margin-top: 0;
+        }
+
+        .playing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .playing-card.selected {
+            border-color: #f1c40f;
+            border-width: 3px;
+            transform: translateY(-8px);
+        }
+
+        .playing-card.red {
+            color: #e74c3c;
+        }
+
+        .playing-card.black {
+            color: #333;
+        }
+
+        .playing-card.face-down {
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .card-value {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .card-suit {
+            font-size: 18px;
+        }
+
+        .card-back {
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stock-pile {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: #9b59b6;
+            cursor: pointer;
+        }
+
+        .stock-pile:hover {
+            background: rgba(155, 89, 182, 0.3);
+        }
+
+        .pile-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .solitaire-board {
+                padding: 15px;
+            }
+
+            .playing-card {
+                width: 45px;
+                height: 65px;
+                font-size: 10px;
+                margin-top: -45px;
+            }
+
+            .card-suit {
+                font-size: 14px;
+            }
+
+            .tableau-area {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+
+            .foundation-area {
+                gap: 5px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">♠️ ソリティア</h1>
+        <p class="game-description">戦略的解法と論理的思考による問題解決ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">完成ゲーム</div>
+                <div class="stat-value" id="completedGames">0/10</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">完成率</div>
+                <div class="stat-value" id="completionRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">最小手数</div>
+                <div class="stat-value" id="bestMoves">--</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">やり直し回数</div>
+                <div class="stat-value" id="retryCount">0/3</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div id="gameStatus">新しいゲームを開始してください</div>
+        </div>
+
+        <div class="solitaire-board">
+            <div class="top-area">
+                <div class="card-pile stock-pile" id="stockPile" onclick="drawCard()">
+                    <div class="pile-label">山札</div>
+                    <div class="card-back">🂠</div>
+                </div>
+                
+                <div class="card-pile waste" id="wastePile">
+                    <div class="pile-label">めくり札</div>
+                </div>
+                
+                <div class="foundation-area">
+                    <div class="card-pile foundation" id="foundation0">
+                        <div class="pile-label">♠️</div>
+                    </div>
+                    <div class="card-pile foundation" id="foundation1">
+                        <div class="pile-label">♥️</div>
+                    </div>
+                    <div class="card-pile foundation" id="foundation2">
+                        <div class="pile-label">♣️</div>
+                    </div>
+                    <div class="card-pile foundation" id="foundation3">
+                        <div class="pile-label">♦️</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tableau-area">
+                <div class="card-pile" id="tableau0"></div>
+                <div class="card-pile" id="tableau1"></div>
+                <div class="card-pile" id="tableau2"></div>
+                <div class="card-pile" id="tableau3"></div>
+                <div class="card-pile" id="tableau4"></div>
+                <div class="card-pile" id="tableau5"></div>
+                <div class="card-pile" id="tableau6"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newGame()">新しいゲーム</button>
+            <button class="btn warning" onclick="restartGame()" id="restartBtn" disabled>やり直し</button>
+            <button class="btn" onclick="autoMove()">自動移動</button>
+            <button class="btn" onclick="showHint()">ヒント</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> クロンダイク形式ソリティアを80%以上の完成率でクリア（10ゲーム中8ゲーム完成）</li>
+                <li><strong>基本ルール:</strong>
+                    <ul>
+                        <li>全てのカードを4つの基礎杭（♠️♥️♣️♦️）にA〜Kの順で積み上げる</li>
+                        <li>場札では赤と黒が交互になるよう、大きい数から小さい数の順で積む</li>
+                        <li>表向きのカードのみ移動可能、裏向きカードがめくれたら表にする</li>
+                    </ul>
+                </li>
+                <li><strong>操作方法:</strong>
+                    <ul>
+                        <li>カードをクリックして選択、もう一度クリックで移動先決定</li>
+                        <li>山札をクリックして新しいカードをめくる</li>
+                        <li>空いた場札の列にはキング（K）のみ配置可能</li>
+                        <li>基礎杭にはAから順番に同じスートのカードを積む</li>
+                    </ul>
+                </li>
+                <li><strong>戦略要素:</strong> 最小手数での完成、手順の最適化、先読み判断</li>
+                <li><strong>やり直し:</strong> 3回まで同じ配置でのやり直し可能</li>
+                <li><strong>評価基準:</strong> 完成率、手数効率、戦略的思考力、問題解決能力</li>
+                <li><strong>クリア条件:</strong> 10ゲーム中8ゲーム以上完成（完成率80%以上）でソリティアマスター認定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            stock: [],
+            waste: [],
+            foundations: [[], [], [], []],
+            tableau: [[], [], [], [], [], [], []],
+            selectedCard: null,
+            selectedPile: null,
+            moves: 0,
+            gamesPlayed: 0,
+            gamesCompleted: 0,
+            totalGames: 10,
+            retryCount: 0,
+            maxRetries: 3,
+            gameActive: false,
+            bestMoves: null
+        };
+
+        const suits = ['spades', 'hearts', 'clubs', 'diamonds'];
+        const suitSymbols = {'spades': '♠️', 'hearts': '♥️', 'clubs': '♣️', 'diamonds': '♦️'};
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+        function createDeck() {
+            const deck = [];
+            suits.forEach(suit => {
+                values.forEach((value, index) => {
+                    deck.push({
+                        suit: suit,
+                        value: value,
+                        rank: index + 1,
+                        color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black',
+                        faceUp: false
+                    });
+                });
+            });
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function dealCards() {
+            const deck = createDeck();
+            
+            // タブローに配る
+            let cardIndex = 0;
+            for (let col = 0; col < 7; col++) {
+                gameState.tableau[col] = [];
+                for (let row = 0; row <= col; row++) {
+                    const card = deck[cardIndex++];
+                    card.faceUp = (row === col); // 最後のカードのみ表向き
+                    gameState.tableau[col].push(card);
+                }
+            }
+            
+            // 残りを山札に
+            gameState.stock = deck.slice(cardIndex);
+            gameState.waste = [];
+            gameState.foundations = [[], [], [], []];
+            gameState.moves = 0;
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            gameState.gameActive = true;
+            
+            updateDisplay();
+        }
+
+        function renderCard(card, clickHandler = null) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `playing-card ${card.color}`;
+            
+            if (!card.faceUp) {
+                cardElement.className += ' face-down';
+                cardElement.innerHTML = '<div class="card-back">🂠</div>';
+            } else {
+                cardElement.innerHTML = `
+                    <div class="card-value">${card.value}</div>
+                    <div class="card-suit">${suitSymbols[card.suit]}</div>
+                `;
+            }
+            
+            if (clickHandler) {
+                cardElement.onclick = clickHandler;
+            }
+            
+            return cardElement;
+        }
+
+        function updateDisplay() {
+            // 山札表示
+            const stockPile = document.getElementById('stockPile');
+            stockPile.innerHTML = '<div class="pile-label">山札</div>';
+            if (gameState.stock.length > 0) {
+                stockPile.appendChild(renderCard({faceUp: false}, drawCard));
+            }
+            
+            // めくり札表示
+            const wastePile = document.getElementById('wastePile');
+            wastePile.innerHTML = '<div class="pile-label">めくり札</div>';
+            if (gameState.waste.length > 0) {
+                const topCard = gameState.waste[gameState.waste.length - 1];
+                wastePile.appendChild(renderCard(topCard, () => selectCard(topCard, 'waste')));
+            }
+            
+            // 基礎杭表示
+            for (let i = 0; i < 4; i++) {
+                const foundation = document.getElementById(`foundation${i}`);
+                foundation.innerHTML = `<div class="pile-label">${suitSymbols[suits[i]]}</div>`;
+                
+                if (gameState.foundations[i].length > 0) {
+                    const topCard = gameState.foundations[i][gameState.foundations[i].length - 1];
+                    foundation.appendChild(renderCard(topCard, () => selectCard(topCard, `foundation${i}`)));
+                } else {
+                    foundation.onclick = () => moveToFoundation(i);
+                }
+            }
+            
+            // タブロー表示
+            for (let i = 0; i < 7; i++) {
+                const tableau = document.getElementById(`tableau${i}`);
+                tableau.innerHTML = '';
+                
+                gameState.tableau[i].forEach((card, index) => {
+                    const cardElement = renderCard(card, () => selectCard(card, `tableau${i}`, index));
+                    tableau.appendChild(cardElement);
+                });
+                
+                if (gameState.tableau[i].length === 0) {
+                    tableau.onclick = () => moveToTableau(i);
+                }
+            }
+            
+            updateStats();
+            updateButtons();
+        }
+
+        function selectCard(card, pileType, cardIndex = null) {
+            if (!gameState.gameActive) return;
+            
+            // 選択解除
+            document.querySelectorAll('.playing-card').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            if (gameState.selectedCard === card) {
+                gameState.selectedCard = null;
+                gameState.selectedPile = null;
+                return;
+            }
+            
+            // 移動可能なカードのみ選択可能
+            if (pileType.startsWith('tableau')) {
+                const pileIndex = parseInt(pileType.replace('tableau', ''));
+                const pile = gameState.tableau[pileIndex];
+                if (cardIndex !== pile.length - 1) {
+                    // タブローでは一番上のカードのみ選択可能
+                    return;
+                }
+            }
+            
+            if (!card.faceUp) return;
+            
+            gameState.selectedCard = card;
+            gameState.selectedPile = pileType;
+            
+            // 選択されたカードをハイライト
+            event.target.classList.add('selected');
+        }
+
+        function drawCard() {
+            if (gameState.stock.length === 0) {
+                // 山札が空の場合、めくり札を山札に戻す
+                gameState.stock = gameState.waste.reverse();
+                gameState.stock.forEach(card => card.faceUp = false);
+                gameState.waste = [];
+            } else {
+                // 山札からめくり札に
+                const card = gameState.stock.pop();
+                card.faceUp = true;
+                gameState.waste.push(card);
+            }
+            
+            gameState.moves++;
+            updateDisplay();
+        }
+
+        function moveToFoundation(foundationIndex) {
+            if (!gameState.selectedCard) return;
+            
+            const card = gameState.selectedCard;
+            const foundation = gameState.foundations[foundationIndex];
+            
+            // 基礎杭への移動可能性チェック
+            if (foundation.length === 0) {
+                if (card.rank !== 1) return; // Aのみ
+            } else {
+                const topCard = foundation[foundation.length - 1];
+                if (card.suit !== topCard.suit || card.rank !== topCard.rank + 1) return;
+            }
+            
+            // カードを移動
+            removeCardFromPile(gameState.selectedPile);
+            foundation.push(card);
+            
+            gameState.moves++;
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            
+            checkForWin();
+            updateDisplay();
+        }
+
+        function moveToTableau(tableauIndex) {
+            if (!gameState.selectedCard) return;
+            
+            const card = gameState.selectedCard;
+            const tableau = gameState.tableau[tableauIndex];
+            
+            // タブローへの移動可能性チェック
+            if (tableau.length === 0) {
+                if (card.rank !== 13) return; // Kのみ
+            } else {
+                const topCard = tableau[tableau.length - 1];
+                if (card.color === topCard.color || card.rank !== topCard.rank - 1) return;
+            }
+            
+            // カードを移動
+            removeCardFromPile(gameState.selectedPile);
+            tableau.push(card);
+            
+            gameState.moves++;
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            
+            updateDisplay();
+        }
+
+        function removeCardFromPile(pileType) {
+            if (pileType === 'waste') {
+                gameState.waste.pop();
+            } else if (pileType.startsWith('foundation')) {
+                const index = parseInt(pileType.replace('foundation', ''));
+                gameState.foundations[index].pop();
+            } else if (pileType.startsWith('tableau')) {
+                const index = parseInt(pileType.replace('tableau', ''));
+                const pile = gameState.tableau[index];
+                pile.pop();
+                
+                // 新しい最上位カードを表にする
+                if (pile.length > 0 && !pile[pile.length - 1].faceUp) {
+                    pile[pile.length - 1].faceUp = true;
+                }
+            }
+        }
+
+        function autoMove() {
+            if (!gameState.gameActive) return;
+            
+            // 自動で基礎杭に移動できるカードを探す
+            let moved = false;
+            
+            // タブローから
+            for (let i = 0; i < 7; i++) {
+                const pile = gameState.tableau[i];
+                if (pile.length > 0) {
+                    const card = pile[pile.length - 1];
+                    if (card.faceUp && canMoveToFoundation(card)) {
+                        removeCardFromPile(`tableau${i}`);
+                        gameState.foundations[suits.indexOf(card.suit)].push(card);
+                        gameState.moves++;
+                        moved = true;
+                        break;
+                    }
+                }
+            }
+            
+            // めくり札から
+            if (!moved && gameState.waste.length > 0) {
+                const card = gameState.waste[gameState.waste.length - 1];
+                if (canMoveToFoundation(card)) {
+                    gameState.waste.pop();
+                    gameState.foundations[suits.indexOf(card.suit)].push(card);
+                    gameState.moves++;
+                    moved = true;
+                }
+            }
+            
+            if (moved) {
+                checkForWin();
+                updateDisplay();
+            } else {
+                alert('自動移動できるカードがありません');
+            }
+        }
+
+        function canMoveToFoundation(card) {
+            const foundationIndex = suits.indexOf(card.suit);
+            const foundation = gameState.foundations[foundationIndex];
+            
+            if (foundation.length === 0) {
+                return card.rank === 1; // A
+            } else {
+                const topCard = foundation[foundation.length - 1];
+                return card.rank === topCard.rank + 1;
+            }
+        }
+
+        function showHint() {
+            if (!gameState.gameActive) return;
+            
+            let hints = [];
+            
+            // 基礎杭に移動できるカードを探す
+            for (let i = 0; i < 7; i++) {
+                const pile = gameState.tableau[i];
+                if (pile.length > 0) {
+                    const card = pile[pile.length - 1];
+                    if (card.faceUp && canMoveToFoundation(card)) {
+                        hints.push(`タブロー${i + 1}の${card.value}${suitSymbols[card.suit]}を基礎杭に移動できます`);
+                    }
+                }
+            }
+            
+            if (gameState.waste.length > 0) {
+                const card = gameState.waste[gameState.waste.length - 1];
+                if (canMoveToFoundation(card)) {
+                    hints.push(`めくり札の${card.value}${suitSymbols[card.suit]}を基礎杭に移動できます`);
+                }
+            }
+            
+            // 山札をめくる提案
+            if (hints.length === 0 && gameState.stock.length > 0) {
+                hints.push('山札をクリックして新しいカードをめくってみましょう');
+            }
+            
+            if (hints.length === 0) {
+                hints.push('現在実行可能な最適な手がありません。配置を見直してみましょう');
+            }
+            
+            alert(`💡 ヒント:\n${hints.join('\n')}`);
+        }
+
+        function checkForWin() {
+            const totalCards = gameState.foundations.reduce((sum, foundation) => sum + foundation.length, 0);
+            
+            if (totalCards === 52) {
+                gameState.gameActive = false;
+                gameState.gamesCompleted++;
+                
+                if (!gameState.bestMoves || gameState.moves < gameState.bestMoves) {
+                    gameState.bestMoves = gameState.moves;
+                }
+                
+                let message = `🏆 ソリティア完成！\n\n`;
+                message += `手数: ${gameState.moves}手\n`;
+                message += `完成ゲーム: ${gameState.gamesCompleted}/${gameState.totalGames}\n`;
+                message += `完成率: ${Math.round((gameState.gamesCompleted / gameState.gamesPlayed) * 100)}%\n\n`;
+                
+                if (gameState.gamesCompleted >= Math.ceil(gameState.totalGames * 0.8)) {
+                    message += `🎯 クリア達成！ソリティアマスター認定！`;
+                } else {
+                    message += `目標: ${Math.ceil(gameState.totalGames * 0.8)}ゲーム完成で80%達成`;
+                }
+                
+                alert(message);
+                
+                if (gameState.gamesPlayed < gameState.totalGames) {
+                    setTimeout(() => newGame(), 2000);
+                }
+            }
+        }
+
+        function restartGame() {
+            if (gameState.retryCount >= gameState.maxRetries) {
+                alert(`やり直し回数の上限(${gameState.maxRetries}回)に達しました`);
+                return;
+            }
+            
+            gameState.retryCount++;
+            dealCards();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('completedGames').textContent = `${gameState.gamesCompleted}/${gameState.totalGames}`;
+            
+            const completionRate = gameState.gamesPlayed > 0 ? 
+                Math.round((gameState.gamesCompleted / gameState.gamesPlayed) * 100) : 0;
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+            
+            document.getElementById('bestMoves').textContent = gameState.bestMoves || '--';
+            document.getElementById('retryCount').textContent = `${gameState.retryCount}/${gameState.maxRetries}`;
+            
+            // ゲーム状況更新
+            let status = '';
+            if (!gameState.gameActive && gameState.gamesPlayed === 0) {
+                status = '新しいゲームを開始してください';
+            } else if (gameState.gameActive) {
+                status = `ゲーム進行中 - 手数: ${gameState.moves}`;
+            } else {
+                status = `ゲーム${gameState.gamesPlayed}完了 - 次のゲームへ`;
+            }
+            
+            document.getElementById('gameStatus').textContent = status;
+        }
+
+        function updateButtons() {
+            const restartBtn = document.getElementById('restartBtn');
+            restartBtn.disabled = !gameState.gameActive || gameState.retryCount >= gameState.maxRetries;
+        }
+
+        function newGame() {
+            gameState.gamesPlayed++;
+            gameState.retryCount = 0;
+            dealCards();
+        }
+
+        // ゲーム初期化
+        updateStats();
+    </script>
+</body>
+</html>

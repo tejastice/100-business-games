@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ロジックグリッド - ゲーム048</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2C1810 0%, #8B4513 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .logic-grid-game {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .conditions-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .condition-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 4px solid #FFD700;
+        }
+
+        .logic-grid {
+            display: grid;
+            grid-template-columns: 150px repeat(5, 1fr);
+            grid-template-rows: 40px repeat(5, 1fr);
+            gap: 2px;
+            max-width: 600px;
+            margin: 20px auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .grid-header {
+            background: linear-gradient(145deg, #4169E1, #1E90FF);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 3px;
+            padding: 5px;
+        }
+
+        .grid-row-header {
+            background: linear-gradient(145deg, #32CD32, #228B22);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 3px;
+            padding: 5px;
+        }
+
+        .grid-cell {
+            background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
+            border: 1px solid #999;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+
+        .grid-cell:hover {
+            background: linear-gradient(145deg, #ffffff, #e0e0e0);
+            transform: scale(1.05);
+        }
+
+        .grid-cell.yes {
+            background: linear-gradient(145deg, #90EE90, #32CD32);
+            color: white;
+        }
+
+        .grid-cell.no {
+            background: linear-gradient(145deg, #FFB6C1, #FF69B4);
+            color: white;
+        }
+
+        .grid-cell.locked {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .deduction-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .deduction-step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #00BFFF;
+        }
+
+        .relationship-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .relationship-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .relationship-item.confirmed {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00FF00;
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFD700);
+            transition: width 0.3s ease;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .logic-grid {
+                grid-template-columns: 120px repeat(4, 1fr);
+                grid-template-rows: 35px repeat(4, 1fr);
+            }
+            
+            .grid-cell {
+                min-height: 35px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🧩 ロジックグリッド</h1>
+        <p class="game-description">条件文からの論理的推論による表作成と関係性解明ゲーム</p>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <p><strong>🎯 目的:</strong> 15の条件文から関係表を作成し、全項目の関係性を解明しよう</p>
+            
+            <p><strong>🎮 ゲームの流れ:</strong></p>
+            <ul>
+                <li>条件文を読み、論理的な関係を推論</li>
+                <li>グリッドセルをクリックして「○」「×」で関係を記録</li>
+                <li>矛盾のない論理構築を心がける</li>
+                <li>全項目の関係性を解明</li>
+                <li>完成率100%でクリア</li>
+            </ul>
+            
+            <p><strong>⭐ 評価システム:</strong></p>
+            <ul>
+                <li>グリッド完成率: 正確な関係性の識別</li>
+                <li>論理的一貫性: 矛盾のない推論</li>
+                <li>矛盾回避能力: エラーの少ない判断</li>
+                <li>推論効率: 最小ステップでの解決</li>
+            </ul>
+            
+            <p><strong>🔍 プレイのコツ:</strong></p>
+            <ul>
+                <li>確実な関係から順番に埋める</li>
+                <li>一つ確定すると連鎖的に決まることがある</li>
+                <li>矛盾が生じた場合は前の判断を見直す</li>
+                <li>排除法を使って消去していく</li>
+            </ul>
+        </div>
+
+        <div class="logic-grid-game">
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="grid-completion">0</div>
+                    <div class="stat-label">完成率(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="relationships-found">0</div>
+                    <div class="stat-label">関係数発見</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="consistency-score">100</div>
+                    <div class="stat-label">一貫性(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="time-elapsed">0</div>
+                    <div class="stat-label">経過時間(秒)</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+
+            <h3>📜 条件文</h3>
+            <div class="conditions-panel" id="conditions-panel">
+                <!-- 条件文がJavaScriptで生成される -->
+            </div>
+
+            <h3>📊 論理グリッド</h3>
+            <div class="logic-grid" id="logic-grid">
+                <!-- グリッドがJavaScriptで生成される -->
+            </div>
+
+            <div class="deduction-panel">
+                <h4>🔍 推論ステップ</h4>
+                <div id="deduction-steps">
+                    <div class="deduction-step">ゲームを開始して論理推論に挑戦しましょう</div>
+                </div>
+            </div>
+
+            <div class="relationship-display" id="relationship-display">
+                <!-- 関係性表示がJavaScriptで生成される -->
+            </div>
+
+            <div class="game-controls">
+                <button class="btn" onclick="startGame()" id="start-btn">ゲーム開始</button>
+                <button class="btn" onclick="analyzeConditions()" id="analyze-btn" disabled>条件分析</button>
+                <button class="btn" onclick="autoDeduction()" id="auto-btn" disabled>自動推論</button>
+                <button class="btn" onclick="checkConsistency()" id="check-btn" disabled>整合性確認</button>
+                <button class="btn" onclick="getHint()" id="hint-btn" disabled>ヒント</button>
+                <button class="btn" onclick="resetGame()" id="reset-btn">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            gridSize: 5,
+            grid: [],
+            conditions: [],
+            solution: {},
+            relationships: {},
+            completionRate: 0,
+            relationshipsFound: 0,
+            consistencyScore: 100,
+            timeElapsed: 0,
+            timer: null,
+            deductionSteps: [],
+            people: ['田中', '佐藤', '鈴木', '高橋', '渡辺'],
+            attributes: ['年齢25', '年齢30', '年齢35', '年齢40', '年齢45'],
+            conditionsData: [
+                '田中は佐藤より5歳年上です',
+                '鈴木は30歳ではありません',
+                '高橋は25歳か45歳のどちらかです',
+                '渡辺は田中より年下です',
+                '佐藤は最年長ではありません',
+                '最年少の人は25歳です',
+                '鈴木は高橋より年上です',
+                '35歳の人は田中でも渡辺でもありません',
+                '佐藤と高橋の年齢差は10歳です',
+                '田中は30歳より年上です',
+                '年齢順で中央の人は35歳です',
+                '渡辺は25歳ではありません',
+                '高橋は佐藤より年下です',
+                '鈴木は40歳か45歳のどちらかです',
+                '全員の年齢は異なります'
+            ]
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.grid = Array(5).fill().map(() => Array(5).fill(null));
+            gameState.relationships = {};
+            gameState.completionRate = 0;
+            gameState.relationshipsFound = 0;
+            gameState.consistencyScore = 100;
+            gameState.timeElapsed = 0;
+            gameState.deductionSteps = [];
+
+            // 正解を設定 (田中:35, 佐藤:30, 鈴木:40, 高橋:25, 渡辺:45)
+            gameState.solution = {
+                '田中': '年齢35',
+                '佐藤': '年齢30', 
+                '鈴木': '年齢40',
+                '高橋': '年齢25',
+                '渡辺': '年齢45'
+            };
+
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = false;
+            document.getElementById('auto-btn').disabled = false;
+            document.getElementById('check-btn').disabled = false;
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = false;
+
+            generateConditions();
+            generateGrid();
+            startTimer();
+            updateDisplay();
+        }
+
+        function generateConditions() {
+            const conditionsPanel = document.getElementById('conditions-panel');
+            conditionsPanel.innerHTML = '';
+
+            gameState.conditionsData.forEach((condition, index) => {
+                const conditionItem = document.createElement('div');
+                conditionItem.className = 'condition-item';
+                conditionItem.innerHTML = `<strong>${index + 1}.</strong> ${condition}`;
+                conditionsPanel.appendChild(conditionItem);
+            });
+        }
+
+        function generateGrid() {
+            const grid = document.getElementById('logic-grid');
+            grid.innerHTML = '';
+
+            // 空のヘッダーセル
+            const emptyHeader = document.createElement('div');
+            emptyHeader.className = 'grid-header';
+            grid.appendChild(emptyHeader);
+
+            // 列ヘッダー
+            gameState.attributes.forEach(attr => {
+                const header = document.createElement('div');
+                header.className = 'grid-header';
+                header.textContent = attr;
+                grid.appendChild(header);
+            });
+
+            // 行とセル
+            gameState.people.forEach((person, rowIndex) => {
+                // 行ヘッダー
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'grid-row-header';
+                rowHeader.textContent = person;
+                grid.appendChild(rowHeader);
+
+                // セル
+                gameState.attributes.forEach((attr, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = colIndex;
+                    cell.dataset.person = person;
+                    cell.dataset.attribute = attr;
+                    
+                    cell.onclick = () => toggleCell(rowIndex, colIndex, person, attr);
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function toggleCell(row, col, person, attribute) {
+            if (!gameState.isPlaying) return;
+
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell.classList.contains('locked')) return;
+
+            const currentState = gameState.grid[row][col];
+            let newState;
+
+            if (currentState === null) {
+                newState = 'yes';
+                cell.textContent = '○';
+                cell.classList.add('yes');
+                cell.classList.remove('no');
+            } else if (currentState === 'yes') {
+                newState = 'no';
+                cell.textContent = '×';
+                cell.classList.add('no');
+                cell.classList.remove('yes');
+            } else {
+                newState = null;
+                cell.textContent = '';
+                cell.classList.remove('yes', 'no');
+            }
+
+            gameState.grid[row][col] = newState;
+
+            if (newState === 'yes') {
+                // 同じ行と列の他のセルを自動的に×にする
+                autoFillExclusions(row, col, person, attribute);
+                addDeductionStep(`${person}は${attribute}に確定 - 他の選択肢を除外`);
+                gameState.relationshipsFound++;
+            }
+
+            updateRelationships();
+            updateDisplay();
+            checkWinCondition();
+        }
+
+        function autoFillExclusions(targetRow, targetCol, person, attribute) {
+            // 同じ行の他のセルを×に
+            for (let col = 0; col < gameState.gridSize; col++) {
+                if (col !== targetCol && gameState.grid[targetRow][col] === null) {
+                    gameState.grid[targetRow][col] = 'no';
+                    const cell = document.querySelector(`[data-row="${targetRow}"][data-col="${col}"]`);
+                    cell.textContent = '×';
+                    cell.classList.add('no');
+                    cell.classList.add('locked');
+                }
+            }
+
+            // 同じ列の他のセルを×に
+            for (let row = 0; row < gameState.gridSize; row++) {
+                if (row !== targetRow && gameState.grid[row][targetCol] === null) {
+                    gameState.grid[row][targetCol] = 'no';
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${targetCol}"]`);
+                    cell.textContent = '×';
+                    cell.classList.add('no');
+                    cell.classList.add('locked');
+                }
+            }
+        }
+
+        function analyzeConditions() {
+            if (!gameState.isPlaying) return;
+
+            const analysis = [];
+            
+            // 簡単な条件分析
+            gameState.conditionsData.forEach((condition, index) => {
+                if (condition.includes('25歳') && condition.includes('最年少')) {
+                    analysis.push(`条件${index + 1}: 25歳=最年少が確定`);
+                } else if (condition.includes('45歳') && condition.includes('最年長')) {
+                    analysis.push(`条件${index + 1}: 45歳=最年長が確定`);
+                } else if (condition.includes('中央') && condition.includes('35歳')) {
+                    analysis.push(`条件${index + 1}: 35歳=中央年齢が確定`);
+                }
+            });
+
+            if (analysis.length > 0) {
+                alert(`🔍 条件分析結果:\n\n${analysis.join('\n')}\n\nこれらの条件から推論を開始してください。`);
+            } else {
+                alert('🔍 条件分析:\n\n複雑な関係性が含まれています。\n一つずつ条件を検証して推論を進めてください。');
+            }
+        }
+
+        function autoDeduction() {
+            if (!gameState.isPlaying) return;
+
+            // 簡単な自動推論（ヒント程度）
+            let found = false;
+
+            // 高橋は25歳（最年少）に設定
+            const takahashiRow = gameState.people.indexOf('高橋');
+            const age25Col = gameState.attributes.indexOf('年齢25');
+            
+            if (gameState.grid[takahashiRow][age25Col] === null) {
+                gameState.grid[takahashiRow][age25Col] = 'yes';
+                const cell = document.querySelector(`[data-row="${takahashiRow}"][data-col="${age25Col}"]`);
+                cell.textContent = '○';
+                cell.classList.add('yes');
+                autoFillExclusions(takahashiRow, age25Col, '高橋', '年齢25');
+                addDeductionStep('自動推論: 高橋は最年少(25歳)に確定');
+                found = true;
+            }
+
+            if (!found) {
+                alert('自動推論: 現在の状態では明確な推論ができません。\n条件をもう一度確認してください。');
+            } else {
+                gameState.relationshipsFound++;
+                updateRelationships();
+                updateDisplay();
+            }
+        }
+
+        function checkConsistency() {
+            if (!gameState.isPlaying) return;
+
+            let inconsistencies = 0;
+            let totalChecks = 0;
+
+            // 各行で○が複数ないかチェック
+            for (let row = 0; row < gameState.gridSize; row++) {
+                let yesCount = 0;
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (gameState.grid[row][col] === 'yes') yesCount++;
+                }
+                totalChecks++;
+                if (yesCount > 1) inconsistencies++;
+            }
+
+            // 各列で○が複数ないかチェック
+            for (let col = 0; col < gameState.gridSize; col++) {
+                let yesCount = 0;
+                for (let row = 0; row < gameState.gridSize; row++) {
+                    if (gameState.grid[row][col] === 'yes') yesCount++;
+                }
+                totalChecks++;
+                if (yesCount > 1) inconsistencies++;
+            }
+
+            gameState.consistencyScore = Math.max(0, Math.floor(((totalChecks - inconsistencies) / totalChecks) * 100));
+
+            if (inconsistencies === 0) {
+                alert('✅ 整合性確認:\n\n現在のグリッドには矛盾はありません！\n論理的に一貫しています。');
+            } else {
+                alert(`❌ 整合性確認:\n\n${inconsistencies}個の矛盾が発見されました。\n同じ行や列に複数の○があります。\n\n一貫性スコア: ${gameState.consistencyScore}%`);
+            }
+
+            updateDisplay();
+        }
+
+        function getHint() {
+            if (!gameState.isPlaying) return;
+
+            const hints = [
+                "高橋は25歳（最年少）です - 条件6と条件2から推論できます",
+                "田中は佐藤より5歳年上 - この関係を使って年齢を絞り込めます",
+                "中央年齢は35歳 - 5人の年齢を並べた時の真ん中です",
+                "鈴木は30歳ではない - 消去法で他の年齢を検討してください",
+                "渡辺は25歳ではない - 高橋が25歳なので確定です"
+            ];
+
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            alert(`💡 ヒント:\n\n${randomHint}`);
+
+            // ヒント使用によるペナルティ
+            gameState.consistencyScore = Math.max(0, gameState.consistencyScore - 3);
+            addDeductionStep(`ヒント使用: ${randomHint}`);
+            updateDisplay();
+        }
+
+        function addDeductionStep(step) {
+            gameState.deductionSteps.push(step);
+            const stepsContainer = document.getElementById('deduction-steps');
+            
+            const stepElement = document.createElement('div');
+            stepElement.className = 'deduction-step';
+            stepElement.textContent = `${gameState.deductionSteps.length}. ${step}`;
+            stepsContainer.appendChild(stepElement);
+
+            // 最新のステップを表示するためにスクロール
+            stepElement.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateRelationships() {
+            const relationships = {};
+            
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (gameState.grid[row][col] === 'yes') {
+                        const person = gameState.people[row];
+                        const attribute = gameState.attributes[col];
+                        relationships[person] = attribute;
+                    }
+                }
+            }
+
+            gameState.relationships = relationships;
+            
+            // 関係性表示を更新
+            const relationshipDisplay = document.getElementById('relationship-display');
+            relationshipDisplay.innerHTML = '';
+
+            Object.entries(relationships).forEach(([person, attribute]) => {
+                const item = document.createElement('div');
+                item.className = 'relationship-item confirmed';
+                item.textContent = `${person} = ${attribute}`;
+                relationshipDisplay.appendChild(item);
+            });
+        }
+
+        function checkWinCondition() {
+            const totalCells = gameState.gridSize * gameState.gridSize;
+            let filledCells = 0;
+
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (gameState.grid[row][col] !== null) {
+                        filledCells++;
+                    }
+                }
+            }
+
+            gameState.completionRate = Math.floor((filledCells / totalCells) * 100);
+
+            // 全ての関係が確定したかチェック
+            if (Object.keys(gameState.relationships).length === gameState.gridSize) {
+                gameState.isPlaying = false;
+                clearInterval(gameState.timer);
+
+                // 正解チェック
+                let correctRelationships = 0;
+                Object.entries(gameState.relationships).forEach(([person, attribute]) => {
+                    if (gameState.solution[person] === attribute) {
+                        correctRelationships++;
+                    }
+                });
+
+                const accuracy = Math.floor((correctRelationships / gameState.gridSize) * 100);
+                const finalScore = Math.floor((accuracy + gameState.consistencyScore) / 2);
+
+                setTimeout(() => {
+                    if (accuracy === 100) {
+                        alert(`🎉 完全クリア！\n\n全ての関係性を正しく解明しました！\n\n最終スコア: ${finalScore}%\n解答精度: ${accuracy}%\n一貫性: ${gameState.consistencyScore}%\n経過時間: ${gameState.timeElapsed}秒\n\n${finalScore >= 90 ? '🏆 エクセレント！論理推論マスターです！' : finalScore >= 70 ? '🥇 グッド！優秀な推論能力です！' : '🎯 さらに練習して論理力を向上させましょう！'}`);
+                    } else {
+                        alert(`❌ 残念！\n\n一部の関係性が間違っています。\n\n解答精度: ${accuracy}%\n一貫性: ${gameState.consistencyScore}%\n\n条件文をもう一度確認して挑戦してください！`);
+                    }
+                }, 500);
+
+                // ボタン状態をリセット
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('analyze-btn').disabled = true;
+                document.getElementById('auto-btn').disabled = true;
+                document.getElementById('check-btn').disabled = true;
+                document.getElementById('hint-btn').disabled = true;
+            }
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeElapsed++;
+                updateDisplay();
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('grid-completion').textContent = gameState.completionRate;
+            document.getElementById('relationships-found').textContent = gameState.relationshipsFound;
+            document.getElementById('consistency-score').textContent = Math.max(0, gameState.consistencyScore);
+            document.getElementById('time-elapsed').textContent = gameState.timeElapsed;
+            document.getElementById('progress-bar').style.width = gameState.completionRate + '%';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+
+            gameState.grid = Array(5).fill().map(() => Array(5).fill(null));
+            gameState.relationships = {};
+            gameState.completionRate = 0;
+            gameState.relationshipsFound = 0;
+            gameState.consistencyScore = 100;
+            gameState.timeElapsed = 0;
+            gameState.deductionSteps = [];
+
+            document.getElementById('logic-grid').innerHTML = '';
+            document.getElementById('conditions-panel').innerHTML = '';
+            document.getElementById('relationship-display').innerHTML = '';
+            document.getElementById('deduction-steps').innerHTML = '<div class="deduction-step">ゲームを開始して論理推論に挑戦しましょう</div>';
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('auto-btn').disabled = true;
+            document.getElementById('check-btn').disabled = true;
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('reset-btn').disabled = false;
+
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 初期化
+        updateDisplay();
+</script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>野球バッティング - ゲーム089</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF6B35, #F7931E, #FFAB00);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #FF6B35;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .court {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #D2691E, #A0522D);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #8B4513;
+            overflow: hidden;
+        }
+
+        .hoop {
+            width: 100px;
+            height: 20px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border: 3px solid #333;
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .hoop::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            right: 10px;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-left: 2px solid rgba(255,255,255,0.3);
+            border-right: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .shooting-zone {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .power-meter {
+            width: 20px;
+            height: 200px;
+            background: #ddd;
+            border-radius: 10px;
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            overflow: hidden;
+        }
+
+        .power-fill {
+            width: 100%;
+            background: linear-gradient(to top, #4CAF50, #FFC107, #F44336);
+            height: 0%;
+            position: absolute;
+            bottom: 0;
+            transition: height 0.1s ease;
+            border-radius: 10px;
+        }
+
+        .accuracy-meter {
+            width: 200px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            position: absolute;
+            right: 30px;
+            top: 50px;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #F44336, #FFC107, #4CAF50, #FFC107, #F44336);
+            width: 20px;
+            position: absolute;
+            left: 0;
+            transition: left 0.1s ease;
+            border-radius: 10px;
+        }
+
+        .ball {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #FF6B35, #D2691E);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 3px solid #333;
+        }
+
+        .ball::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #333;
+            top: 50%;
+            border-radius: 1px;
+        }
+
+        .ball::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #333;
+            left: 50%;
+            border-radius: 1px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .shoot-btn {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            font-size: 1.5em;
+            padding: 20px 40px;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .streak-indicator {
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .streak-cold {
+            background: linear-gradient(45deg, #607D8B, #90A4AE);
+            color: white;
+        }
+
+        .streak-warm {
+            background: linear-gradient(45deg, #FF9800, #FFB74D);
+            color: white;
+        }
+
+        .streak-hot {
+            background: linear-gradient(45deg, #F44336, #EF5350);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes swish {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .swish-animation {
+            animation: swish 0.5s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .game-title {
+                font-size: 2em;
+            }
+            
+            .court {
+                height: 350px;
+            }
+            
+            .shooting-zone {
+                width: 250px;
+                height: 80px;
+            }
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">⚾ 野球バッティング</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: バッティング技術・タイミング・動体視力・瞬間判断力
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>成功率</div>
+                <div id="successRate">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>得点</div>
+                <div id="score">0/0</div>
+            </div>
+            <div class="stat-item">
+                <div>連続成功</div>
+                <div id="currentStreak">0</div>
+            </div>
+            <div class="stat-item">
+                <div>最高連続</div>
+                <div id="bestStreak">0</div>
+            </div>
+            <div class="stat-item">
+                <div>残りシュート</div>
+                <div id="remaining">20</div>
+            </div>
+        </div>
+
+        <div class="streak-indicator streak-cold" id="streakIndicator">
+            🧊 コールドスタート - 集中力を高めましょう
+        </div>
+
+        <div class="court">
+            <div class="hoop" id="hoop"></div>
+            <div class="power-meter">
+                <div class="power-fill" id="powerFill"></div>
+            </div>
+            <div class="accuracy-meter">
+                <div class="accuracy-fill" id="accuracyFill"></div>
+            </div>
+            <div class="shooting-zone">
+                <div>📐 パワー: <span id="powerValue">0</span>% | 🎯 精度: <span id="accuracyValue">50</span>%</div>
+            </div>
+            <div class="ball" id="ball"></div>
+        </div>
+
+        <button class="control-btn shoot-btn" id="shootBtn" disabled>🏀 シュート!</button>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">ゲーム開始</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+            <button class="control-btn" id="practiceBtn">練習モード</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>重要なプレゼンテーションでの一貫したパフォーマンス・プレッシャー下での集中力維持・継続的な成果達成能力を養います</p>
+        </div>
+    </div>
+
+    <script>
+        class BasketballFreeThrow {
+            constructor() {
+                this.score = 0;
+                this.attempts = 0;
+                this.maxAttempts = 20;
+                this.currentStreak = 0;
+                this.bestStreak = 0;
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.power = 0;
+                this.accuracy = 50;
+                this.powerDirection = 1;
+                this.accuracyDirection = 1;
+                this.animationId = null;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.successRateEl = document.getElementById('successRate');
+                this.scoreEl = document.getElementById('score');
+                this.currentStreakEl = document.getElementById('currentStreak');
+                this.bestStreakEl = document.getElementById('bestStreak');
+                this.remainingEl = document.getElementById('remaining');
+                this.streakIndicatorEl = document.getElementById('streakIndicator');
+                this.powerFillEl = document.getElementById('powerFill');
+                this.accuracyFillEl = document.getElementById('accuracyFill');
+                this.powerValueEl = document.getElementById('powerValue');
+                this.accuracyValueEl = document.getElementById('accuracyValue');
+                this.ballEl = document.getElementById('ball');
+                this.hoopEl = document.getElementById('hoop');
+                this.shootBtn = document.getElementById('shootBtn');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.practiceBtn = document.getElementById('practiceBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.practiceBtn.addEventListener('click', () => this.togglePracticeMode());
+                this.shootBtn.addEventListener('click', () => this.shoot());
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.practiceMode = false;
+                this.attempts = 0;
+                this.score = 0;
+                this.currentStreak = 0;
+                this.startMeterAnimation();
+                this.updateDisplay();
+                this.shootBtn.disabled = false;
+                this.startBtn.textContent = 'プレイ中...';
+                this.startBtn.disabled = true;
+            }
+
+            togglePracticeMode() {
+                this.practiceMode = !this.practiceMode;
+                if (this.practiceMode) {
+                    this.gameActive = true;
+                    this.startMeterAnimation();
+                    this.shootBtn.disabled = false;
+                    this.practiceBtn.textContent = '練習終了';
+                    this.startBtn.disabled = true;
+                } else {
+                    this.gameActive = false;
+                    this.stopMeterAnimation();
+                    this.shootBtn.disabled = true;
+                    this.practiceBtn.textContent = '練習モード';
+                    this.startBtn.disabled = false;
+                }
+                this.updateDisplay();
+            }
+
+            startMeterAnimation() {
+                const animate = () => {
+                    if (!this.gameActive) return;
+
+                    // Power meter animation
+                    this.power += this.powerDirection * 2;
+                    if (this.power >= 100) {
+                        this.power = 100;
+                        this.powerDirection = -1;
+                    } else if (this.power <= 0) {
+                        this.power = 0;
+                        this.powerDirection = 1;
+                    }
+
+                    // Accuracy meter animation
+                    this.accuracy += this.accuracyDirection * 1.5;
+                    if (this.accuracy >= 90) {
+                        this.accuracy = 90;
+                        this.accuracyDirection = -1;
+                    } else if (this.accuracy <= 10) {
+                        this.accuracy = 10;
+                        this.accuracyDirection = 1;
+                    }
+
+                    this.updateMeters();
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            stopMeterAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            updateMeters() {
+                this.powerFillEl.style.height = this.power + '%';
+                this.accuracyFillEl.style.left = (this.accuracy * 1.8) + 'px';
+                this.powerValueEl.textContent = Math.round(this.power);
+                this.accuracyValueEl.textContent = Math.round(this.accuracy);
+            }
+
+            shoot() {
+                if (!this.gameActive) return;
+
+                const powerScore = this.calculatePowerScore();
+                const accuracyScore = this.calculateAccuracyScore();
+                const totalScore = (powerScore + accuracyScore) / 2;
+                const isSuccess = totalScore >= 60;
+
+                this.animateShoot(isSuccess);
+
+                if (!this.practiceMode) {
+                    this.attempts++;
+                }
+
+                if (isSuccess) {
+                    this.score++;
+                    this.currentStreak++;
+                    this.bestStreak = Math.max(this.bestStreak, this.currentStreak);
+                } else {
+                    this.currentStreak = 0;
+                }
+
+                setTimeout(() => {
+                    if (!this.practiceMode && this.attempts >= this.maxAttempts) {
+                        this.endGame();
+                    }
+                }, 1500);
+
+                this.updateDisplay();
+            }
+
+            calculatePowerScore() {
+                // 理想的なパワーは70-85%
+                const idealPower = 77.5;
+                const deviation = Math.abs(this.power - idealPower);
+                return Math.max(0, 100 - deviation * 2);
+            }
+
+            calculateAccuracyScore() {
+                // 理想的な精度は45-55%（中央付近）
+                const idealAccuracy = 50;
+                const deviation = Math.abs(this.accuracy - idealAccuracy);
+                return Math.max(0, 100 - deviation * 3);
+            }
+
+            animateShoot(isSuccess) {
+                const targetX = isSuccess ? 0 : (Math.random() - 0.5) * 200;
+                const targetY = isSuccess ? -250 : -200 + Math.random() * 50;
+                
+                this.ballEl.style.transform = `translate(${targetX}px, ${targetY}px)`;
+                
+                if (isSuccess) {
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #4CAF50, #2E7D32)';
+                    this.hoopEl.classList.add('swish-animation');
+                    setTimeout(() => {
+                        this.hoopEl.classList.remove('swish-animation');
+                    }, 500);
+                } else {
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #F44336, #C62828)';
+                }
+
+                setTimeout(() => {
+                    this.ballEl.style.transform = 'translateX(-50%)';
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #FF6B35, #D2691E)';
+                }, 1000);
+            }
+
+            updateStreakIndicator() {
+                const indicator = this.streakIndicatorEl;
+                
+                if (this.currentStreak === 0) {
+                    indicator.className = 'streak-indicator streak-cold';
+                    indicator.textContent = '🧊 コールドスタート - 集中力を高めましょう';
+                } else if (this.currentStreak < 3) {
+                    indicator.className = 'streak-indicator streak-warm';
+                    indicator.textContent = `🔥 ウォーミングアップ - 連続${this.currentStreak}回成功`;
+                } else {
+                    indicator.className = 'streak-indicator streak-hot';
+                    indicator.textContent = `🔥🔥 ホットストリーク - 連続${this.currentStreak}回成功！`;
+                }
+            }
+
+            endGame() {
+                this.gameActive = false;
+                this.stopMeterAnimation();
+                this.shootBtn.disabled = true;
+                this.startBtn.textContent = 'ゲーム開始';
+                this.startBtn.disabled = false;
+
+                const successRate = ((this.score / this.attempts) * 100).toFixed(1);
+                const consistency = this.bestStreak >= 5 ? '優秀' : this.bestStreak >= 3 ? '良好' : '要改善';
+
+                alert(`🏆 ゲーム終了！\n\n成功率: ${successRate}%\n得点: ${this.score}/${this.attempts}\n最高連続成功: ${this.bestStreak}\n\n一貫性評価: ${consistency}\n\nビジネススキル: プレッシャー下での${consistency}な一貫性を発揮しました！`);
+            }
+
+            resetGame() {
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.score = 0;
+                this.attempts = 0;
+                this.currentStreak = 0;
+                this.power = 0;
+                this.accuracy = 50;
+                this.stopMeterAnimation();
+                this.updateDisplay();
+                this.shootBtn.disabled = true;
+                this.startBtn.textContent = 'ゲーム開始';
+                this.startBtn.disabled = false;
+                this.practiceBtn.textContent = '練習モード';
+            }
+
+            updateDisplay() {
+                const successRate = this.attempts > 0 ? ((this.score / this.attempts) * 100).toFixed(1) : '0';
+                this.successRateEl.textContent = successRate + '%';
+                this.scoreEl.textContent = `${this.score}/${this.attempts}`;
+                this.currentStreakEl.textContent = this.currentStreak;
+                this.bestStreakEl.textContent = this.bestStreak;
+                this.remainingEl.textContent = this.practiceMode ? '∞' : (this.maxAttempts - this.attempts);
+                
+                this.updateStreakIndicator();
+            }
+        }
+
+        // ゲーム開始
+        window.addEventListener('DOMContentLoaded', () => {
+            new BasketballFreeThrow();
+        });
+    </script>
+</body>
+</html>

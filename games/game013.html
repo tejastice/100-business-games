@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キーボード移動 - ゲーム013</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .game-area { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; margin-bottom: 30px; min-height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .maze-container { width: 600px; height: 400px; background: #2c3e50; border: 3px solid #34495e; border-radius: 10px; position: relative; overflow: hidden; }
+        .player { width: 20px; height: 20px; background: #3498db; border-radius: 50%; position: absolute; top: 20px; left: 20px; transition: all 0.1s ease; box-shadow: 0 0 10px rgba(52, 152, 219, 0.7); }
+        .goal { width: 30px; height: 30px; background: #e74c3c; border-radius: 50%; position: absolute; bottom: 20px; right: 20px; animation: pulse 2s infinite; }
+        .obstacle { background: #95a5a6; border-radius: 3px; position: absolute; }
+        .controls-info { margin-top: 20px; text-align: center; font-size: 1.1rem; opacity: 0.9; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .game-over { display: none; background: rgba(76, 175, 80, 0.2); padding: 30px; border-radius: 15px; margin-top: 20px; border: 2px solid #4caf50; }
+        .instructions { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left; }
+        .countdown { font-size: 3rem; color: #ffeb3b; margin-bottom: 20px; }
+        @media (max-width: 768px) { .click-button { width: 150px; height: 150px; font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">⌨️ キーボード移動</h1>
+        <p class="game-description">WASDキーや矢印キーを使用してキャラクターを正確に移動させ、障害物を避けながらゴールに到達しよう！</p>
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">ステージ</div><div class="stat-value" id="stage">1</div></div>
+            <div class="stat"><div class="stat-label">スコア</div><div class="stat-value" id="score">0</div></div>
+            <div class="stat"><div class="stat-label">移動効率</div><div class="stat-value" id="efficiency">100%</div></div>
+            <div class="stat"><div class="stat-label">残り時間</div><div class="stat-value" id="timeLeft">60</div></div>
+        </div>
+        <div class="game-area">
+            <div class="maze-container" id="mazeContainer">
+                <div class="player" id="player"></div>
+                <div class="goal" id="goal"></div>
+            </div>
+            <div class="controls-info">
+                <p>操作: WASDキー または 矢印キーで移動</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>🎉 ゲーム終了！</h2>
+            <p>総クリック数: <span id="finalClicks">0</span></p>
+            <p>平均CPS: <span id="avgCps">0.0</span></p>
+            <p>最高CPS: <span id="finalMaxCps">0.0</span></p>
+        </div>
+        <div class="instructions">
+            <h3>🎯 遊び方</h3>
+            <p>• WASDキーまたは矢印キーでキャラクターを移動</p>
+            <p>• 障害物を避けながら赤いゴールに到達</p>
+            <p>• 最短ルートでクリアして高スコアを獲得</p>
+            <p>• キーボード操作スキルでビジネス効率を向上</p>
+        </div>
+    </div>
+    <script>
+        let gameState = {
+            isPlaying: false,
+            stage: 1,
+            score: 0,
+            timeLeft: 60,
+            player: { x: 20, y: 20 },
+            goal: { x: 550, y: 350 },
+            obstacles: [],
+            moveCount: 0,
+            optimalMoves: 0,
+            gameTimer: null
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState = {
+                isPlaying: true,
+                stage: 1,
+                score: 0,
+                timeLeft: 60,
+                player: { x: 20, y: 20 },
+                goal: { x: 550, y: 350 },
+                obstacles: [],
+                moveCount: 0,
+                optimalMoves: 0,
+                gameTimer: null
+            };
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('gameOver').style.display = 'none';
+            
+            generateObstacles();
+            updatePlayerPosition();
+            calculateOptimalMoves();
+            startTimer();
+            updateDisplay();
+        }
+
+        function generateObstacles() {
+            gameState.obstacles = [];
+            const container = document.getElementById('mazeContainer');
+            
+            // Clear existing obstacles
+            container.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+            
+            const obstacleCount = 5 + gameState.stage * 2;
+            
+            for (let i = 0; i < obstacleCount; i++) {
+                let obstacle;
+                let attempts = 0;
+                
+                do {
+                    obstacle = {
+                        x: Math.random() * 550,
+                        y: Math.random() * 350,
+                        width: 20 + Math.random() * 80,
+                        height: 20 + Math.random() * 80
+                    };
+                    attempts++;
+                } while (isObstacleBlocking(obstacle) && attempts < 50);
+                
+                if (!isObstacleBlocking(obstacle)) {
+                    gameState.obstacles.push(obstacle);
+                    
+                    const obsElement = document.createElement('div');
+                    obsElement.className = 'obstacle';
+                    obsElement.style.left = obstacle.x + 'px';
+                    obsElement.style.top = obstacle.y + 'px';
+                    obsElement.style.width = obstacle.width + 'px';
+                    obsElement.style.height = obstacle.height + 'px';
+                    container.appendChild(obsElement);
+                }
+            }
+        }
+
+        function isObstacleBlocking(obstacle) {
+            // Check if obstacle blocks player start or goal positions
+            const playerRect = { x: 20, y: 20, width: 20, height: 20 };
+            const goalRect = { x: 550, y: 350, width: 30, height: 30 };
+            
+            return isColliding(obstacle, playerRect) || isColliding(obstacle, goalRect);
+        }
+
+        function calculateOptimalMoves() {
+            // Simplified optimal move calculation (Manhattan distance)
+            const dx = Math.abs(gameState.goal.x - gameState.player.x);
+            const dy = Math.abs(gameState.goal.y - gameState.player.y);
+            gameState.optimalMoves = Math.ceil((dx + dy) / 10); // Assuming 10px per move
+        }
+
+        function updatePlayerPosition() {
+            const player = document.getElementById('player');
+            player.style.left = gameState.player.x + 'px';
+            player.style.top = gameState.player.y + 'px';
+        }
+
+        function movePlayer(dx, dy) {
+            if (!gameState.isPlaying) return;
+            
+            const newX = gameState.player.x + dx * 10;
+            const newY = gameState.player.y + dy * 10;
+            
+            // Boundary check
+            if (newX < 0 || newX > 560 || newY < 0 || newY > 360) return;
+            
+            // Collision check
+            const playerRect = { x: newX, y: newY, width: 20, height: 20 };
+            if (gameState.obstacles.some(obs => isColliding(playerRect, obs))) return;
+            
+            gameState.player.x = newX;
+            gameState.player.y = newY;
+            gameState.moveCount++;
+            
+            updatePlayerPosition();
+            checkGoalReached();
+            updateDisplay();
+        }
+
+        function isColliding(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function checkGoalReached() {
+            const playerRect = { x: gameState.player.x, y: gameState.player.y, width: 20, height: 20 };
+            const goalRect = { x: gameState.goal.x, y: gameState.goal.y, width: 30, height: 30 };
+            
+            if (isColliding(playerRect, goalRect)) {
+                // Stage completed
+                const efficiency = Math.max(50, Math.round((gameState.optimalMoves / gameState.moveCount) * 100));
+                const timeBonus = gameState.timeLeft * 10;
+                const stageBonus = gameState.stage * 100;
+                
+                gameState.score += efficiency + timeBonus + stageBonus;
+                gameState.stage++;
+                
+                if (gameState.stage <= 5) {
+                    // Next stage
+                    gameState.player = { x: 20, y: 20 };
+                    gameState.moveCount = 0;
+                    generateObstacles();
+                    updatePlayerPosition();
+                    calculateOptimalMoves();
+                    updateDisplay();
+                } else {
+                    // Game completed
+                    endGame();
+                }
+            }
+        }
+
+        function startTimer() {
+            gameState.gameTimer = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+                if (gameState.timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('stage').textContent = gameState.stage;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+            
+            const efficiency = gameState.moveCount > 0 ? 
+                Math.round((gameState.optimalMoves / gameState.moveCount) * 100) : 100;
+            document.getElementById('efficiency').textContent = Math.min(100, efficiency) + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            document.getElementById('startBtn').disabled = false;
+            
+            setTimeout(() => {
+                alert(`ゲーム終了！\\nスコア: ${gameState.score}\\n到達ステージ: ${gameState.stage}\\n総移動効率: ${document.getElementById('efficiency').textContent}`);
+            }, 500);
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            
+            gameState = {
+                isPlaying: false,
+                stage: 1,
+                score: 0,
+                timeLeft: 60,
+                player: { x: 20, y: 20 },
+                goal: { x: 550, y: 350 },
+                obstacles: [],
+                moveCount: 0,
+                optimalMoves: 0,
+                gameTimer: null
+            };
+            
+            // Clear obstacles
+            document.getElementById('mazeContainer').querySelectorAll('.obstacle').forEach(obs => obs.remove());
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameOver').style.display = 'none';
+            updatePlayerPosition();
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            window.close(); 
+            window.history.back();
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isPlaying) return;
+            
+            const key = e.key.toLowerCase();
+            
+            switch(key) {
+                case 'w':
+                case 'arrowup':
+                    e.preventDefault();
+                    movePlayer(0, -1);
+                    break;
+                case 's':
+                case 'arrowdown':
+                    e.preventDefault();
+                    movePlayer(0, 1);
+                    break;
+                case 'a':
+                case 'arrowleft':
+                    e.preventDefault();
+                    movePlayer(-1, 0);
+                    break;
+                case 'd':
+                case 'arrowright':
+                    e.preventDefault();
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>

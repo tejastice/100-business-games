@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マインスイーパー - ゲーム046</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4B0082 0%, #8B0000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .minesweeper-game {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .mine-field {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 2px;
+            max-width: 600px;
+            margin: 20px auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .mine-cell {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(145deg, #666, #333);
+            border: 2px outset #666;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .mine-cell:hover {
+            background: linear-gradient(145deg, #777, #444);
+        }
+
+        .mine-cell.revealed {
+            border: 1px inset #999;
+            background: linear-gradient(145deg, #ccc, #aaa);
+            color: #333;
+            cursor: default;
+        }
+
+        .mine-cell.flagged {
+            background: linear-gradient(145deg, #ff6b6b, #ff4757);
+            color: white;
+        }
+
+        .mine-cell.mine {
+            background: linear-gradient(145deg, #ff0000, #cc0000);
+            color: white;
+        }
+
+        .mine-cell.exploded {
+            background: linear-gradient(145deg, #ff0000, #990000);
+            animation: explosion 0.5s ease-in-out;
+        }
+
+        @keyframes explosion {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); background: #ffff00; }
+            100% { transform: scale(1); }
+        }
+
+        .mine-cell .number-1 { color: #0000ff; }
+        .mine-cell .number-2 { color: #008000; }
+        .mine-cell .number-3 { color: #ff0000; }
+        .mine-cell .number-4 { color: #000080; }
+        .mine-cell .number-5 { color: #800000; }
+        .mine-cell .number-6 { color: #008080; }
+        .mine-cell .number-7 { color: #000000; }
+        .mine-cell .number-8 { color: #808080; }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.selected {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+
+        .analysis-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .probability-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .prob-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFD700);
+            transition: width 0.3s ease;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .mine-field {
+                grid-template-columns: repeat(12, 1fr);
+            }
+            
+            .mine-cell {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">💣 マインスイーパー</h1>
+        <p class="game-description">数字ヒントによる地雷位置推定と確率的推理による論理パズルゲーム</p>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <p><strong>🎯 目的:</strong> 16×16グリッドで地雷を回避し、完全クリアを達成しよう</p>
+            
+            <p><strong>🎮 ゲームの流れ:</strong></p>
+            <ul>
+                <li>マス目をクリックして地雷の位置を推理</li>
+                <li>数字ヒントから周辺の地雷数を把握</li>
+                <li>右クリックで地雷と推定される場所にフラグを設置</li>
+                <li>推理精度90%以上でクリア</li>
+                <li>地雷を踏まずに全てのマスを開放</li>
+            </ul>
+            
+            <p><strong>⭐ 評価システム:</strong></p>
+            <ul>
+                <li>クリア成功率: 地雷回避と完全クリア</li>
+                <li>推理精度: 論理的な推理の正確性</li>
+                <li>効率性: 最小クリック数でのクリア</li>
+                <li>確率的思考力: 地雷確率の正確な計算</li>
+            </ul>
+            
+            <p><strong>🔍 プレイのコツ:</strong></p>
+            <ul>
+                <li>数字の周辺をよく観察する</li>
+                <li>確実に安全なマスから開始</li>
+                <li>パターンを覚えて効率化</li>
+                <li>確率を計算して最適選択</li>
+            </ul>
+        </div>
+
+        <div class="minesweeper-game">
+            <div class="difficulty-selector">
+                <div class="difficulty-btn selected" data-difficulty="beginner">初級 (12×12, 15個)</div>
+                <div class="difficulty-btn" data-difficulty="intermediate">中級 (16×16, 40個)</div>
+                <div class="difficulty-btn" data-difficulty="expert">上級 (16×16, 60個)</div>
+            </div>
+
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="mines-remaining">15</div>
+                    <div class="stat-label">残り地雷数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="cells-remaining">129</div>
+                    <div class="stat-label">残りマス数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy-rate">100</div>
+                    <div class="stat-label">推理精度(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="time-elapsed">0</div>
+                    <div class="stat-label">経過時間(秒)</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+
+            <div class="mine-field" id="mine-field">
+                <!-- マインフィールドがJavaScriptで生成される -->
+            </div>
+
+            <div class="analysis-panel">
+                <h4>📊 推理分析</h4>
+                <div class="probability-display" id="probability-display">
+                    <!-- 確率表示がJavaScriptで生成される -->
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button class="btn" onclick="startGame()" id="start-btn">ゲーム開始</button>
+                <button class="btn" onclick="analyzeField()" id="analyze-btn" disabled>フィールド分析</button>
+                <button class="btn" onclick="calculateProbabilities()" id="probability-btn" disabled>確率計算</button>
+                <button class="btn" onclick="autoSolve()" id="auto-btn" disabled>自動ソルバー</button>
+                <button class="btn" onclick="getHint()" id="hint-btn" disabled>ヒント</button>
+                <button class="btn" onclick="resetGame()" id="reset-btn">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            difficulty: 'beginner',
+            gridSize: 12,
+            mineCount: 15,
+            field: [],
+            minePositions: new Set(),
+            revealedCells: new Set(),
+            flaggedCells: new Set(),
+            cellsRemaining: 0,
+            minesRemaining: 0,
+            accuracyRate: 100,
+            incorrectMoves: 0,
+            totalMoves: 0,
+            timeElapsed: 0,
+            timer: null,
+            firstClick: true,
+            difficulties: {
+                beginner: { size: 12, mines: 15 },
+                intermediate: { size: 16, mines: 40 },
+                expert: { size: 16, mines: 60 }
+            }
+        };
+
+        function startGame() {
+            const difficulty = document.querySelector('.difficulty-btn.selected').dataset.difficulty;
+            const config = gameState.difficulties[difficulty];
+            
+            gameState.isPlaying = true;
+            gameState.difficulty = difficulty;
+            gameState.gridSize = config.size;
+            gameState.mineCount = config.mines;
+            gameState.minePositions.clear();
+            gameState.revealedCells.clear();
+            gameState.flaggedCells.clear();
+            gameState.cellsRemaining = config.size * config.size - config.mines;
+            gameState.minesRemaining = config.mines;
+            gameState.accuracyRate = 100;
+            gameState.incorrectMoves = 0;
+            gameState.totalMoves = 0;
+            gameState.timeElapsed = 0;
+            gameState.firstClick = true;
+
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = false;
+            document.getElementById('probability-btn').disabled = false;
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = false;
+
+            generateField();
+            startTimer();
+            updateDisplay();
+            setupDifficultySelector();
+        }
+
+        function generateField() {
+            const size = gameState.gridSize;
+            gameState.field = Array(size).fill().map(() => Array(size).fill(0));
+            
+            const mineField = document.getElementById('mine-field');
+            mineField.innerHTML = '';
+            mineField.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+
+            // セルを生成
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'mine-cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    cell.onclick = () => revealCell(i, j);
+                    cell.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        toggleFlag(i, j);
+                    };
+                    
+                    mineField.appendChild(cell);
+                }
+            }
+        }
+
+        function placeMines(excludeRow, excludeCol) {
+            const size = gameState.gridSize;
+            const mineCount = gameState.mineCount;
+            
+            gameState.minePositions.clear();
+            
+            while (gameState.minePositions.size < mineCount) {
+                const row = Math.floor(Math.random() * size);
+                const col = Math.floor(Math.random() * size);
+                
+                // 最初のクリック位置とその周辺は除外
+                if (Math.abs(row - excludeRow) <= 1 && Math.abs(col - excludeCol) <= 1) {
+                    continue;
+                }
+                
+                const key = `${row},${col}`;
+                if (!gameState.minePositions.has(key)) {
+                    gameState.minePositions.add(key);
+                    gameState.field[row][col] = -1; // -1は地雷
+                }
+            }
+            
+            // 数字を計算
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (gameState.field[i][j] !== -1) {
+                        gameState.field[i][j] = countAdjacentMines(i, j);
+                    }
+                }
+            }
+        }
+
+        function countAdjacentMines(row, col) {
+            let count = 0;
+            const size = gameState.gridSize;
+            
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newRow = row + i;
+                    const newCol = col + j;
+                    
+                    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+                        if (gameState.field[newRow][newCol] === -1) {
+                            count++;
+                        }
+                    }
+                }
+            }
+            
+            return count;
+        }
+
+        function revealCell(row, col) {
+            if (!gameState.isPlaying) return;
+            
+            const key = `${row},${col}`;
+            if (gameState.revealedCells.has(key) || gameState.flaggedCells.has(key)) {
+                return;
+            }
+
+            if (gameState.firstClick) {
+                placeMines(row, col);
+                gameState.firstClick = false;
+            }
+
+            gameState.totalMoves++;
+            
+            if (gameState.field[row][col] === -1) {
+                // 地雷を踏んだ
+                gameState.incorrectMoves++;
+                explodeGame(row, col);
+                return;
+            }
+
+            gameState.revealedCells.add(key);
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add('revealed');
+            
+            const value = gameState.field[row][col];
+            if (value > 0) {
+                cell.textContent = value;
+                cell.classList.add(`number-${value}`);
+            } else if (value === 0) {
+                // 空のセルは周辺も自動で開く
+                revealEmptyArea(row, col);
+            }
+
+            gameState.cellsRemaining--;
+            updateDisplay();
+            checkWinCondition();
+        }
+
+        function revealEmptyArea(row, col) {
+            const size = gameState.gridSize;
+            
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newRow = row + i;
+                    const newCol = col + j;
+                    
+                    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+                        const key = `${newRow},${newCol}`;
+                        if (!gameState.revealedCells.has(key) && !gameState.flaggedCells.has(key)) {
+                            revealCell(newRow, newCol);
+                        }
+                    }
+                }
+            }
+        }
+
+        function toggleFlag(row, col) {
+            if (!gameState.isPlaying) return;
+            
+            const key = `${row},${col}`;
+            if (gameState.revealedCells.has(key)) return;
+            
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            if (gameState.flaggedCells.has(key)) {
+                gameState.flaggedCells.delete(key);
+                cell.classList.remove('flagged');
+                cell.textContent = '';
+                gameState.minesRemaining++;
+            } else {
+                gameState.flaggedCells.add(key);
+                cell.classList.add('flagged');
+                cell.textContent = '🚩';
+                gameState.minesRemaining--;
+            }
+            
+            updateDisplay();
+        }
+
+        function explodeGame(mineRow, mineCol) {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            
+            // 踏んだ地雷を爆発表示
+            const explodedCell = document.querySelector(`[data-row="${mineRow}"][data-col="${mineCol}"]`);
+            explodedCell.classList.add('exploded');
+            explodedCell.textContent = '💥';
+            
+            // 全ての地雷を表示
+            gameState.minePositions.forEach(pos => {
+                const [row, col] = pos.split(',').map(Number);
+                if (row !== mineRow || col !== mineCol) {
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add('mine');
+                    cell.textContent = '💣';
+                }
+            });
+
+            const finalAccuracy = Math.floor(((gameState.totalMoves - gameState.incorrectMoves) / gameState.totalMoves) * 100);
+            
+            setTimeout(() => {
+                alert(`💥 ゲームオーバー！\n\n地雷を踏んでしまいました...\n\n推理精度: ${finalAccuracy}%\n経過時間: ${gameState.timeElapsed}秒\n\nもう一度挑戦してみましょう！`);
+            }, 1000);
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('probability-btn').disabled = true;
+            document.getElementById('auto-btn').disabled = true;
+            document.getElementById('hint-btn').disabled = true;
+        }
+
+        function checkWinCondition() {
+            if (gameState.cellsRemaining === 0) {
+                gameState.isPlaying = false;
+                clearInterval(gameState.timer);
+                
+                const finalAccuracy = Math.floor(((gameState.totalMoves - gameState.incorrectMoves) / gameState.totalMoves) * 100);
+                const timeBonus = gameState.timeElapsed < 120 ? 10 : 0;
+                const finalScore = Math.min(100, finalAccuracy + timeBonus);
+                
+                setTimeout(() => {
+                    alert(`🎉 完全クリア！\n\n全ての地雷を回避して完全クリアを達成しました！\n\n最終スコア: ${finalScore}%\n推理精度: ${finalAccuracy}%\n経過時間: ${gameState.timeElapsed}秒\n\n${finalScore >= 90 ? '🏆 エクセレント！マインスイーパーマスターです！' : finalScore >= 70 ? '🥇 グッド！優秀な推理能力です！' : '🎯 もっと練習して精度を上げましょう！'}`);
+                }, 500);
+
+                // ボタン状態をリセット
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('analyze-btn').disabled = true;
+                document.getElementById('probability-btn').disabled = true;
+                document.getElementById('auto-btn').disabled = true;
+                document.getElementById('hint-btn').disabled = true;
+            }
+        }
+
+        function analyzeField() {
+            if (!gameState.isPlaying) return;
+            
+            const analysis = {
+                revealedCount: gameState.revealedCells.size,
+                flaggedCount: gameState.flaggedCells.size,
+                remainingCells: gameState.cellsRemaining,
+                minesDensity: (gameState.mineCount / (gameState.gridSize * gameState.gridSize) * 100).toFixed(1)
+            };
+
+            const displayDiv = document.getElementById('probability-display');
+            displayDiv.innerHTML = `
+                <div class="prob-item">開放済み: ${analysis.revealedCount}</div>
+                <div class="prob-item">フラグ設置: ${analysis.flaggedCount}</div>
+                <div class="prob-item">残りマス: ${analysis.remainingCells}</div>
+                <div class="prob-item">地雷密度: ${analysis.minesDensity}%</div>
+            `;
+        }
+
+        function calculateProbabilities() {
+            if (!gameState.isPlaying) return;
+            
+            const size = gameState.gridSize;
+            const probabilities = {};
+            
+            // 簡易確率計算（実際の高度なアルゴリズムは複雑）
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const key = `${i},${j}`;
+                    if (!gameState.revealedCells.has(key) && !gameState.flaggedCells.has(key)) {
+                        probabilities[key] = calculateCellProbability(i, j);
+                    }
+                }
+            }
+            
+            // 最も安全なセルと最も危険なセルを表示
+            const sortedProbs = Object.entries(probabilities).sort((a, b) => a[1] - b[1]);
+            const safest = sortedProbs[0];
+            const mostDangerous = sortedProbs[sortedProbs.length - 1];
+            
+            const displayDiv = document.getElementById('probability-display');
+            displayDiv.innerHTML = `
+                <div class="prob-item">最安全: ${safest ? `(${safest[0]}) ${(safest[1] * 100).toFixed(1)}%` : '計算中...'}</div>
+                <div class="prob-item">最危険: ${mostDangerous ? `(${mostDangerous[0]}) ${(mostDangerous[1] * 100).toFixed(1)}%` : '計算中...'}</div>
+                <div class="prob-item">平均確率: ${probabilities ? (Object.values(probabilities).reduce((a, b) => a + b, 0) / Object.values(probabilities).length * 100).toFixed(1) : 0}%</div>
+                <div class="prob-item">残り地雷: ${gameState.minesRemaining}</div>
+            `;
+        }
+
+        function calculateCellProbability(row, col) {
+            // 簡易的な確率計算（隣接する開放済みセルの情報から推定）
+            const size = gameState.gridSize;
+            let totalConstraints = 0;
+            let totalMines = 0;
+            
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newRow = row + i;
+                    const newCol = col + j;
+                    
+                    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+                        const key = `${newRow},${newCol}`;
+                        if (gameState.revealedCells.has(key)) {
+                            const value = gameState.field[newRow][newCol];
+                            if (value > 0) {
+                                totalConstraints++;
+                                totalMines += value;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (totalConstraints === 0) {
+                return gameState.minesRemaining / (gameState.cellsRemaining + gameState.minesRemaining);
+            }
+            
+            return Math.min(1, Math.max(0, totalMines / (totalConstraints * 8)));
+        }
+
+        function getHint() {
+            if (!gameState.isPlaying) return;
+            
+            calculateProbabilities();
+            
+            const hints = [
+                "数字の周辺のマス数と等しい場合、残りは全て地雷です",
+                "すでにフラグが十分な場合、残りは安全です",
+                "角や端のマスは制約が少なく推理が困難です",
+                "パターンを覚えると効率的に推理できます",
+                "確率の低いマスから開始すると安全です"
+            ];
+            
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            alert(`💡 ヒント:\n\n${randomHint}`);
+            
+            // ヒント使用によるペナルティ
+            gameState.accuracyRate = Math.max(0, gameState.accuracyRate - 2);
+            updateDisplay();
+        }
+
+        function setupDifficultySelector() {
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.onclick = () => {
+                    if (gameState.isPlaying) {
+                        if (confirm('ゲーム中です。難易度を変更しますか？')) {
+                            resetGame();
+                        } else {
+                            return;
+                        }
+                    }
+                    
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                };
+            });
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeElapsed++;
+                updateDisplay();
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('mines-remaining').textContent = gameState.minesRemaining;
+            document.getElementById('cells-remaining').textContent = gameState.cellsRemaining;
+            document.getElementById('time-elapsed').textContent = gameState.timeElapsed;
+            
+            if (gameState.totalMoves > 0) {
+                gameState.accuracyRate = Math.floor(((gameState.totalMoves - gameState.incorrectMoves) / gameState.totalMoves) * 100);
+            }
+            document.getElementById('accuracy-rate').textContent = Math.max(0, gameState.accuracyRate);
+            
+            const totalCells = gameState.gridSize * gameState.gridSize - gameState.mineCount;
+            const progress = ((totalCells - gameState.cellsRemaining) / totalCells) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+
+            const difficulty = document.querySelector('.difficulty-btn.selected').dataset.difficulty;
+            const config = gameState.difficulties[difficulty];
+
+            gameState.cellsRemaining = config.size * config.size - config.mines;
+            gameState.minesRemaining = config.mines;
+            gameState.accuracyRate = 100;
+            gameState.incorrectMoves = 0;
+            gameState.totalMoves = 0;
+            gameState.timeElapsed = 0;
+            gameState.firstClick = true;
+
+            document.getElementById('mine-field').innerHTML = '';
+            document.getElementById('probability-display').innerHTML = '';
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('probability-btn').disabled = true;
+            document.getElementById('auto-btn').disabled = true;
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('reset-btn').disabled = false;
+
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 初期化
+        setupDifficultySelector();
+        updateDisplay();
+</script>
+</body>
+</html>

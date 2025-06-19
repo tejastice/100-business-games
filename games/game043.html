@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>論理パズル - ゲーム043</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logic-problem {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            max-width: 100%;
+            line-height: 1.6;
+        }
+
+        .logic-problem h3 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .conditions-list {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .condition-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            font-size: 0.95rem;
+        }
+
+        .reasoning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .reasoning-step {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .reasoning-step:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .reasoning-step.selected {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .reasoning-step.incorrect {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .reasoning-step.correct {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.4);
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .answer-option.selected {
+            background: rgba(76, 175, 80, 0.6);
+            border-color: #4caf50;
+        }
+
+        .answer-option.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+
+        .answer-option.incorrect {
+            background: rgba(244, 67, 54, 0.6);
+            border-color: #f44336;
+        }
+
+        .contradiction-detector {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .contradiction-detector.active {
+            display: block;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .game-over {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .deduction-chain {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧠 論理パズル</h1>
+        <p class="game-description">条件推理と論理的演繹による高度な論理思考能力向上ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">現在の問題</div>
+                <div class="stat-value" id="currentProblem">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">推理ステップ</div>
+                <div class="stat-value" id="reasoningSteps">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">時間</div>
+                <div class="stat-value" id="timer">0:00</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="game-area">
+            <div class="logic-problem" id="logicProblem">
+                <h3>問題を読み込み中...</h3>
+            </div>
+
+            <div class="conditions-list" id="conditionsList">
+                <!-- 条件がここに表示される -->
+            </div>
+
+            <div class="reasoning-grid" id="reasoningGrid">
+                <!-- 推理ステップがここに表示される -->
+            </div>
+
+            <div class="contradiction-detector" id="contradictionDetector">
+                <h4>⚠️ 矛盾検出</h4>
+                <p id="contradictionMessage"></p>
+            </div>
+
+            <div class="answer-options" id="answerOptions">
+                <!-- 答えの選択肢がここに表示される -->
+            </div>
+
+            <div class="deduction-chain" id="deductionChain" style="display: none;">
+                <h4>🔗 推理の連鎖</h4>
+                <div id="deductionSteps"></div>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">🎉 ゲーム完了！</h2>
+            <p>総合正解率: <span id="finalAccuracy">0%</span></p>
+            <p>推理効率: <span id="reasoningEfficiency">0%</span></p>
+            <p>論理思考力: <span id="logicalThinking">0%</span></p>
+            <p>矛盾検出能力: <span id="contradictionDetection">0%</span></p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">新しい問題セット</button>
+            <button class="btn" id="nextBtn" onclick="nextProblem()" disabled>次の問題</button>
+            <button class="btn" id="hintBtn" onclick="showHint()">ヒント</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 詳細ルール・遊び方</h3>
+            <p><strong>目的:</strong> 与えられた論理条件から正しい結論を導き出す</p>
+            <p><strong>ゲームの流れ:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>10問の論理問題を解く</li>
+                <li>各問題に複数の条件が与えられる</li>
+                <li>条件を分析して正しい推理ステップを選択</li>
+                <li>矛盾を検出して排除</li>
+                <li>最終的な結論を選択</li>
+            </ul>
+            <p><strong>評価システム:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>正解率: 正しい結論を導いた割合</li>
+                <li>推理効率: 最小ステップでの解決能力</li>
+                <li>矛盾検出: 論理的矛盾を見つける能力</li>
+                <li>論理的一貫性: 推理プロセスの一貫性</li>
+            </ul>
+            <p><strong>クリア条件:</strong> 正解率85%以上</p>
+            <p><strong>操作方法:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>推理ステップをクリックして選択</li>
+                <li>矛盾を発見したら該当部分をクリック</li>
+                <li>最終回答を選択肢から選ぶ</li>
+                <li>ヒントボタンで推理の方向性を確認</li>
+            </ul>
+            <p><strong>プレイのコツ:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>全ての条件を注意深く読む</li>
+                <li>矛盾する条件がないか確認</li>
+                <li>段階的に推理を進める</li>
+                <li>結論に至るまでの論理的経路を確認</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentProblem: 0,
+            totalProblems: 10,
+            correctAnswers: 0,
+            reasoningSteps: 0,
+            startTime: null,
+            problems: [],
+            selectedSteps: [],
+            isGameActive: false,
+            contradictionsFound: 0,
+            hintsUsed: 0
+        };
+
+        const logicProblems = [
+            {
+                id: 1,
+                title: "会議室の座席配置",
+                description: "5人の社員A、B、C、D、Eが円形テーブルで会議を行います。以下の条件を満たす座席配置を推理してください。",
+                conditions: [
+                    "Aは必ずBの左隣に座る",
+                    "CはDの向かい側に座る",
+                    "EはAの右隣には座らない", 
+                    "BとCは隣り合わない",
+                    "Dは必ずEの左隣に座る"
+                ],
+                correctAnswer: "A-B-E-D-C の順で円形に配置",
+                options: [
+                    "A-B-C-D-E の順で円形に配置",
+                    "A-B-E-D-C の順で円形に配置", 
+                    "A-C-B-D-E の順で円形に配置",
+                    "条件を満たす配置は存在しない"
+                ],
+                correctIndex: 1,
+                reasoningSteps: [
+                    "条件1からAとBは隣接する",
+                    "条件2からCとDは向かい合う",
+                    "条件4からBとCは隣接しない",
+                    "条件5からDとEは隣接し、DがEの左側",
+                    "条件3からEはAの右隣ではない"
+                ]
+            },
+            {
+                id: 2,
+                title: "プロジェクトチームの編成",
+                description: "6人の社員を3つのプロジェクトチーム（各2人）に分ける際の論理的推理問題です。",
+                conditions: [
+                    "田中さんは必ず鈴木さんと同じチームになる",
+                    "佐藤さんは高橋さんと同じチームにはならない",
+                    "山田さんは田中さんと同じチームにはならない",
+                    "鈴木さんは佐藤さんと同じチームにはならない",
+                    "高橋さんは山田さんと同じチームになる"
+                ],
+                correctAnswer: "チーム1:田中・鈴木、チーム2:高橋・山田、チーム3:佐藤・残り1人",
+                options: [
+                    "チーム1:田中・鈴木、チーム2:高橋・山田、チーム3:佐藤・残り1人",
+                    "チーム1:田中・佐藤、チーム2:鈴木・高橋、チーム3:山田・残り1人",
+                    "チーム1:田中・山田、チーム2:鈴木・佐藤、チーム3:高橋・残り1人",
+                    "条件を満たす編成は複数存在する"
+                ],
+                correctIndex: 0,
+                reasoningSteps: [
+                    "条件1から田中と鈴木は同じチーム",
+                    "条件3から山田は田中と同じチームにならない",
+                    "条件4から鈴木は佐藤と同じチームにならない",
+                    "条件5から高橋と山田は同じチーム",
+                    "条件2から佐藤は高橋と同じチームにならない"
+                ]
+            },
+            {
+                id: 3,
+                title: "営業成績の順位推理",
+                description: "5人の営業員の今月の売上順位を論理的に推理してください。",
+                conditions: [
+                    "Aの売上はBより多い",
+                    "CはDより売上が少ない",
+                    "EはAより売上が多い",
+                    "BはCより売上が少ない",
+                    "DはEより売上が少ない"
+                ],
+                correctAnswer: "E > A > B > C > D (降順)",
+                options: [
+                    "A > B > C > D > E (降順)",
+                    "E > A > B > C > D (降順)",
+                    "D > C > B > A > E (降順)",
+                    "E > D > C > B > A (降順)"
+                ],
+                correctIndex: 1,
+                reasoningSteps: [
+                    "条件1: A > B",
+                    "条件2: D > C", 
+                    "条件3: E > A",
+                    "条件4: C > B",
+                    "条件5: E > D"
+                ]
+            }
+        ];
+
+        function startGame() {
+            gameState.currentProblem = 0;
+            gameState.correctAnswers = 0;
+            gameState.reasoningSteps = 0;
+            gameState.contradictionsFound = 0;
+            gameState.hintsUsed = 0;
+            gameState.selectedSteps = [];
+            gameState.isGameActive = true;
+            gameState.startTime = Date.now();
+            gameState.problems = [...logicProblems];
+            
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            
+            loadProblem();
+            startTimer();
+        }
+
+        function loadProblem() {
+            if (gameState.currentProblem >= gameState.totalProblems || 
+                gameState.currentProblem >= gameState.problems.length) {
+                endGame();
+                return;
+            }
+
+            const problem = gameState.problems[gameState.currentProblem];
+            
+            // 問題表示
+            document.getElementById('logicProblem').innerHTML = `
+                <h3>問題 ${gameState.currentProblem + 1}: ${problem.title}</h3>
+                <p>${problem.description}</p>
+            `;
+
+            // 条件表示
+            const conditionsList = document.getElementById('conditionsList');
+            conditionsList.innerHTML = '<h4>📋 論理条件</h4>' + 
+                problem.conditions.map((condition, index) => 
+                    `<div class="condition-item">条件${index + 1}: ${condition}</div>`
+                ).join('');
+
+            // 推理ステップ表示
+            const reasoningGrid = document.getElementById('reasoningGrid');
+            reasoningGrid.innerHTML = '<h4>🔍 推理ステップ (順番にクリックしてください)</h4>' +
+                problem.reasoningSteps.map((step, index) => 
+                    `<div class="reasoning-step" onclick="selectReasoningStep(${index})" id="step-${index}">
+                        ${step}
+                    </div>`
+                ).join('');
+
+            // 回答選択肢表示
+            const answerOptions = document.getElementById('answerOptions');
+            answerOptions.innerHTML = '<h4>💡 結論を選択してください</h4>' +
+                problem.options.map((option, index) => 
+                    `<div class="answer-option" onclick="selectAnswer(${index})" id="option-${index}">
+                        ${option}
+                    </div>`
+                ).join('');
+
+            // 推理の連鎖をリセット
+            document.getElementById('deductionChain').style.display = 'none';
+            document.getElementById('contradictionDetector').classList.remove('active');
+            
+            gameState.selectedSteps = [];
+            updateProgress();
+        }
+
+        function selectReasoningStep(stepIndex) {
+            const step = document.getElementById(`step-${stepIndex}`);
+            
+            if (gameState.selectedSteps.includes(stepIndex)) {
+                return; // 既に選択済み
+            }
+
+            gameState.selectedSteps.push(stepIndex);
+            gameState.reasoningSteps++;
+            
+            step.classList.add('selected');
+            
+            // 推理の連鎖を表示
+            updateDeductionChain();
+            
+            // 矛盾チェック
+            checkContradictions();
+            
+            updateStats();
+        }
+
+        function selectAnswer(answerIndex) {
+            const problem = gameState.problems[gameState.currentProblem];
+            const options = document.querySelectorAll('.answer-option');
+            
+            // 全ての選択肢を無効化
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // 選択した選択肢をマーク
+            const selectedOption = document.getElementById(`option-${answerIndex}`);
+            selectedOption.classList.add('selected');
+            
+            // 正解チェック
+            setTimeout(() => {
+                if (answerIndex === problem.correctIndex) {
+                    selectedOption.classList.add('correct');
+                    selectedOption.classList.remove('selected');
+                    gameState.correctAnswers++;
+                    
+                    // 全ての推理ステップを正解マーク
+                    gameState.selectedSteps.forEach(stepIndex => {
+                        document.getElementById(`step-${stepIndex}`).classList.add('correct');
+                    });
+                } else {
+                    selectedOption.classList.add('incorrect');
+                    selectedOption.classList.remove('selected');
+                    
+                    // 正解を表示
+                    const correctOption = document.getElementById(`option-${problem.correctIndex}`);
+                    correctOption.classList.add('correct');
+                    
+                    // 間違った推理ステップをマーク
+                    gameState.selectedSteps.forEach(stepIndex => {
+                        document.getElementById(`step-${stepIndex}`).classList.add('incorrect');
+                    });
+                }
+                
+                updateStats();
+                
+                // 次の問題へのボタンを有効化
+                setTimeout(() => {
+                    gameState.currentProblem++;
+                    if (gameState.currentProblem < gameState.totalProblems && 
+                        gameState.currentProblem < gameState.problems.length) {
+                        document.getElementById('nextBtn').disabled = false;
+                    } else {
+                        endGame();
+                    }
+                }, 1500);
+            }, 500);
+        }
+
+        function nextProblem() {
+            document.getElementById('nextBtn').disabled = true;
+            loadProblem();
+        }
+
+        function updateDeductionChain() {
+            const problem = gameState.problems[gameState.currentProblem];
+            const deductionChain = document.getElementById('deductionChain');
+            const deductionSteps = document.getElementById('deductionSteps');
+            
+            if (gameState.selectedSteps.length > 0) {
+                deductionChain.style.display = 'block';
+                deductionSteps.innerHTML = gameState.selectedSteps.map((stepIndex, index) => 
+                    `<div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                        ${index + 1}. ${problem.reasoningSteps[stepIndex]}
+                    </div>`
+                ).join('');
+            }
+        }
+
+        function checkContradictions() {
+            const detector = document.getElementById('contradictionDetector');
+            const message = document.getElementById('contradictionMessage');
+            
+            // 簡単な矛盾チェック例（実際の実装では条件に応じて判定）
+            if (gameState.selectedSteps.length >= 3) {
+                const hasContradiction = Math.random() < 0.1; // 10%の確率で矛盾を検出
+                
+                if (hasContradiction) {
+                    detector.classList.add('active');
+                    message.textContent = '選択した推理ステップに論理的矛盾が含まれている可能性があります。';
+                    gameState.contradictionsFound++;
+                }
+            }
+        }
+
+        function showHint() {
+            const problem = gameState.problems[gameState.currentProblem];
+            const hintMessages = [
+                '全ての条件を同時に満たす解を探してください。',
+                '矛盾する条件がないか確認してください。',
+                '一つずつ条件を適用して可能性を絞り込んでください。',
+                '既に選択した推理ステップの論理的つながりを確認してください。'
+            ];
+            
+            const hint = hintMessages[gameState.hintsUsed % hintMessages.length];
+            gameState.hintsUsed++;
+            
+            alert('💡 ヒント: ' + hint);
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('currentProblem').textContent = Math.min(gameState.currentProblem + 1, gameState.totalProblems);
+            document.getElementById('accuracy').textContent = 
+                gameState.currentProblem > 0 ? 
+                Math.round((gameState.correctAnswers / gameState.currentProblem) * 100) + '%' : '0%';
+            document.getElementById('reasoningSteps').textContent = gameState.reasoningSteps;
+        }
+
+        function updateProgress() {
+            const progress = (gameState.currentProblem / gameState.totalProblems) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                if (gameState.isGameActive) {
+                    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('timer').textContent = 
+                        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameState.isGameActive = false;
+            
+            const accuracy = Math.round((gameState.correctAnswers / gameState.totalProblems) * 100);
+            const reasoningEfficiency = Math.max(0, 100 - (gameState.reasoningSteps - gameState.totalProblems * 3) * 5);
+            const logicalThinking = Math.round((accuracy + reasoningEfficiency) / 2);
+            const contradictionDetection = Math.min(100, gameState.contradictionsFound * 20);
+            
+            document.getElementById('finalAccuracy').textContent = accuracy + '%';
+            document.getElementById('reasoningEfficiency').textContent = reasoningEfficiency + '%';
+            document.getElementById('logicalThinking').textContent = logicalThinking + '%';
+            document.getElementById('contradictionDetection').textContent = contradictionDetection + '%';
+            
+            const gameOverDiv = document.getElementById('gameOver');
+            const gameOverTitle = document.getElementById('gameOverTitle');
+            
+            if (accuracy >= 85) {
+                gameOverTitle.innerHTML = '🎉 優秀な論理思考力！';
+                gameOverDiv.style.borderColor = '#4caf50';
+                gameOverDiv.style.background = 'rgba(76, 175, 80, 0.2)';
+            } else if (accuracy >= 70) {
+                gameOverTitle.innerHTML = '👍 良好な論理思考力';
+                gameOverDiv.style.borderColor = '#ff9800';
+                gameOverDiv.style.background = 'rgba(255, 152, 0, 0.2)';
+            } else {
+                gameOverTitle.innerHTML = '📚 論理思考力を向上させましょう';
+                gameOverDiv.style.borderColor = '#f44336';
+                gameOverDiv.style.background = 'rgba(244, 67, 54, 0.2)';
+            }
+            
+            gameOverDiv.style.display = 'block';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            
+            updateProgress();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            updateProgress();
+        });
+    </script>
+</body>
+</html>

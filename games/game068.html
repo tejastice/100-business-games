@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷路3D - ゲーム068</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .maze-3d-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .maze-viewport {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .maze-viewport h4 {
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .maze-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .maze-controls h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .movement-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 60px;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            background: rgba(255, 193, 7, 0.7);
+            border-color: #ffc107;
+        }
+
+        .maze-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .movement-controls {
+                transform: scale(0.9);
+            }
+            .control-btn {
+                min-width: 50px;
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+            .info-panels {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🌀 迷路3D</h1>
+        <p class="game-description">3次元迷路のナビゲーションと空間方向感覚による立体迷路ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">迷路</div>
+                <div class="stat-value" id="currentMaze">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">脱出数</div>
+                <div class="stat-value" id="escapedMazes">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">成功率</div>
+                <div class="stat-value" id="escapeRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 5x5x5の3次元迷路から脱出し、立体的な空間ナビゲーション能力を向上させる</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>3D迷路内の現在位置から出口を目指す</li>
+                        <li>上下左右前後の6方向に移動可能</li>
+                        <li>壁にぶつからないよう慎重にナビゲートする</li>
+                    </ul>
+                </li>
+                <li><strong>移動操作:</strong> WASD（前後左右）、QE（上下）、または画面ボタンクリック</li>
+                <li><strong>勝利条件:</strong> 20迷路中、脱出成功率85%以上（17迷路以上脱出）でクリア</li>
+                <li><strong>評価システム:</strong> 脱出成功: +100点、最短ルート: +50点、時間超過: -25点</li>
+                <li><strong>プレイのコツ:</strong> 3次元的な位置関係を把握し、効率的なルートを見つける</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="maze-3d-area" id="maze3DArea">
+                <div class="maze-viewport">
+                    <h4>🗺️ 3D迷路ビュー</h4>
+                    <canvas id="maze3DCanvas" width="600" height="400" style="border: 2px solid #fff; border-radius: 10px; background: rgba(0,0,0,0.8);"></canvas>
+                </div>
+                
+                <div class="maze-controls">
+                    <h4>🎮 移動コントロール</h4>
+                    <div class="movement-controls" id="movementControls">
+                        <div class="control-row">
+                            <button class="control-btn" onclick="movePlayer('up')">🔺 上</button>
+                        </div>
+                        <div class="control-row">
+                            <button class="control-btn" onclick="movePlayer('left')">◀️ 左</button>
+                            <button class="control-btn" onclick="movePlayer('forward')">🔼 前</button>
+                            <button class="control-btn" onclick="movePlayer('right')">▶️ 右</button>
+                        </div>
+                        <div class="control-row">
+                            <button class="control-btn" onclick="movePlayer('back')">🔽 後</button>
+                        </div>
+                        <div class="control-row">
+                            <button class="control-btn" onclick="movePlayer('down')">🔻 下</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="maze-info">
+                    <div class="info-panels">
+                        <div class="info-panel">
+                            <strong>現在位置:</strong><br>
+                            <span id="playerPosition">X:0 Y:0 Z:0</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>目標:</strong><br>
+                            <span id="targetPosition">X:4 Y:4 Z:4</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>移動数:</strong><br>
+                            <span id="moveCount">0</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>時間:</strong><br>
+                            <span id="timeElapsed">0秒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newMaze()">新しい迷路</button>
+            <button class="btn" onclick="showMazeMap()">迷路マップ</button>
+            <button class="btn" onclick="getNavigationHint()">ナビヒント</button>
+            <button class="btn" onclick="resetMaze()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentMaze: 1,
+            totalMazes: 20,
+            escapedMazes: 0,
+            score: 0,
+            playerPosition: { x: 0, y: 0, z: 0 },
+            targetPosition: { x: 4, y: 4, z: 4 },
+            maze3D: [],
+            moveCount: 0,
+            startTime: null,
+            canvas: null,
+            ctx: null
+        };
+
+        function initializeGame() {
+            gameState.canvas = document.getElementById('maze3DCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resetGameState();
+            generateNew3DMaze();
+            setupKeyboardControls();
+            updateDisplay();
+            drawMaze3D();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentMaze: 1,
+                totalMazes: 20,
+                escapedMazes: 0,
+                score: 0,
+                playerPosition: { x: 0, y: 0, z: 0 },
+                targetPosition: { x: 4, y: 4, z: 4 },
+                maze3D: [],
+                moveCount: 0,
+                startTime: Date.now(),
+                canvas: gameState.canvas,
+                ctx: gameState.ctx
+            };
+        }
+
+        function generateNew3DMaze() {
+            const size = 5;
+            gameState.maze3D = [];
+            
+            // 5x5x5の3D迷路を生成
+            for (let x = 0; x < size; x++) {
+                gameState.maze3D[x] = [];
+                for (let y = 0; y < size; y++) {
+                    gameState.maze3D[x][y] = [];
+                    for (let z = 0; z < size; z++) {
+                        // 基本的に通路（false）、一部に壁（true）
+                        gameState.maze3D[x][y][z] = Math.random() < 0.3; // 30%の確率で壁
+                    }
+                }
+            }
+            
+            // スタート地点とゴール地点は必ず通路にする
+            gameState.maze3D[0][0][0] = false;
+            gameState.maze3D[4][4][4] = false;
+            
+            // 最低限のルートを確保
+            ensurePathExists();
+            
+            gameState.playerPosition = { x: 0, y: 0, z: 0 };
+            gameState.moveCount = 0;
+            gameState.startTime = Date.now();
+            
+            updatePositionDisplay();
+        }
+
+        function ensurePathExists() {
+            // 簡易的なルート確保（斜め移動でゴールまでのパスを作る）
+            for (let i = 0; i <= 4; i++) {
+                if (i < 4) {
+                    gameState.maze3D[i][i][i] = false;
+                    gameState.maze3D[i+1][i][i] = false;
+                    gameState.maze3D[i][i+1][i] = false;
+                    gameState.maze3D[i][i][i+1] = false;
+                }
+            }
+        }
+
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', (e) => {
+                switch(e.key.toLowerCase()) {
+                    case 'w': movePlayer('forward'); break;
+                    case 's': movePlayer('back'); break;
+                    case 'a': movePlayer('left'); break;
+                    case 'd': movePlayer('right'); break;
+                    case 'q': movePlayer('up'); break;
+                    case 'e': movePlayer('down'); break;
+                }
+            });
+        }
+
+        function movePlayer(direction) {
+            const newPos = { ...gameState.playerPosition };
+            
+            switch(direction) {
+                case 'forward':  // Z軸正方向
+                    newPos.z = Math.min(4, newPos.z + 1);
+                    break;
+                case 'back':     // Z軸負方向
+                    newPos.z = Math.max(0, newPos.z - 1);
+                    break;
+                case 'left':     // X軸負方向
+                    newPos.x = Math.max(0, newPos.x - 1);
+                    break;
+                case 'right':    // X軸正方向
+                    newPos.x = Math.min(4, newPos.x + 1);
+                    break;
+                case 'up':       // Y軸正方向
+                    newPos.y = Math.min(4, newPos.y + 1);
+                    break;
+                case 'down':     // Y軸負方向
+                    newPos.y = Math.max(0, newPos.y - 1);
+                    break;
+            }
+            
+            // 壁に衝突チェック
+            if (!gameState.maze3D[newPos.x][newPos.y][newPos.z]) {
+                gameState.playerPosition = newPos;
+                gameState.moveCount++;
+                
+                updatePositionDisplay();
+                drawMaze3D();
+                
+                // ゴールチェック
+                if (newPos.x === 4 && newPos.y === 4 && newPos.z === 4) {
+                    escapeMaze();
+                }
+            } else {
+                // 壁に衝突時のフィードバック
+                showWallCollisionFeedback();
+            }
+        }
+
+        function showWallCollisionFeedback() {
+            gameState.canvas.style.border = '2px solid #f44336';
+            setTimeout(() => {
+                gameState.canvas.style.border = '2px solid #fff';
+            }, 200);
+        }
+
+        function drawMaze3D() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // 黒背景
+            gameState.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            const centerX = gameState.canvas.width / 2;
+            const centerY = gameState.canvas.height / 2;
+            
+            // 3D迷路の簡易等軸投影
+            const scale = 40;
+            const offsetX = centerX - 100;
+            const offsetY = centerY - 100;
+            
+            // 迷路のブロックを描画
+            for (let x = 0; x < 5; x++) {
+                for (let y = 0; y < 5; y++) {
+                    for (let z = 0; z < 5; z++) {
+                        const screenX = offsetX + (x - z) * scale * 0.5;
+                        const screenY = offsetY + (x + z) * scale * 0.25 - y * scale * 0.3;
+                        
+                        if (gameState.maze3D[x][y][z]) {
+                            // 壁（立方体として描画）
+                            drawCube(screenX, screenY, scale * 0.4, '#666');
+                        } else {
+                            // 通路（小さな床として描画）
+                            drawFloor(screenX, screenY, scale * 0.3, 'rgba(255,255,255,0.1)');
+                        }
+                    }
+                }
+            }
+            
+            // プレイヤー位置
+            const playerX = offsetX + (gameState.playerPosition.x - gameState.playerPosition.z) * scale * 0.5;
+            const playerY = offsetY + (gameState.playerPosition.x + gameState.playerPosition.z) * scale * 0.25 - gameState.playerPosition.y * scale * 0.3;
+            drawPlayer(playerX, playerY, scale * 0.2);
+            
+            // ゴール位置
+            const goalX = offsetX + (4 - 4) * scale * 0.5;
+            const goalY = offsetY + (4 + 4) * scale * 0.25 - 4 * scale * 0.3;
+            drawGoal(goalX, goalY, scale * 0.3);
+            
+            // 情報表示
+            gameState.ctx.fillStyle = '#fff';
+            gameState.ctx.font = '14px Arial';
+            gameState.ctx.textAlign = 'left';
+            gameState.ctx.fillText(`迷路: ${gameState.currentMaze}/20`, 10, 25);
+            gameState.ctx.fillText(`移動数: ${gameState.moveCount}`, 10, 45);
+            
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            gameState.ctx.fillText(`経過時間: ${elapsed}秒`, 10, 65);
+        }
+
+        function drawCube(x, y, size, color) {
+            gameState.ctx.fillStyle = color;
+            gameState.ctx.fillRect(x, y, size, size);
+            
+            gameState.ctx.strokeStyle = '#333';
+            gameState.ctx.lineWidth = 1;
+            gameState.ctx.strokeRect(x, y, size, size);
+        }
+
+        function drawFloor(x, y, size, color) {
+            gameState.ctx.fillStyle = color;
+            gameState.ctx.fillRect(x, y, size, size);
+        }
+
+        function drawPlayer(x, y, size) {
+            gameState.ctx.fillStyle = '#4caf50';
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(x + size/2, y + size/2, size/2, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+            
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            gameState.ctx.stroke();
+        }
+
+        function drawGoal(x, y, size) {
+            gameState.ctx.fillStyle = '#ffc107';
+            gameState.ctx.fillRect(x, y, size, size);
+            
+            gameState.ctx.strokeStyle = '#ff9800';
+            gameState.ctx.lineWidth = 2;
+            gameState.ctx.strokeRect(x, y, size, size);
+            
+            // ゴールマーク
+            gameState.ctx.fillStyle = '#fff';
+            gameState.ctx.font = 'bold 12px Arial';
+            gameState.ctx.textAlign = 'center';
+            gameState.ctx.fillText('G', x + size/2, y + size/2 + 4);
+        }
+
+        function updatePositionDisplay() {
+            document.getElementById('playerPosition').textContent = 
+                `X:${gameState.playerPosition.x} Y:${gameState.playerPosition.y} Z:${gameState.playerPosition.z}`;
+            document.getElementById('moveCount').textContent = gameState.moveCount;
+            
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            document.getElementById('timeElapsed').textContent = `${elapsed}秒`;
+        }
+
+        function escapeMaze() {
+            const timeElapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const baseScore = 100;
+            let bonus = 0;
+            
+            // 時間ボーナス
+            if (timeElapsed < 30) bonus += 50;
+            else if (timeElapsed < 60) bonus += 25;
+            
+            // 移動効率ボーナス
+            if (gameState.moveCount < 15) bonus += 50;
+            else if (gameState.moveCount < 25) bonus += 25;
+            
+            gameState.score += baseScore + bonus;
+            gameState.escapedMazes++;
+            
+            let message = `🎉 迷路脱出成功！\\n\\n`;
+            message += `移動数: ${gameState.moveCount}\\n`;
+            message += `時間: ${timeElapsed}秒\\n`;
+            message += `基本スコア: ${baseScore}点\\n`;
+            message += `ボーナス: ${bonus}点\\n`;
+            message += `合計: ${baseScore + bonus}点`;
+            
+            alert(message);
+            
+            gameState.currentMaze++;
+            setTimeout(() => {
+                if (gameState.currentMaze <= gameState.totalMazes) {
+                    generateNew3DMaze();
+                    drawMaze3D();
+                    updateDisplay();
+                } else {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function showMazeMap() {
+            let mapText = '3D迷路マップ (現在の層):\\n\\n';
+            const y = gameState.playerPosition.y;
+            
+            for (let z = 4; z >= 0; z--) {
+                for (let x = 0; x < 5; x++) {
+                    if (x === gameState.playerPosition.x && z === gameState.playerPosition.z && y === gameState.playerPosition.y) {
+                        mapText += 'P '; // プレイヤー
+                    } else if (x === 4 && z === 4 && y === 4) {
+                        mapText += 'G '; // ゴール
+                    } else if (gameState.maze3D[x][y][z]) {
+                        mapText += '■ '; // 壁
+                    } else {
+                        mapText += '□ '; // 通路
+                    }
+                }
+                mapText += '\\n';
+            }
+            
+            mapText += `\\n現在層: Y=${y}\\n上下移動: Q(上) / E(下)`;
+            alert(mapText);
+        }
+
+        function getNavigationHint() {
+            const hints = [
+                '🧭 3次元的な位置関係を意識してください',
+                '🎯 ゴール座標は X:4 Y:4 Z:4 です',
+                '⬆️ Q/Eキーで上下移動ができます',
+                '🗺️ 迷路マップで現在層の状況を確認できます',
+                '⚡ 最短ルートを見つけて効率的に移動しましょう'
+            ];
+            
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            alert(`ナビゲーションヒント:\\n${randomHint}`);
+        }
+
+        function resetMaze() {
+            if (confirm('現在の迷路をリセットしますか？進行状況が失われます。')) {
+                generateNew3DMaze();
+                drawMaze3D();
+                updateDisplay();
+            }
+        }
+
+        function newMaze() {
+            if (confirm('新しい迷路を生成しますか？現在の進行状況が失われます。')) {
+                generateNew3DMaze();
+                drawMaze3D();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentMaze').textContent = Math.min(gameState.currentMaze, gameState.totalMazes);
+            document.getElementById('escapedMazes').textContent = gameState.escapedMazes;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const escapeRate = gameState.currentMaze > 1 ? 
+                ((gameState.escapedMazes / (gameState.currentMaze - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('escapeRate').textContent = `${escapeRate}%`;
+            
+            const progress = ((gameState.currentMaze - 1) / gameState.totalMazes) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            updatePositionDisplay();
+            
+            // ゲーム終了チェック
+            if (gameState.currentMaze > gameState.totalMazes) {
+                setTimeout(endGame, 1000);
+            }
+        }
+
+        function endGame() {
+            const escapeRate = ((gameState.escapedMazes / gameState.totalMazes) * 100).toFixed(1);
+            const passed = escapeRate >= 85;
+            
+            let message = `🎊 3D迷路ゲーム完了！\\n\\n`;
+            message += `脱出迷路: ${gameState.escapedMazes} / ${gameState.totalMazes}\\n`;
+            message += `脱出成功率: ${escapeRate}%\\n`;
+            message += `最終スコア: ${gameState.score}点\\n\\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\\n優秀な3D空間ナビゲーション能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\\n85%以上の脱出成功率を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

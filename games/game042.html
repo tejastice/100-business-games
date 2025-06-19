@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クロスワード - ゲーム042</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 900px; width: 95%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        
+        .crossword-container { display: flex; gap: 20px; align-items: flex-start; }
+        .crossword-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; max-width: 500px; }
+        .grid-cell { width: 40px; height: 40px; border: 1px solid #666; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; position: relative; }
+        .grid-cell.black { background: #333; }
+        .grid-cell.white { background: rgba(255, 255, 255, 0.9); color: #333; }
+        .grid-cell.active { background: rgba(255, 193, 7, 0.8); color: #333; }
+        .grid-cell input { width: 100%; height: 100%; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 1rem; color: #333; }
+        .cell-number { position: absolute; top: 2px; left: 2px; font-size: 0.7rem; color: #666; }
+        
+        .clues-panel { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; min-width: 300px; max-height: 400px; overflow-y: auto; }
+        .clues-section { margin-bottom: 20px; text-align: left; }
+        .clues-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #ffc107; }
+        .clue-item { padding: 8px; margin: 5px 0; background: rgba(255, 255, 255, 0.1); border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+        .clue-item:hover { background: rgba(255, 255, 255, 0.2); }
+        .clue-item.solved { background: rgba(76, 175, 80, 0.3); }
+        
+        .controls { display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        
+        .game-complete { display: none; background: rgba(76, 175, 80, 0.2); padding: 30px; border-radius: 15px; margin-top: 20px; border: 2px solid #4caf50; }
+        .demo-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.8; }
+        .demo-text { font-size: 1.3rem; margin-bottom: 30px; line-height: 1.6; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+        
+        @media (max-width: 768px) { 
+            .crossword-container { flex-direction: column; }
+            .crossword-grid { grid-template-columns: repeat(10, 1fr); }
+            .grid-cell { width: 30px; height: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">📝 クロスワード</h1>
+        <p class="game-description">単語知識と推理による語彙力と論理的思考の複合スキルゲーム</p>
+        
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">正解数</div><div class="stat-value" id="solved">0</div></div>
+            <div class="stat"><div class="stat-label">完成率</div><div class="stat-value" id="completion">0%</div></div>
+            <div class="stat"><div class="stat-label">語彙レベル</div><div class="stat-value" id="vocabLevel">初級</div></div>
+        </div>
+        
+        <div id="gameArea">
+            <div id="gamePlay" style="display: none;">
+                <div class="crossword-container">
+                    <div class="crossword-grid" id="crosswordGrid"></div>
+                    <div class="clues-panel">
+                        <div class="clues-section">
+                            <div class="clues-title">タテのカギ</div>
+                            <div id="downClues"></div>
+                        </div>
+                        <div class="clues-section">
+                            <div class="clues-title">ヨコのカギ</div>
+                            <div id="acrossClues"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gameStart">
+                <div class="demo-icon">📝</div>
+                <div class="demo-text">縦横の単語ヒントから推理して、語彙力と論理思考力を鍛えよう！<br>15x15グリッドの完成を目指すクロスワードパズル</div>
+                <div class="feature-list">
+                    <div class="feature-item">📝 縦横の単語ヒントから推理</div>
+                    <div class="feature-item">🧩 10x10グリッドの完成</div>
+                    <div class="feature-item">📚 語彙知識の活用</div>
+                    <div class="feature-item">🏆 完成率90%以上でクリア</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="checkBtn" onclick="checkAnswers()" style="display: none;">答え合わせ</button>
+            <button class="btn" id="hintBtn" onclick="getHint()" style="display: none;">ヒント</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+        
+        <div class="game-complete" id="gameComplete">
+            <h2>🎉 完成おめでとうございます！</h2>
+            <p>正解数: <span id="finalSolved">0</span></p>
+            <p>完成率: <span id="finalCompletion">0%</span></p>
+            <p>語彙力と論理的思考力が向上しました！</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            grid: [],
+            answers: [],
+            userAnswers: [],
+            solved: 0,
+            totalWords: 0,
+            currentCell: null,
+            isPlaying: false,
+            hintsUsed: 0
+        };
+
+        // Simple crossword puzzle data
+        const puzzleData = {
+            grid: [
+                ['', '', '1', '', '', '2', '', '', '', ''],
+                ['', '', 'コ', '', '', 'ネ', '', '3', '', ''],
+                ['4', 'ビ', 'ン', 'ゴ', '5', 'コ', '6', 'イ', 'ヌ', ''],
+                ['', '', 'ピ', '', 'ガ', '', '', 'ン', '', ''],
+                ['', '7', 'ュ', 'ー', 'ッ', 'ク', '', 'ゴ', '', ''],
+                ['', '', 'ー', '', 'ク', '', '', '', '', ''],
+                ['', '', 'タ', '', '', '', '8', 'ホ', 'ン', ''],
+                ['', '9', 'ー', 'ポ', 'ン', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', '', '', '']
+            ],
+            answers: {
+                1: 'コンピューター',
+                2: 'ネコ',
+                3: 'イヌ',
+                4: 'ビンゴ',
+                5: 'ガッコウ',
+                6: 'イヌ',
+                7: 'ユーザー',
+                8: 'ホン',
+                9: 'ーポン'
+            },
+            clues: {
+                across: {
+                    4: '数字を並べるゲーム',
+                    5: '勉強する場所',
+                    7: 'システムを使う人',
+                    8: '読み物',
+                    9: '割引券'
+                },
+                down: {
+                    1: '電子計算機',
+                    2: 'ニャーと鳴く動物',
+                    3: 'ワンと吠える動物',
+                    6: 'ワンと吠える動物'
+                }
+            }
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.solved = 0;
+            gameState.hintsUsed = 0;
+            gameState.totalWords = Object.keys(puzzleData.answers).length;
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('hintBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            createGrid();
+            createClues();
+            updateDisplay();
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('crosswordGrid');
+            grid.innerHTML = '';
+            
+            gameState.userAnswers = Array(10).fill().map(() => Array(10).fill(''));
+            
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    
+                    const cellValue = puzzleData.grid[row][col];
+                    
+                    if (cellValue === '') {
+                        cell.classList.add('black');
+                    } else {
+                        cell.classList.add('white');
+                        
+                        // Add number if it's a numbered cell
+                        if (/\d/.test(cellValue)) {
+                            const number = document.createElement('div');
+                            number.className = 'cell-number';
+                            number.textContent = cellValue;
+                            cell.appendChild(number);
+                        }
+                        
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.addEventListener('input', (e) => {
+                            gameState.userAnswers[row][col] = e.target.value.toUpperCase();
+                            updateDisplay();
+                        });
+                        input.addEventListener('click', () => {
+                            gameState.currentCell = {row, col};
+                            highlightCell(row, col);
+                        });
+                        
+                        cell.appendChild(input);
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function createClues() {
+            const acrossContainer = document.getElementById('acrossClues');
+            const downContainer = document.getElementById('downClues');
+            
+            acrossContainer.innerHTML = '';
+            downContainer.innerHTML = '';
+            
+            // Across clues
+            Object.entries(puzzleData.clues.across).forEach(([num, clue]) => {
+                const clueItem = document.createElement('div');
+                clueItem.className = 'clue-item';
+                clueItem.innerHTML = `<strong>${num}.</strong> ${clue}`;
+                clueItem.onclick = () => highlightWord(num, 'across');
+                acrossContainer.appendChild(clueItem);
+            });
+            
+            // Down clues
+            Object.entries(puzzleData.clues.down).forEach(([num, clue]) => {
+                const clueItem = document.createElement('div');
+                clueItem.className = 'clue-item';
+                clueItem.innerHTML = `<strong>${num}.</strong> ${clue}`;
+                clueItem.onclick = () => highlightWord(num, 'down');
+                downContainer.appendChild(clueItem);
+            });
+        }
+
+        function highlightCell(row, col) {
+            // Clear previous highlights
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('active');
+            });
+            
+            // Highlight current cell
+            const index = row * 10 + col;
+            document.querySelectorAll('.grid-cell')[index].classList.add('active');
+        }
+
+        function highlightWord(number, direction) {
+            // This is a simplified version - in a real crossword, you'd need to
+            // calculate the actual word positions based on the grid layout
+            console.log(`Highlighting word ${number} ${direction}`);
+        }
+
+        function checkAnswers() {
+            let correctAnswers = 0;
+            
+            // This is a simplified check - in a real implementation,
+            // you'd check each word against its correct answer
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const userAnswer = gameState.userAnswers[row][col];
+                    const correctAnswer = puzzleData.grid[row][col];
+                    
+                    if (userAnswer && correctAnswer && 
+                        userAnswer === correctAnswer.replace(/\d/g, '')) {
+                        correctAnswers++;
+                    }
+                }
+            }
+            
+            gameState.solved = Math.floor(correctAnswers / 3); // Approximate word count
+            updateDisplay();
+            
+            if (gameState.solved >= Math.floor(gameState.totalWords * 0.9)) {
+                completeGame();
+            }
+        }
+
+        function getHint() {
+            if (gameState.hintsUsed >= 3) {
+                alert('ヒントの使用回数が上限に達しました。');
+                return;
+            }
+            
+            gameState.hintsUsed++;
+            
+            // Provide a random hint
+            const hints = [
+                'タテのカギ1: 「コン」で始まる単語です',
+                'ヨコのカギ4: ゲームの名前です',
+                'タテのカギ2: 動物の名前です',
+                'ヨコのカギ7: 「ユー」で始まります'
+            ];
+            
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            alert(`ヒント ${gameState.hintsUsed}/3: ${randomHint}`);
+        }
+
+        function updateDisplay() {
+            document.getElementById('solved').textContent = gameState.solved;
+            
+            const completion = gameState.totalWords > 0 ? 
+                Math.round((gameState.solved / gameState.totalWords) * 100) : 0;
+            document.getElementById('completion').textContent = completion + '%';
+            
+            let vocabLevel = '初級';
+            if (completion >= 70) vocabLevel = '上級';
+            else if (completion >= 40) vocabLevel = '中級';
+            document.getElementById('vocabLevel').textContent = vocabLevel;
+        }
+
+        function completeGame() {
+            document.getElementById('finalSolved').textContent = gameState.solved;
+            document.getElementById('finalCompletion').textContent = 
+                Math.round((gameState.solved / gameState.totalWords) * 100) + '%';
+            document.getElementById('gameComplete').style.display = 'block';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('hintBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('gameComplete').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

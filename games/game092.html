@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卓球ラリー - ゲーム092</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2E7D32, #4CAF50, #81C784);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2E7D32;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #795548, #8D6E63);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .golf-green {
+            width: 100%;
+            height: 400px;
+            background: radial-gradient(ellipse at center, #4CAF50, #2E7D32);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #1B5E20;
+            overflow: hidden;
+        }
+
+        .hole {
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #000, #333);
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 3px 10px rgba(0,0,0,0.8);
+        }
+
+        .ball {
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid #ccc;
+        }
+
+        .power-gauge {
+            width: 80%;
+            height: 200px;
+            background: linear-gradient(to top, #4CAF50, #FFC107, #F44336);
+            border-radius: 10px;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            overflow: hidden;
+        }
+
+        .power-indicator {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.8);
+            position: absolute;
+            bottom: 0;
+            transition: bottom 0.1s ease;
+        }
+
+        .distance-markers {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .marker {
+            margin: 20px 0;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #2E7D32, #4CAF50);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.4);
+        }
+
+        .putt-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            font-size: 1.3em;
+            padding: 20px 40px;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes hole-in-one {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .hole-celebration {
+            animation: hole-in-one 0.8s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .golf-green { height: 350px; }
+            .game-title { font-size: 2em; }
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🏓 卓球ラリー</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: ラリー技術・反射神経・ラケット制御・継続的集中力
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>成功率</div>
+                <div id="successRate">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>ホールインワン</div>
+                <div id="holeInOnes">0</div>
+            </div>
+            <div class="stat-item">
+                <div>平均距離</div>
+                <div id="avgDistance">0cm</div>
+            </div>
+            <div class="stat-item">
+                <div>総パット数</div>
+                <div id="totalPutts">0</div>
+            </div>
+        </div>
+
+        <div class="golf-green">
+            <div class="hole" id="hole"></div>
+            <div class="ball" id="ball"></div>
+            <div class="power-gauge">
+                <div class="power-indicator" id="powerIndicator"></div>
+            </div>
+            <div class="distance-markers">
+                <div class="marker">20cm</div>
+                <div class="marker">15cm</div>
+                <div class="marker">10cm</div>
+                <div class="marker">5cm</div>
+                <div class="marker">完璧!</div>
+            </div>
+        </div>
+
+        <button class="control-btn putt-btn" id="puttBtn" disabled>🏌️‍♂️ パット!</button>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">ゲーム開始</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+            <button class="control-btn" id="practiceBtn">練習モード</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>重要な商談や提案での精密性・長時間の集中力維持・目標への正確なアプローチ能力を向上させます</p>
+        </div>
+    </div>
+
+    <script>
+        class GolfPutting {
+            constructor() {
+                this.totalPutts = 0;
+                this.successfulPutts = 0;
+                this.holeInOnes = 0;
+                this.totalDistance = 0;
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.power = 0;
+                this.powerDirection = 1;
+                this.animationId = null;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.successRateEl = document.getElementById('successRate');
+                this.holeInOnesEl = document.getElementById('holeInOnes');
+                this.avgDistanceEl = document.getElementById('avgDistance');
+                this.totalPuttsEl = document.getElementById('totalPutts');
+                this.powerIndicatorEl = document.getElementById('powerIndicator');
+                this.ballEl = document.getElementById('ball');
+                this.holeEl = document.getElementById('hole');
+                this.puttBtn = document.getElementById('puttBtn');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.practiceBtn = document.getElementById('practiceBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.practiceBtn.addEventListener('click', () => this.togglePracticeMode());
+                this.puttBtn.addEventListener('click', () => this.putt());
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.practiceMode = false;
+                this.startPowerAnimation();
+                this.puttBtn.disabled = false;
+                this.startBtn.textContent = 'プレイ中...';
+                this.startBtn.disabled = true;
+            }
+
+            togglePracticeMode() {
+                this.practiceMode = !this.practiceMode;
+                if (this.practiceMode) {
+                    this.gameActive = true;
+                    this.startPowerAnimation();
+                    this.puttBtn.disabled = false;
+                    this.practiceBtn.textContent = '練習終了';
+                    this.startBtn.disabled = true;
+                } else {
+                    this.gameActive = false;
+                    this.stopPowerAnimation();
+                    this.puttBtn.disabled = true;
+                    this.practiceBtn.textContent = '練習モード';
+                    this.startBtn.disabled = false;
+                }
+            }
+
+            startPowerAnimation() {
+                const animate = () => {
+                    if (!this.gameActive) return;
+
+                    this.power += this.powerDirection * 2;
+                    if (this.power >= 100) {
+                        this.power = 100;
+                        this.powerDirection = -1;
+                    } else if (this.power <= 0) {
+                        this.power = 0;
+                        this.powerDirection = 1;
+                    }
+
+                    this.powerIndicatorEl.style.bottom = this.power + '%';
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            stopPowerAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            putt() {
+                if (!this.gameActive) return;
+
+                this.totalPutts++;
+                const accuracy = this.calculateAccuracy();
+                const distance = this.calculateDistance(accuracy);
+                
+                this.animateBall(distance);
+                this.totalDistance += distance;
+
+                if (distance <= 2) {
+                    this.holeInOnes++;
+                    this.successfulPutts++;
+                    this.celebrateSuccess();
+                } else if (distance <= 10) {
+                    this.successfulPutts++;
+                }
+
+                setTimeout(() => {
+                    this.resetBallPosition();
+                }, 2000);
+
+                this.updateDisplay();
+            }
+
+            calculateAccuracy() {
+                // 理想的なパワーは30-50%の範囲
+                const idealPower = 40;
+                const deviation = Math.abs(this.power - idealPower);
+                return Math.max(0, 100 - deviation * 2);
+            }
+
+            calculateDistance(accuracy) {
+                // 精度に基づいて距離を計算（cm単位）
+                const baseDistance = 25;
+                const accuracyFactor = (100 - accuracy) / 100;
+                return Math.round(baseDistance * accuracyFactor + Math.random() * 5);
+            }
+
+            animateBall(distance) {
+                const maxDistance = 350; // グリーンの高さ
+                const actualDistance = Math.min(distance * 10, maxDistance);
+                
+                this.ballEl.style.bottom = (50 + actualDistance) + 'px';
+                
+                if (distance <= 2) {
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #4CAF50, #2E7D32)';
+                } else if (distance <= 10) {
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #FFC107, #FF9800)';
+                } else {
+                    this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #F44336, #C62828)';
+                }
+            }
+
+            celebrateSuccess() {
+                this.holeEl.classList.add('hole-celebration');
+                setTimeout(() => {
+                    this.holeEl.classList.remove('hole-celebration');
+                }, 800);
+            }
+
+            resetBallPosition() {
+                this.ballEl.style.bottom = '50px';
+                this.ballEl.style.background = 'radial-gradient(circle at 30% 30%, #fff, #ddd)';
+            }
+
+            resetGame() {
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.totalPutts = 0;
+                this.successfulPutts = 0;
+                this.holeInOnes = 0;
+                this.totalDistance = 0;
+                this.power = 0;
+                this.stopPowerAnimation();
+                this.resetBallPosition();
+                this.updateDisplay();
+                this.puttBtn.disabled = true;
+                this.startBtn.textContent = 'ゲーム開始';
+                this.startBtn.disabled = false;
+                this.practiceBtn.textContent = '練習モード';
+            }
+
+            updateDisplay() {
+                const successRate = this.totalPutts > 0 ? ((this.successfulPutts / this.totalPutts) * 100).toFixed(1) : '0';
+                const avgDistance = this.totalPutts > 0 ? Math.round(this.totalDistance / this.totalPutts) : 0;
+                
+                this.successRateEl.textContent = successRate + '%';
+                this.holeInOnesEl.textContent = this.holeInOnes;
+                this.avgDistanceEl.textContent = avgDistance + 'cm';
+                this.totalPuttsEl.textContent = this.totalPutts;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new GolfPutting();
+        });
+    </script>
+</body>
+</html>

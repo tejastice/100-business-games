@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推理ゲーム - ゲーム044</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .detective-game {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .case-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .clues-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .clue-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .clue-card:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+        }
+
+        .clue-card.analyzed {
+            border-color: #00FF00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .suspects-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .suspect-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .suspect-card:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+        }
+
+        .suspect-card.eliminated {
+            opacity: 0.5;
+            border-color: #FF0000;
+        }
+
+        .suspect-card.selected {
+            border-color: #00FF00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .hypothesis-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .evidence-chain {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .evidence-link {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF00, #FFD700);
+            transition: width 0.3s ease;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .clues-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .suspects-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">🕵️ 推理ゲーム</h1>
+        <p class="game-description">手がかり分析と仮説検証による事件解決型推理能力ゲーム</p>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <p><strong>🎯 目的:</strong> 12の手がかりを分析し、事件の真相を解明せよ</p>
+            
+            <p><strong>🎮 ゲームの流れ:</strong></p>
+            <ul>
+                <li>事件の概要を確認</li>
+                <li>手がかりを1つずつ分析（クリックして詳細確認）</li>
+                <li>容疑者の行動・動機・アリバイを検証</li>
+                <li>証拠の論理的組み立てを構築</li>
+                <li>推理を構築して犯人を特定</li>
+                <li>解決率90%以上でクリア</li>
+            </ul>
+            
+            <p><strong>⭐ 評価システム:</strong></p>
+            <ul>
+                <li>事件解決率: 正確な犯人特定</li>
+                <li>推理精度: 論理的な推理過程</li>
+                <li>証拠活用度: 手がかりの効果的活用</li>
+                <li>論理構築力: 筋道立った推理</li>
+            </ul>
+            
+            <p><strong>🔍 プレイのコツ:</strong></p>
+            <ul>
+                <li>全ての手がかりを必ず分析する</li>
+                <li>矛盾する証言を見つける</li>
+                <li>時系列を整理して行動を確認</li>
+                <li>動機とアリバイの両方を検証</li>
+            </ul>
+        </div>
+
+        <div class="detective-game">
+            <div class="case-info">
+                <h3>📄 事件概要</h3>
+                <p id="case-description">高級オフィスビルの会議室で企業秘密が盗まれた。容疑者は3名。手がかりを分析して真犯人を見つけよう。</p>
+                <p><strong>時刻:</strong> <span id="crime-time">午後8時30分</span></p>
+                <p><strong>場所:</strong> <span id="crime-location">15階会議室</span></p>
+            </div>
+
+            <div class="game-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="analyzed-clues">0</div>
+                    <div class="stat-label">分析済み手がかり</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="solution-progress">0</div>
+                    <div class="stat-label">解決進捗(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy-score">100</div>
+                    <div class="stat-label">推理精度(%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="time-remaining">300</div>
+                    <div class="stat-label">残り時間(秒)</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+            </div>
+
+            <h3>🔍 手がかり一覧</h3>
+            <div class="clues-section" id="clues-container">
+                <!-- 手がかりカードがJavaScriptで生成される -->
+            </div>
+
+            <h3>👥 容疑者一覧</h3>
+            <div class="suspects-section" id="suspects-container">
+                <!-- 容疑者カードがJavaScriptで生成される -->
+            </div>
+
+            <div class="hypothesis-section">
+                <h3>🧠 推理構築</h3>
+                <p>選択した証拠:</p>
+                <div class="evidence-chain" id="evidence-chain">
+                    <!-- 選択された証拠がここに表示される -->
+                </div>
+                <textarea id="hypothesis-text" placeholder="あなたの推理を記述してください..." 
+                         style="width: 100%; height: 100px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px; color: white; resize: vertical;"></textarea>
+            </div>
+
+            <div class="game-controls">
+                <button class="btn" onclick="startGame()" id="start-btn">ゲーム開始</button>
+                <button class="btn" onclick="analyzeClue()" id="analyze-btn" disabled>手がかり分析</button>
+                <button class="btn" onclick="eliminateSuspect()" id="eliminate-btn" disabled>容疑者除外</button>
+                <button class="btn" onclick="buildHypothesis()" id="hypothesis-btn" disabled>推理構築</button>
+                <button class="btn" onclick="solveCase()" id="solve-btn" disabled>事件解決</button>
+                <button class="btn" onclick="resetGame()" id="reset-btn">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            timeRemaining: 300,
+            analyzedClues: 0,
+            selectedClues: [],
+            selectedSuspect: null,
+            eliminatedSuspects: [],
+            solutionProgress: 0,
+            accuracyScore: 100,
+            timer: null,
+            correctSuspect: 1, // 田中が犯人
+            cluesData: [
+                {id: 1, title: "監視カメラ映像", content: "午後8時25分、田中が会議室に向かう姿", importance: 9},
+                {id: 2, title: "アクセスカード記録", content: "田中のカードで8時28分に会議室入室", importance: 10},
+                {id: 3, title: "指紋鑑定", content: "金庫から田中の指紋を検出", importance: 10},
+                {id: 4, title: "佐藤の証言", content: "8時30分頃、廊下で田中を見かけた", importance: 8},
+                {id: 5, title: "鈴木のアリバイ", content: "8時20分〜9時まで別の会議に参加", importance: 7},
+                {id: 6, title: "田中の動機", content: "昇進を逃し、会社に不満を持っていた", importance: 9},
+                {id: 7, title: "削除されたファイル", content: "田中のPCから機密ファイルのコピー痕跡", importance: 10},
+                {id: 8, title: "清掃員の証言", content: "8時35分、田中が慌てて出てくるのを目撃", importance: 8},
+                {id: 9, title: "USBメモリ", content: "田中のデスクからデータ転送用USB発見", importance: 9},
+                {id: 10, title: "電話記録", content: "8時15分、田中が競合他社に電話", importance: 8},
+                {id: 11, title: "佐藤のアリバイ", content: "8時〜9時まで家族と食事", importance: 6},
+                {id: 12, title: "会議室の状況", content: "金庫が開けられ、書類が散乱", importance: 7}
+            ],
+            suspectsData: [
+                {id: 1, name: "田中", age: 45, position: "営業部長", motive: "昇進失敗への不満", alibi: "不十分"},
+                {id: 2, name: "佐藤", age: 38, position: "技術主任", motive: "特になし", alibi: "複数の証言あり"},
+                {id: 3, name: "鈴木", age: 42, position: "企画課長", motive: "特になし", alibi: "会議参加記録あり"}
+            ]
+        };
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.timeRemaining = 300;
+            gameState.analyzedClues = 0;
+            gameState.selectedClues = [];
+            gameState.selectedSuspect = null;
+            gameState.eliminatedSuspects = [];
+            gameState.solutionProgress = 0;
+            gameState.accuracyScore = 100;
+
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = false;
+
+            generateClues();
+            generateSuspects();
+            startTimer();
+            updateDisplay();
+        }
+
+        function generateClues() {
+            const container = document.getElementById('clues-container');
+            container.innerHTML = '';
+
+            gameState.cluesData.forEach(clue => {
+                const clueCard = document.createElement('div');
+                clueCard.className = 'clue-card';
+                clueCard.dataset.clueId = clue.id;
+                clueCard.innerHTML = `
+                    <h4>${clue.title}</h4>
+                    <p>重要度: ${'★'.repeat(Math.floor(clue.importance/2))}</p>
+                    <p class="clue-preview">クリックして詳細を確認</p>
+                `;
+                clueCard.onclick = () => selectClue(clue.id);
+                container.appendChild(clueCard);
+            });
+        }
+
+        function generateSuspects() {
+            const container = document.getElementById('suspects-container');
+            container.innerHTML = '';
+
+            gameState.suspectsData.forEach(suspect => {
+                const suspectCard = document.createElement('div');
+                suspectCard.className = 'suspect-card';
+                suspectCard.dataset.suspectId = suspect.id;
+                suspectCard.innerHTML = `
+                    <h4>${suspect.name} (${suspect.age}歳)</h4>
+                    <p><strong>役職:</strong> ${suspect.position}</p>
+                    <p><strong>動機:</strong> ${suspect.motive}</p>
+                    <p><strong>アリバイ:</strong> ${suspect.alibi}</p>
+                `;
+                suspectCard.onclick = () => selectSuspect(suspect.id);
+                container.appendChild(suspectCard);
+            });
+        }
+
+        function selectClue(clueId) {
+            if (!gameState.isPlaying) return;
+
+            const clue = gameState.cluesData.find(c => c.id === clueId);
+            const clueCard = document.querySelector(`[data-clue-id="${clueId}"]`);
+            
+            if (!gameState.selectedClues.includes(clueId)) {
+                gameState.selectedClues.push(clueId);
+                clueCard.classList.add('analyzed');
+                
+                // 詳細内容を表示
+                const preview = clueCard.querySelector('.clue-preview');
+                preview.textContent = clue.content;
+                preview.style.fontWeight = 'bold';
+                preview.style.color = '#FFD700';
+
+                gameState.analyzedClues++;
+                gameState.solutionProgress = Math.floor((gameState.analyzedClues / 12) * 60);
+                
+                updateEvidenceChain();
+                updateDisplay();
+                checkGameProgress();
+            }
+        }
+
+        function selectSuspect(suspectId) {
+            if (!gameState.isPlaying) return;
+
+            // 前回の選択をクリア
+            document.querySelectorAll('.suspect-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // 新しい選択を適用
+            const suspectCard = document.querySelector(`[data-suspect-id="${suspectId}"]`);
+            suspectCard.classList.add('selected');
+            gameState.selectedSuspect = suspectId;
+
+            document.getElementById('eliminate-btn').disabled = false;
+            document.getElementById('hypothesis-btn').disabled = false;
+        }
+
+        function analyzeClue() {
+            if (!gameState.isPlaying) return;
+            alert('手がかりカードをクリックして分析してください');
+        }
+
+        function eliminateSuspect() {
+            if (!gameState.selectedSuspect || !gameState.isPlaying) return;
+
+            const suspectId = gameState.selectedSuspect;
+            if (!gameState.eliminatedSuspects.includes(suspectId)) {
+                gameState.eliminatedSuspects.push(suspectId);
+                const suspectCard = document.querySelector(`[data-suspect-id="${suspectId}"]`);
+                suspectCard.classList.add('eliminated');
+                suspectCard.classList.remove('selected');
+                
+                // 正しい容疑者を除外した場合は精度を下げる
+                if (suspectId === gameState.correctSuspect) {
+                    gameState.accuracyScore -= 30;
+                }
+                
+                gameState.selectedSuspect = null;
+                document.getElementById('eliminate-btn').disabled = true;
+                updateDisplay();
+            }
+        }
+
+        function buildHypothesis() {
+            if (!gameState.selectedSuspect || !gameState.isPlaying) return;
+            
+            const hypothesisText = document.getElementById('hypothesis-text').value;
+            if (hypothesisText.length < 50) {
+                alert('推理をより詳しく記述してください（50文字以上）');
+                return;
+            }
+
+            gameState.solutionProgress = Math.max(gameState.solutionProgress, 80);
+            document.getElementById('solve-btn').disabled = false;
+            updateDisplay();
+        }
+
+        function updateEvidenceChain() {
+            const container = document.getElementById('evidence-chain');
+            container.innerHTML = '';
+
+            gameState.selectedClues.forEach(clueId => {
+                const clue = gameState.cluesData.find(c => c.id === clueId);
+                const evidenceLink = document.createElement('div');
+                evidenceLink.className = 'evidence-link';
+                evidenceLink.textContent = clue.title;
+                container.appendChild(evidenceLink);
+            });
+        }
+
+        function solveCase() {
+            if (!gameState.selectedSuspect || !gameState.isPlaying) {
+                alert('犯人を選択し、推理を構築してください');
+                return;
+            }
+
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+
+            const isCorrect = gameState.selectedSuspect === gameState.correctSuspect;
+            const hypothesisQuality = document.getElementById('hypothesis-text').value.length;
+            
+            let finalScore = gameState.accuracyScore;
+            
+            if (isCorrect) {
+                finalScore += 20;
+                gameState.solutionProgress = 100;
+            } else {
+                finalScore -= 40;
+            }
+
+            // 推理の質による加点
+            if (hypothesisQuality > 100) finalScore += 10;
+
+            // 時間ボーナス
+            if (gameState.timeRemaining > 120) finalScore += 10;
+
+            const resultMessage = isCorrect ? 
+                `🎉 事件解決成功！\n\n正解: ${gameState.suspectsData[0].name}が犯人でした\n\n最終スコア: ${finalScore}%\n${finalScore >= 90 ? 'エクセレント！優秀な推理力です！' : finalScore >= 70 ? 'グッド！良い推理でした！' : 'もう少し慎重に分析しましょう'}` :
+                `❌ 推理が外れました\n\n正解: ${gameState.suspectsData[0].name}が犯人でした\n手がかりをより慎重に分析しましょう\n\n最終スコア: ${finalScore}%`;
+
+            alert(resultMessage);
+            
+            gameState.accuracyScore = Math.max(0, finalScore);
+            updateDisplay();
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('solve-btn').disabled = true;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('eliminate-btn').disabled = true;
+            document.getElementById('hypothesis-btn').disabled = true;
+        }
+
+        function checkGameProgress() {
+            // 全ての手がかりを分析した場合
+            if (gameState.analyzedClues >= 8) {
+                document.getElementById('hypothesis-btn').disabled = false;
+            }
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                updateDisplay();
+
+                if (gameState.timeRemaining <= 0) {
+                    gameState.isPlaying = false;
+                    clearInterval(gameState.timer);
+                    alert('時間切れです！事件は未解決に終わりました...');
+                    
+                    // ゲーム終了処理
+                    document.getElementById('start-btn').disabled = false;
+                    document.getElementById('solve-btn').disabled = true;
+                    document.getElementById('analyze-btn').disabled = true;
+                    document.getElementById('eliminate-btn').disabled = true;
+                    document.getElementById('hypothesis-btn').disabled = true;
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('analyzed-clues').textContent = gameState.analyzedClues;
+            document.getElementById('solution-progress').textContent = gameState.solutionProgress;
+            document.getElementById('accuracy-score').textContent = Math.max(0, gameState.accuracyScore);
+            document.getElementById('time-remaining').textContent = gameState.timeRemaining;
+            document.getElementById('progress-bar').style.width = gameState.solutionProgress + '%';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+
+            gameState.timeRemaining = 300;
+            gameState.analyzedClues = 0;
+            gameState.selectedClues = [];
+            gameState.selectedSuspect = null;
+            gameState.eliminatedSuspects = [];
+            gameState.solutionProgress = 0;
+            gameState.accuracyScore = 100;
+
+            document.getElementById('hypothesis-text').value = '';
+            document.getElementById('evidence-chain').innerHTML = '';
+            document.getElementById('clues-container').innerHTML = '';
+            document.getElementById('suspects-container').innerHTML = '';
+
+            // ボタン状態をリセット
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('eliminate-btn').disabled = true;
+            document.getElementById('hypothesis-btn').disabled = true;
+            document.getElementById('solve-btn').disabled = true;
+            document.getElementById('reset-btn').disabled = false;
+
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    window.location.href = '../index.html';
+                }
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 初期化
+        updateDisplay();
+</script>
+</body>
+</html>

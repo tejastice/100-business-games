@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瞬間クリック - ゲーム001</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+
+        .target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ffff00, #ffa500);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 3px solid white;
+        }
+
+        .target:hover {
+            transform: scale(1.1);
+        }
+
+        .target.hit {
+            animation: hit 0.3s ease-out;
+        }
+
+        @keyframes hit {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); background: #00ff00; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over {
+            display: none;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffff00;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">⚡ 瞬間クリック</h1>
+        <p class="game-description">画面に現れるターゲットを素早くクリックして反射神経を鍛えよう！</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ヒット数</div>
+                <div class="stat-value" id="hits">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">残り時間</div>
+                <div class="stat-value" id="timeLeft">30</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">平均反応時間</div>
+                <div class="stat-value" id="avgTime">0ms</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; opacity: 0.7;">
+                ゲーム開始ボタンを押してターゲットをクリックしよう！
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>🎉 ゲーム終了！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p>お疲れさまでした！</p>
+            <p>ヒット数: <span id="finalHits">0</span> / 平均反応時間: <span id="finalAvgTime">0ms</span></p>
+        </div>
+
+        <div class="instructions">
+            <h3>🎯 詳細ルール・遊び方</h3>
+            <p><strong>目的:</strong> 30秒間でできるだけ多くのターゲットをクリックして高スコアを目指す</p>
+            <p><strong>ゲームの流れ:</strong></p>
+            <p>• ゲーム開始ボタンを押すと30秒間のタイマーが開始</p>
+            <p>• 画面にランダムな位置に黄色い円形ターゲット（🎯）が出現</p>
+            <p>• ターゲットを素早くクリックすると得点獲得</p>
+            <p>• ターゲットは3秒後に自動消失するので見逃し注意</p>
+            <p><strong>得点システム:</strong></p>
+            <p>• 基本点: 100点 + 反応時間ボーナス</p>
+            <p>• 反応時間ボーナス = max(0, (1000ms - 反応時間) ÷ 10)</p>
+            <p>• 例: 200ms反応 → 100 + 80 = 180点</p>
+            <p><strong>勝利条件:</strong> 制限時間内により多くのターゲットをヒットして高得点を獲得</p>
+            <p><strong>コツ:</strong> 画面全体を見渡し、ターゲット出現を予測して素早く反応しよう！</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            hits: 0,
+            timeLeft: 30,
+            gameTimer: null,
+            targetTimer: null,
+            currentTarget: null,
+            targetStartTime: 0,
+            reactionTimes: []
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                hits: 0,
+                timeLeft: 30,
+                gameTimer: null,
+                targetTimer: null,
+                currentTarget: null,
+                targetStartTime: 0,
+                reactionTimes: []
+            };
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameArea').innerHTML = '';
+
+            // ゲームタイマー開始
+            gameState.gameTimer = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            // 最初のターゲット生成
+            spawnTarget();
+            updateDisplay();
+        }
+
+        function spawnTarget() {
+            if (!gameState.isPlaying) return;
+
+            // 既存のターゲットを削除
+            if (gameState.currentTarget) {
+                gameState.currentTarget.remove();
+            }
+
+            const gameArea = document.getElementById('gameArea');
+            const target = document.createElement('div');
+            target.className = 'target';
+            target.textContent = '🎯';
+
+            // ランダムな位置に配置
+            const maxX = gameArea.offsetWidth - 60;
+            const maxY = gameArea.offsetHeight - 60;
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+
+            target.style.left = x + 'px';
+            target.style.top = y + 'px';
+
+            target.onclick = hitTarget;
+            gameArea.appendChild(target);
+
+            gameState.currentTarget = target;
+            gameState.targetStartTime = Date.now();
+
+            // 3秒後に自動的にターゲットを削除
+            gameState.targetTimer = setTimeout(() => {
+                if (gameState.isPlaying && gameState.currentTarget === target) {
+                    target.remove();
+                    gameState.currentTarget = null;
+                    spawnTarget();
+                }
+            }, 3000);
+        }
+
+        function hitTarget(event) {
+            event.stopPropagation();
+            
+            if (!gameState.isPlaying) return;
+
+            const reactionTime = Date.now() - gameState.targetStartTime;
+            gameState.reactionTimes.push(reactionTime);
+
+            // スコア計算（反応時間が早いほど高スコア）
+            const baseScore = 100;
+            const timeBonus = Math.max(0, 1000 - reactionTime);
+            const score = Math.floor(baseScore + timeBonus / 10);
+
+            gameState.score += score;
+            gameState.hits++;
+
+            // ヒットエフェクト
+            const target = event.target;
+            target.classList.add('hit');
+
+            // ターゲットを削除
+            clearTimeout(gameState.targetTimer);
+            setTimeout(() => {
+                if (target.parentNode) {
+                    target.remove();
+                }
+                gameState.currentTarget = null;
+                spawnTarget();
+            }, 300);
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('hits').textContent = gameState.hits;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+            
+            const avgTime = gameState.reactionTimes.length > 0 
+                ? Math.round(gameState.reactionTimes.reduce((a, b) => a + b, 0) / gameState.reactionTimes.length)
+                : 0;
+            document.getElementById('avgTime').textContent = avgTime + 'ms';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            clearTimeout(gameState.targetTimer);
+
+            if (gameState.currentTarget) {
+                gameState.currentTarget.remove();
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameArea').innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; opacity: 0.7;">ゲーム終了！もう一度プレイするにはゲーム開始ボタンを押してください</div>';
+
+            // 結果表示
+            const avgTime = gameState.reactionTimes.length > 0 
+                ? Math.round(gameState.reactionTimes.reduce((a, b) => a + b, 0) / gameState.reactionTimes.length)
+                : 0;
+
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalHits').textContent = gameState.hits;
+            document.getElementById('finalAvgTime').textContent = avgTime + 'ms';
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            clearTimeout(gameState.targetTimer);
+
+            if (gameState.currentTarget) {
+                gameState.currentTarget.remove();
+            }
+
+            gameState = {
+                isPlaying: false,
+                score: 0,
+                hits: 0,
+                timeLeft: 30,
+                gameTimer: null,
+                targetTimer: null,
+                currentTarget: null,
+                targetStartTime: 0,
+                reactionTimes: []
+            };
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameArea').innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; opacity: 0.7;">ゲーム開始ボタンを押してターゲットをクリックしよう！</div>';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // 初期表示更新
+        updateDisplay();
+    </script>
+</body>
+</html>

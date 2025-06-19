@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瞬間判断 - ゲーム034</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px 25px; border-radius: 15px; min-width: 100px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .game-area { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 40px; margin-bottom: 30px; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .sequence-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 20px auto; }
+        .sequence-btn { width: 80px; height: 80px; border: none; border-radius: 10px; font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease; }
+        .demo-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.8; }
+        .demo-text { font-size: 1.3rem; margin-bottom: 30px; line-height: 1.6; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+        .skills-section { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .skill-item { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; text-align: center; }
+        .skill-icon { font-size: 2rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">⚡ 瞬間判断</h1>
+        <p class="game-description">戦闘中の瞬時の状況判断能力と適切な行動選択による戦術的思考力ゲーム
+        
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">レベル</div><div class="stat-value" id="level">1</div></div>
+            <div class="stat"><div class="stat-label">経験値</div><div class="stat-value" id="experience">0</div></div>
+            <div class="stat"><div class="stat-label">達成度</div><div class="stat-value" id="progress">0%</div></div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div id="gamePlay" style="display: none;">
+                <div id="situationDisplay" style="margin-bottom: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <h3 id="instruction">状況を分析して適切な行動を選択してください</h3>
+                    <div id="situationDescription" style="font-size: 1.2rem; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;"></div>
+                    <div id="timeRemaining" style="font-size: 1rem; color: #ff9800; margin: 10px 0;">残り時間: 0.5秒</div>
+                </div>
+                <div id="choicesGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 500px; margin: 20px auto;">
+                    <!-- Choices will be generated here -->
+                </div>
+                <div id="gameStats" style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <div style="text-align: center;"><div>判断回数</div><div id="totalJudgments" style="font-size: 1.5rem; font-weight: bold; color: #4caf50;">0</div></div>
+                    <div style="text-align: center;"><div>正解数</div><div id="correctJudgments" style="font-size: 1.5rem; font-weight: bold;">0</div></div>
+                    <div style="text-align: center;"><div>判断精度</div><div id="accuracy" style="font-size: 1.5rem; font-weight: bold; color: #ff9800;">0%</div></div>
+                    <div style="text-align: center;"><div>平均時間</div><div id="avgTime" style="font-size: 1.5rem; font-weight: bold;">0.0s</div></div>
+                </div>
+            </div>
+            <div id="gameStart">
+                <div class="demo-icon">⚡</div>
+                <div class="demo-text">戦闘状況を瞬時に分析し、最適な行動を選択しよう！<br>0.5秒以内の判断実行で戦術的思考力を鍛える</div>
+                <div class="feature-list">
+                    <div class="feature-item">⚡ 0.5秒以内の瞬間判断実行</div>
+                    <div class="feature-item">🎯 15種類の戦闘状況への対応</div>
+                    <div class="feature-item">📈 連続判断の精度維持</div>
+                    <div class="feature-item">🏆 判断精度90%以上でクリア</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="resetBtn" onclick="resetGame()" style="display: none;">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+        
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item"><div class="skill-icon">⚡</div><h4>瞬間判断</h4><p>状況分析と決断力</p></div>
+                <div class="skill-item"><div class="skill-icon">🧠</div><h4>意思決定</h4><p>迅速で正確な選択</p></div>
+                <div class="skill-item"><div class="skill-icon">🎯</div><h4>状況把握</h4><p>戦闘状況の理解</p></div>
+                <div class="skill-item"><div class="skill-icon">⚔️</div><h4>戦術思考</h4><p>戦略的な行動選択</p></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let gameState = { 
+            level: 1, 
+            experience: 0, 
+            progress: 0, 
+            isPlaying: false, 
+            totalJudgments: 0, 
+            correctJudgments: 0,
+            judgmentTimes: [],
+            currentSituation: null,
+            situationStartTime: null,
+            situations: []
+        };
+
+        // Initialize situations
+        const combatSituations = [
+            { description: "敵が右から攻撃してくる！", choices: ["左に回避", "正面で防御", "カウンター攻撃", "後退"], correct: 0, reason: "右からの攻撃には左回避が最適" },
+            { description: "複数の敵に囲まれている状況", choices: ["一点突破", "回転攻撃", "防御姿勢", "後方退却"], correct: 3, reason: "包囲されたら退却が基本" },
+            { description: "敵の隙が見えた瞬間", choices: ["様子見", "全力攻撃", "挑発", "位置調整"], correct: 1, reason: "隙には全力攻撃で畳み掛ける" },
+            { description: "武器を落としてしまった", choices: ["素手で戦う", "武器を拾う", "逃走", "仲間を呼ぶ"], correct: 2, reason: "武器なしでは逃走が賢明" },
+            { description: "体力が残り僅かの状態", choices: ["最後の一撃", "回復待ち", "退却", "時間稼ぎ"], correct: 2, reason: "体力僅かなら退却が安全" },
+            { description: "敵が強力な攻撃を準備中", choices: ["先制攻撃", "防御準備", "距離を取る", "攻撃を待つ"], correct: 2, reason: "強力攻撃には距離を取るのが最適" },
+            { description: "地形的に不利な場所にいる", choices: ["その場で戦う", "有利な場所へ移動", "罠を仕掛ける", "隠れる"], correct: 1, reason: "不利な場所からは移動が基本" },
+            { description: "敵の攻撃パターンが読めた", choices: ["同じ対応", "カウンター準備", "攻撃継続", "パターン変更"], correct: 1, reason: "パターンが読めたらカウンター準備" },
+            { description: "味方が危険な状況にある", choices: ["自分の戦闘優先", "味方を援護", "指示を出す", "注意を逸らす"], correct: 1, reason: "味方援護が チーム戦の基本" },
+            { description: "戦況が不利になってきた", choices: ["逆転を狙う", "守備重視", "戦術変更", "撤退検討"], correct: 2, reason: "不利な状況では戦術変更が必要" },
+            { description: "敵が罠を仕掛けようとしている", choices: ["罠に引っかかる", "罠を回避", "罠を逆用", "無視して攻撃"], correct: 1, reason: "罠は基本的に回避する" },
+            { description: "時間制限がある戦闘", choices: ["時間稼ぎ", "速攻", "守備", "様子見"], correct: 1, reason: "時間制限があるなら速攻で決める" },
+            { description: "敵との実力差が大きい", choices: ["正面勝負", "技術で対抗", "逃走", "援軍要請"], correct: 3, reason: "実力差が大きければ援軍要請" },
+            { description: "敵が動揺している様子", choices: ["様子見", "畳み掛ける", "説得", "警戒"], correct: 1, reason: "敵の動揺には畳み掛けが効果的" },
+            { description: "環境要因（雨、暗闇等）がある", choices: ["通常通り", "環境利用", "不利と判断", "戦闘延期"], correct: 1, reason: "環境要因は利用するのが戦術的" }
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.totalJudgments = 0;
+            gameState.correctJudgments = 0;
+            gameState.judgmentTimes = [];
+            gameState.situations = [...combatSituations].sort(() => Math.random() - 0.5).slice(0, 15);
+            
+            document.getElementById('gameStart').style.display = 'none';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            
+            generateNewSituation();
+        }
+
+        function generateNewSituation() {
+            if (gameState.totalJudgments >= 15) {
+                endGame();
+                return;
+            }
+
+            gameState.currentSituation = gameState.situations[gameState.totalJudgments];
+            document.getElementById('situationDescription').textContent = gameState.currentSituation.description;
+            
+            // Generate choice buttons
+            const choicesGrid = document.getElementById('choicesGrid');
+            choicesGrid.innerHTML = '';
+            
+            gameState.currentSituation.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'btn';
+                button.textContent = choice;
+                button.style.margin = '5px';
+                button.style.padding = '15px';
+                button.style.fontSize = '1rem';
+                button.onclick = () => makeJudgment(index);
+                choicesGrid.appendChild(button);
+            });
+
+            // Start timer
+            gameState.situationStartTime = Date.now();
+            startTimer();
+        }
+
+        function startTimer() {
+            let timeLeft = 500; // 0.5 seconds in milliseconds
+            const timerElement = document.getElementById('timeRemaining');
+            
+            const countdown = setInterval(() => {
+                timeLeft -= 10;
+                timerElement.textContent = `残り時間: ${(timeLeft / 1000).toFixed(2)}秒`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    makeJudgment(-1); // Time out
+                }
+            }, 10);
+            
+            gameState.currentTimer = countdown;
+        }
+
+        function makeJudgment(choiceIndex) {
+            if (!gameState.isPlaying || !gameState.currentSituation) return;
+            
+            clearInterval(gameState.currentTimer);
+            const reactionTime = Date.now() - gameState.situationStartTime;
+            gameState.judgmentTimes.push(reactionTime);
+            gameState.totalJudgments++;
+
+            let result = '';
+            if (choiceIndex === -1) {
+                result = '時間切れ！0.5秒以内に判断してください';
+            } else if (choiceIndex === gameState.currentSituation.correct) {
+                gameState.correctJudgments++;
+                gameState.experience += 10;
+                result = `正解！ ${gameState.currentSituation.reason}`;
+            } else {
+                result = `不正解。正解は「${gameState.currentSituation.choices[gameState.currentSituation.correct]}」でした。${gameState.currentSituation.reason}`;
+            }
+
+            document.getElementById('instruction').textContent = result;
+            updateStats();
+
+            setTimeout(() => {
+                generateNewSituation();
+            }, 2000);
+        }
+
+        function updateStats() {
+            document.getElementById('totalJudgments').textContent = gameState.totalJudgments;
+            document.getElementById('correctJudgments').textContent = gameState.correctJudgments;
+            
+            const accuracy = gameState.totalJudgments > 0 ? Math.round((gameState.correctJudgments / gameState.totalJudgments) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            const avgTime = gameState.judgmentTimes.length > 0 ? 
+                (gameState.judgmentTimes.reduce((a, b) => a + b, 0) / gameState.judgmentTimes.length / 1000).toFixed(2) : '0.0';
+            document.getElementById('avgTime').textContent = avgTime + 's';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.currentTimer);
+            
+            const accuracy = Math.round((gameState.correctJudgments / gameState.totalJudgments) * 100);
+            const avgTime = (gameState.judgmentTimes.reduce((a, b) => a + b, 0) / gameState.judgmentTimes.length / 1000).toFixed(2);
+            
+            let result = `ゲーム完了！\n\n正解数: ${gameState.correctJudgments}/15\n判断精度: ${accuracy}%\n平均時間: ${avgTime}秒\n\n`;
+            
+            if (accuracy >= 90) {
+                result += "🏆 素晴らしい！瞬間判断マスターです！";
+                gameState.level += 2;
+                gameState.experience += 200;
+            } else if (accuracy >= 75) {
+                result += "🎯 excellent！優秀な判断力です！";
+                gameState.level++;
+                gameState.experience += 100;
+            } else if (accuracy >= 60) {
+                result += "📈 良い結果です！さらなる向上を目指しましょう。";
+                gameState.experience += 50;
+            } else {
+                result += "💪 もう少し練習が必要です。戦術的思考を鍛えましょう。";
+                gameState.experience += 25;
+            }
+            
+            alert(result);
+            resetGame();
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.currentTimer);
+            document.getElementById('gameStart').style.display = 'block';
+            document.getElementById('gamePlay').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('resetBtn').style.display = 'none';
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('experience').textContent = gameState.experience;
+            document.getElementById('progress').textContent = Math.round((gameState.correctJudgments / 15) * 100) + '%';
+        }
+
+        function goBack() { window.close(); window.history.back(); }
+        updateDisplay();
+    </script>
+</body>
+</html>

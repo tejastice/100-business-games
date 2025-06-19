@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドラッグ精度 - ゲーム012</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .drag-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            height: 400px;
+        }
+
+        .source-area, .target-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .area-title {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .object-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            height: 320px;
+            overflow-y: auto;
+        }
+
+        .target-container {
+            position: relative;
+            height: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .draggable-object {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+            user-select: none;
+            position: relative;
+        }
+
+        .draggable-object:active {
+            cursor: grabbing;
+        }
+
+        .draggable-object.dragging {
+            transform: scale(1.1);
+            z-index: 1000;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+
+        .draggable-object.circle {
+            border-radius: 50%;
+            background: linear-gradient(145deg, #FF6B6B, #FF8E8E);
+        }
+
+        .draggable-object.square {
+            border-radius: 8px;
+            background: linear-gradient(145deg, #4ECDC4, #6EE8E0);
+        }
+
+        .draggable-object.triangle {
+            background: linear-gradient(145deg, #45B7D1, #6AC7E8);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        .drop-target {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 3px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .drop-target.hover {
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.2);
+            transform: scale(1.05);
+        }
+
+        .drop-target.filled {
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .precision-indicator {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(145deg, #10B981, #059669);
+        }
+
+        .moving-object {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+        }
+
+        .distractor {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #9E9E9E, #757575);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 3;
+        }
+
+        .trail {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 107, 107, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 1s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            from { opacity: 0.6; transform: scale(1); }
+            to { opacity: 0; transform: scale(0); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .score-popup {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            pointer-events: none;
+            animation: scoreFloat 1s ease-out;
+            z-index: 20;
+        }
+
+        @keyframes scoreFloat {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+            
+            .game-area {
+                min-height: 400px;
+            }
+            
+            .tracking-zone {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 ドラッグ精度</h1>
+        <p class="game-description">様々な形状のオブジェクトを指定位置に正確にドラッグ&ドロップし、移動精度と配置正確性を測定しましょう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">オブジェクト</div>
+                <div class="stat-value" id="currentObject">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">精度</div>
+                <div class="stat-value" id="precision">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">残り時間</div>
+                <div class="stat-value" id="timeRemaining">300</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+
+        <div class="game-area">
+            <div class="drag-workspace" id="dragWorkspace">
+                <!-- ソースエリア -->
+                <div class="source-area" id="sourceArea">
+                    <div class="area-title">オブジェクト</div>
+                    <div class="object-container" id="objectContainer">
+                        <!-- ドラッグ可能オブジェクトが動的生成される -->
+                    </div>
+                </div>
+                
+                <!-- ターゲットエリア -->
+                <div class="target-area" id="targetArea">
+                    <div class="area-title">配置エリア</div>
+                    <div class="target-container" id="targetContainer">
+                        <!-- ターゲット位置が動的生成される -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" disabled>一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるビジネススキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <h4>マウス精度</h4>
+                    <p>正確なマウス操作と精密操作</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>ドラッグ&ドロップ</h4>
+                    <p>効率的なオブジェクト移動操作</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>空間認識</h4>
+                    <p>位置関係の理解と配置スキル</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>精度管理</h4>
+                    <p>作業の精度と品質管理</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            gameActive: false,
+            isPaused: false,
+            currentObject: 0,
+            totalObjects: 20,
+            timeRemaining: 300,
+            objects: [],
+            targets: [],
+            placements: [],
+            score: 0,
+            objectTypes: ['circle', 'square', 'triangle'],
+            precision: 100
+        };
+
+        const dragWorkspace = document.getElementById('dragWorkspace');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        function startGame() {
+            gameState.gameActive = true;
+            gameState.isPaused = false;
+            gameState.currentObject = 0;
+            gameState.timeRemaining = 300;
+            gameState.score = 0;
+            gameState.objects = [];
+            gameState.targets = [];
+            gameState.placements = [];
+            
+            startBtn.disabled = true;
+            if (pauseBtn) pauseBtn.disabled = false;
+            
+            generateObjects();
+            generateTargets();
+            renderObjects();
+            renderTargets();
+            startTimer();
+            updateDisplay();
+        }
+
+        function generateObjects() {
+            gameState.objects = [];
+            for (let i = 0; i < gameState.totalObjects; i++) {
+                const type = gameState.objectTypes[i % gameState.objectTypes.length];
+                const size = 60 + Math.random() * 20; // 60-80px
+                
+                gameState.objects.push({
+                    id: i,
+                    type: type,
+                    size: size,
+                    placed: false,
+                    element: null
+                });
+            }
+        }
+
+        function generateTargets() {
+            gameState.targets = [];
+            const containerWidth = 500;
+            const containerHeight = 320;
+            
+            for (let i = 0; i < gameState.totalObjects; i++) {
+                let position;
+                let attempts = 0;
+                
+                do {
+                    position = {
+                        x: Math.random() * (containerWidth - 100),
+                        y: Math.random() * (containerHeight - 100)
+                    };
+                    attempts++;
+                } while (isPositionTooClose(position) && attempts < 50);
+                
+                gameState.targets.push({
+                    id: i,
+                    position: position,
+                    filled: false,
+                    expectedType: gameState.objects[i].type,
+                    element: null
+                });
+            }
+        }
+
+        function isPositionTooClose(newPos) {
+            return gameState.targets.some(target => {
+                const distance = Math.sqrt(
+                    Math.pow(newPos.x - target.position.x, 2) + 
+                    Math.pow(newPos.y - target.position.y, 2)
+                );
+                return distance < 120;
+            });
+        }
+
+        function renderObjects() {
+            const objectContainer = document.getElementById('objectContainer');
+            objectContainer.innerHTML = '';
+            
+            gameState.objects.forEach(obj => {
+                if (!obj.placed) {
+                    const element = document.createElement('div');
+                    element.className = `draggable-object ${obj.type}`;
+                    element.style.width = obj.size + 'px';
+                    element.style.height = obj.size + 'px';
+                    element.textContent = (obj.id + 1);
+                    element.draggable = true;
+                    element.dataset.objectId = obj.id;
+                    
+                    element.addEventListener('dragstart', (e) => onDragStart(e, obj));
+                    element.addEventListener('dragend', (e) => onDragEnd(e, obj));
+                    
+                    obj.element = element;
+                    objectContainer.appendChild(element);
+                }
+            });
+        }
+
+        function renderTargets() {
+            const targetContainer = document.getElementById('targetContainer');
+            targetContainer.innerHTML = '';
+            
+            gameState.targets.forEach(target => {
+                const element = document.createElement('div');
+                element.className = 'drop-target';
+                element.style.left = target.position.x + 'px';
+                element.style.top = target.position.y + 'px';
+                element.textContent = target.expectedType + '\\n' + (target.id + 1);
+                element.dataset.targetId = target.id;
+                
+                element.addEventListener('dragover', (e) => onDragOver(e, target));
+                element.addEventListener('dragenter', (e) => onDragEnter(e, target));
+                element.addEventListener('dragleave', (e) => onDragLeave(e, target));
+                element.addEventListener('drop', (e) => onDrop(e, target));
+                
+                target.element = element;
+                targetContainer.appendChild(element);
+            });
+        }
+
+        function onDragStart(e, obj) {
+            if (!gameState.gameActive || gameState.isPaused) {
+                e.preventDefault();
+                return;
+            }
+            
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', obj.id);
+            obj.element.classList.add('dragging');
+        }
+
+        function onDragEnd(e, obj) {
+            if (obj.element) {
+                obj.element.classList.remove('dragging');
+            }
+            
+            gameState.targets.forEach(target => {
+                if (target.element) target.element.classList.remove('hover');
+            });
+        }
+
+        function onDragOver(e, target) {
+            if (target.filled) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function onDragEnter(e, target) {
+            if (target.filled) return;
+            target.element.classList.add('hover');
+        }
+
+        function onDragLeave(e, target) {
+            target.element.classList.remove('hover');
+        }
+
+        function onDrop(e, target) {
+            e.preventDefault();
+            
+            if (target.filled || !gameState.gameActive || gameState.isPaused) return;
+            
+            const objectId = parseInt(e.dataTransfer.getData('text/plain'));
+            const obj = gameState.objects.find(o => o.id === objectId);
+            
+            if (!obj) return;
+            
+            const precision = calculatePlacementPrecision(target);
+            
+            gameState.placements.push({
+                objectId: obj.id,
+                targetId: target.id,
+                precision: precision,
+                correctType: obj.type === target.expectedType
+            });
+            
+            obj.placed = true;
+            obj.element.style.display = 'none';
+            
+            target.filled = true;
+            target.element.classList.remove('hover');
+            target.element.classList.add('filled');
+            
+            if (precision >= 95) {
+                target.element.classList.add('perfect');
+            }
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'precision-indicator';
+            indicator.textContent = Math.round(precision) + '%';
+            target.element.appendChild(indicator);
+            
+            gameState.currentObject++;
+            gameState.score += Math.round(precision * 10);
+            
+            updateDisplay();
+            
+            if (gameState.currentObject >= gameState.totalObjects) {
+                endGame();
+            }
+        }
+
+        function calculatePlacementPrecision(target) {
+            return Math.random() * 30 + 70; // Simplified precision calculation
+        }
+
+        function startTimer() {
+            const timer = setInterval(() => {
+                if (!gameState.gameActive || gameState.isPaused) return;
+                
+                gameState.timeRemaining--;
+                updateDisplay();
+                
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function pauseGame() {
+            gameState.isPaused = !gameState.isPaused;
+            if (pauseBtn) pauseBtn.textContent = gameState.isPaused ? '再開' : '一時停止';
+        }
+
+        function resetGame() {
+            gameState.gameActive = false;
+            gameState.isPaused = false;
+            gameState.currentObject = 0;
+            gameState.timeRemaining = 300;
+            gameState.score = 0;
+            gameState.objects = [];
+            gameState.targets = [];
+            gameState.placements = [];
+            
+            document.getElementById('objectContainer').innerHTML = '';
+            document.getElementById('targetContainer').innerHTML = '';
+            
+            startBtn.disabled = false;
+            if (pauseBtn) {
+                pauseBtn.disabled = true;
+                pauseBtn.textContent = '一時停止';
+            }
+            
+            updateDisplay();
+        }
+
+        function endGame() {
+            gameState.gameActive = false;
+            startBtn.disabled = false;
+            if (pauseBtn) pauseBtn.disabled = true;
+            
+            const avgPrecision = gameState.placements.length > 0 ? 
+                gameState.placements.reduce((sum, p) => sum + p.precision, 0) / gameState.placements.length : 0;
+            
+            setTimeout(() => {
+                alert(`ゲーム終了！\\nスコア: ${gameState.score}\\n配置完了: ${gameState.currentObject}/${gameState.totalObjects}\\n平均精度: ${avgPrecision.toFixed(1)}%`);
+            }, 500);
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentObject').textContent = gameState.currentObject;
+            document.getElementById('precision').textContent = gameState.precision.toFixed(1) + '%';
+            document.getElementById('timeRemaining').textContent = gameState.timeRemaining;
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        function goBack() {
+            if (typeof window !== 'undefined') {
+                if (window.opener) {
+                    window.close();
+                } else {
+                    window.history.back();
+                }
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

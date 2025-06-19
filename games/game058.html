@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数列パズル - ゲーム058</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .sequence-display {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .sequence-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            color: #333;
+            text-align: center;
+        }
+
+        .sequence-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .sequence-numbers {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .sequence-number {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sequence-unknown {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            color: #f57f17;
+        }
+
+        .sequence-pattern {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .pattern-title {
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        .pattern-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .pattern-item {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+
+        .question-area {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .answer-option.selected {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .answer-option.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+
+        .answer-option.incorrect {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: #f44336;
+        }
+
+        .analysis-area {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .analysis-steps {
+            list-style: decimal;
+            margin-left: 20px;
+        }
+
+        .analysis-steps li {
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .feedback {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .sequence-numbers {
+                gap: 10px;
+            }
+
+            .sequence-number {
+                width: 50px;
+                height: 50px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🔢 数列パズル</h1>
+        <p class="game-description">数列の規則性発見と一般項推定による数学的帰納的思考ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">問題</div>
+                <div class="stat-value" id="currentProblem">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">推定精度</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 25種類の数列を分析し、規則性の発見と一般項の推定を行う</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>数列の最初の数項が表示される</li>
+                        <li>規則性を発見し、次の項を推定する</li>
+                        <li>一般項の形式を理解して正確に予測する</li>
+                    </ul>
+                </li>
+                <li><strong>数列種類:</strong> 等差数列、等比数列、階差数列、フィボナッチ数列、平方数列、立方数列、階乗数列</li>
+                <li><strong>勝利条件:</strong> 25問中、推定精度90%以上（23問以上正解）でクリア</li>
+                <li><strong>評価システム:</strong> 正解: +100点、部分正解: +50点、不正解: -25点</li>
+                <li><strong>プレイのコツ:</strong> 数列の差や比率を計算し、パターンを見つける</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="sequence-display" id="sequenceDisplay">
+                <!-- 数列がここに表示される -->
+            </div>
+
+            <div class="question-area" id="questionArea">
+                <!-- 質問がここに表示される -->
+            </div>
+
+            <div class="feedback" id="feedback">
+                <!-- フィードバックがここに表示される -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="generateNewProblem()">新しい問題</button>
+            <button class="btn primary" onclick="submitAnswer()" id="submitBtn" disabled>回答を提出</button>
+            <button class="btn" onclick="showAnalysis()">規則性分析表示</button>
+            <button class="btn" onclick="resetGame()">ゲームリセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentProblem: 1,
+            totalProblems: 25,
+            correctAnswers: 0,
+            score: 0,
+            currentSequence: null,
+            selectedAnswer: null,
+            isAnswered: false
+        };
+
+        const sequenceTypes = [
+            {
+                type: 'arithmetic',
+                generator: () => {
+                    const first = Math.floor(Math.random() * 20) + 1;
+                    const diff = Math.floor(Math.random() * 10) + 1;
+                    const terms = [];
+                    for (let i = 0; i < 6; i++) {
+                        terms.push(first + i * diff);
+                    }
+                    return {
+                        name: '等差数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = ${first} + (n-1) × ${diff}`,
+                        analysis: [`初項: ${first}`, `公差: ${diff}`, `第6項: ${first} + 5×${diff} = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'geometric',
+                generator: () => {
+                    const first = Math.floor(Math.random() * 5) + 2;
+                    const ratio = Math.floor(Math.random() * 3) + 2;
+                    const terms = [];
+                    for (let i = 0; i < 6; i++) {
+                        terms.push(first * Math.pow(ratio, i));
+                    }
+                    return {
+                        name: '等比数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = ${first} × ${ratio}^(n-1)`,
+                        analysis: [`初項: ${first}`, `公比: ${ratio}`, `第6項: ${first} × ${ratio}^5 = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'square',
+                generator: () => {
+                    const terms = [];
+                    for (let i = 1; i <= 6; i++) {
+                        terms.push(i * i);
+                    }
+                    return {
+                        name: '平方数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = n^2`,
+                        analysis: [`各項: n^2`, `1^2=1, 2^2=4, 3^2=9...`, `第6項: 6^2 = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'cube',
+                generator: () => {
+                    const terms = [];
+                    for (let i = 1; i <= 6; i++) {
+                        terms.push(i * i * i);
+                    }
+                    return {
+                        name: '立方数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = n^3`,
+                        analysis: [`各項: n^3`, `1^3=1, 2^3=8, 3^3=27...`, `第6項: 6^3 = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'fibonacci',
+                generator: () => {
+                    const terms = [1, 1];
+                    for (let i = 2; i < 6; i++) {
+                        terms.push(terms[i-1] + terms[i-2]);
+                    }
+                    return {
+                        name: 'フィボナッチ数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = a_(n-1) + a_(n-2)`,
+                        analysis: [`各項: 前2項の和`, `1+1=2, 1+2=3, 2+3=5...`, `第6項: 5+8 = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'triangular',
+                generator: () => {
+                    const terms = [];
+                    for (let i = 1; i <= 6; i++) {
+                        terms.push(i * (i + 1) / 2);
+                    }
+                    return {
+                        name: '三角数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = n(n+1)/2`,
+                        analysis: [`各項: n(n+1)/2`, `1×2/2=1, 2×3/2=3...`, `第6項: 6×7/2 = ${terms[5]}`]
+                    };
+                }
+            },
+            {
+                type: 'factorial',
+                generator: () => {
+                    const terms = [];
+                    for (let i = 1; i <= 6; i++) {
+                        let factorial = 1;
+                        for (let j = 1; j <= i; j++) {
+                            factorial *= j;
+                        }
+                        terms.push(factorial);
+                    }
+                    return {
+                        name: '階乗数列',
+                        terms: terms.slice(0, 5),
+                        nextTerm: terms[5],
+                        rule: `a_n = n!`,
+                        analysis: [`各項: n!`, `1!=1, 2!=2, 3!=6...`, `第6項: 6! = ${terms[5]}`]
+                    };
+                }
+            }
+        ];
+
+        function initializeGame() {
+            resetGameState();
+            generateNewProblem();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentProblem: 1,
+                totalProblems: 25,
+                correctAnswers: 0,
+                score: 0,
+                currentSequence: null,
+                selectedAnswer: null,
+                isAnswered: false
+            };
+        }
+
+        function generateNewProblem() {
+            if (gameState.currentProblem > gameState.totalProblems) {
+                endGame();
+                return;
+            }
+
+            // ランダムな数列タイプを選択
+            const sequenceType = sequenceTypes[Math.floor(Math.random() * sequenceTypes.length)];
+            gameState.currentSequence = sequenceType.generator();
+            
+            gameState.selectedAnswer = null;
+            gameState.isAnswered = false;
+            
+            displaySequence();
+            displayQuestion();
+            hideFeedback();
+            updateDisplay();
+        }
+
+        function displaySequence() {
+            const sequenceDisplay = document.getElementById('sequenceDisplay');
+            const sequence = gameState.currentSequence;
+            
+            sequenceDisplay.innerHTML = `
+                <div class="sequence-container">
+                    <div class="sequence-title">🔢 数列パターン分析</div>
+                    <div class="sequence-numbers">
+                        ${sequence.terms.map((term, index) => 
+                            `<div class="sequence-number">${term}</div>`
+                        ).join('')}
+                        <div class="sequence-number sequence-unknown">?</div>
+                    </div>
+                </div>
+                
+                <div class="sequence-pattern">
+                    <div class="pattern-title">📊 数列の特性</div>
+                    <div class="pattern-analysis">
+                        <div class="pattern-item">項数: ${sequence.terms.length + 1}</div>
+                        <div class="pattern-item">最初の項: ${sequence.terms[0]}</div>
+                        <div class="pattern-item">最新の項: ${sequence.terms[sequence.terms.length - 1]}</div>
+                        <div class="pattern-item">推定対象: 第${sequence.terms.length + 1}項</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayQuestion() {
+            const questionArea = document.getElementById('questionArea');
+            const sequence = gameState.currentSequence;
+            
+            // 選択肢を生成
+            const options = generateOptions(sequence);
+            
+            questionArea.innerHTML = `
+                <div class="question-text">この数列の次の項（第6項）は何ですか？</div>
+                <div class="answer-options" id="answerOptions">
+                    ${options.map((option, index) => 
+                        `<div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                            ${option}
+                        </div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function generateOptions(sequence) {
+            const correct = sequence.nextTerm;
+            let options = [correct];
+            
+            // 各数列タイプに応じた間違った選択肢を生成
+            for (let i = 0; i < 3; i++) {
+                let wrong;
+                if (sequence.name === 'フィボナッチ数列') {
+                    // フィボナッチの場合、近い値を生成
+                    wrong = correct + Math.floor(Math.random() * 10) - 5;
+                } else if (sequence.name === '階乗数列') {
+                    // 階乗の場合、倍数関係の値を生成
+                    wrong = Math.floor(correct * (0.5 + Math.random()));
+                } else {
+                    // その他の場合、±30%の範囲で生成
+                    const variation = (Math.random() - 0.5) * 0.6;
+                    wrong = Math.floor(correct * (1 + variation));
+                }
+                
+                // 負の数を避け、重複を避ける
+                wrong = Math.max(1, wrong);
+                if (!options.includes(wrong)) {
+                    options.push(wrong);
+                }
+            }
+            
+            return shuffleArray(options);
+        }
+
+        function selectAnswer(index) {
+            if (gameState.isAnswered) return;
+            
+            // 全ての選択肢から選択状態を削除
+            document.querySelectorAll('.answer-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 選択された選択肢をハイライト
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+            
+            gameState.selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function submitAnswer() {
+            if (gameState.selectedAnswer === null || gameState.isAnswered) return;
+            
+            gameState.isAnswered = true;
+            
+            const options = Array.from(document.querySelectorAll('.answer-option')).map(el => parseInt(el.textContent.trim()));
+            const selectedOption = options[gameState.selectedAnswer];
+            const correctAnswer = gameState.currentSequence.nextTerm;
+            
+            const isCorrect = selectedOption === correctAnswer;
+            
+            // 回答の表示を更新
+            document.querySelectorAll('.answer-option').forEach((option, index) => {
+                const optionValue = parseInt(option.textContent.trim());
+                if (optionValue === correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === gameState.selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // スコアと統計の更新
+            if (isCorrect) {
+                gameState.correctAnswers++;
+                gameState.score += 100;
+                showFeedback(true, `正解です！${gameState.currentSequence.name}の規則性を正確に理解できました。`);
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+                showFeedback(false, `不正解です。正解は「${correctAnswer}」でした。これは${gameState.currentSequence.name}です。`);
+            }
+            
+            gameState.currentProblem++;
+            document.getElementById('submitBtn').disabled = true;
+            
+            updateDisplay();
+            
+            // 次の問題への自動進行
+            setTimeout(() => {
+                generateNewProblem();
+            }, 3000);
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">
+                    ${isCorrect ? '✅ 正解' : '❌ 不正解'}
+                </div>
+                <div>${message}</div>
+            `;
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function showAnalysis() {
+            if (!gameState.currentSequence) return;
+            
+            const analysisHTML = `
+                <div class="analysis-area">
+                    <h4>🔍 規則性分析</h4>
+                    <div><strong>数列名:</strong> ${gameState.currentSequence.name}</div>
+                    <div><strong>一般項:</strong> ${gameState.currentSequence.rule}</div>
+                    <div style="margin-top: 10px;"><strong>分析手順:</strong></div>
+                    <ol class="analysis-steps">
+                        ${gameState.currentSequence.analysis.map(step => `<li>${step}</li>`).join('')}
+                    </ol>
+                </div>
+            `;
+            
+            const sequenceDisplay = document.getElementById('sequenceDisplay');
+            if (!sequenceDisplay.querySelector('.analysis-area')) {
+                sequenceDisplay.innerHTML += analysisHTML;
+            }
+        }
+
+        function resetGame() {
+            if (confirm('ゲームをリセットしますか？進行状況が失われます。')) {
+                initializeGame();
+            }
+        }
+
+        function endGame() {
+            const accuracy = ((gameState.correctAnswers / gameState.totalProblems) * 100).toFixed(1);
+            const passed = accuracy >= 90;
+            
+            let message = `🎊 数列パズルゲーム完了！\n\n`;
+            message += `正解数: ${gameState.correctAnswers} / ${gameState.totalProblems}\n`;
+            message += `推定精度: ${accuracy}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な数学的帰納的思考力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n90%以上の推定精度を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentProblem').textContent = Math.min(gameState.currentProblem, gameState.totalProblems);
+            document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.currentProblem > 1 ? 
+                ((gameState.correctAnswers / (gameState.currentProblem - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const progress = ((gameState.currentProblem - 1) / gameState.totalProblems) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

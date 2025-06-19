@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶パズル - ゲーム050</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .memory-phase, .recall-phase {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .memory-timer {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffc107;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .memory-items {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .memory-item {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .recall-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .recall-slot {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recall-slot:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .recall-slot.correct {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .recall-slot.incorrect {
+            background: rgba(244, 67, 54, 0.7);
+            border-color: #f44336;
+        }
+
+        .recall-status {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .item-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .selectable-item {
+            background: rgba(255, 193, 7, 0.3);
+            border: 2px solid #ffc107;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .selectable-item:hover {
+            background: rgba(255, 193, 7, 0.5);
+            transform: scale(1.05);
+        }
+
+        .selectable-item.used {
+            background: rgba(150, 150, 150, 0.5);
+            border-color: #999;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .logic-grid {
+                grid-template-columns: repeat(4, 50px);
+            }
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧩 記憶パズル</h1>
+        <p class="game-description">記憶力と論理力を組み合わせる - 情報保持・活用能力ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>🎯 ゲームルール</h4>
+            <p>・30個の情報要素を記憶しよう</p>
+            <p>・時間経過後に正確に再現しよう</p>
+            <p>・論理的順序で組み立てよう</p>
+            <p>・再現率85%以上でクリア達成</p>
+        </div>
+
+        <div class="game-area">
+            <div class="memory-phase" id="memoryPhase">
+                <h4>🧠 記憶フェーズ</h4>
+                <div class="memory-timer" id="memoryTimer">30</div>
+                <div class="memory-items" id="memoryItems"></div>
+            </div>
+            
+            <div class="recall-phase" id="recallPhase" style="display: none;">
+                <h4>🎯 再現フェーズ</h4>
+                <div class="recall-grid" id="recallGrid"></div>
+                <div class="recall-status" id="recallStatus"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startMemoryPhase()">記憶開始</button>
+            <button class="btn" id="recallBtn" onclick="startRecallPhase()" style="display: none;">再現開始</button>
+            <button class="btn" onclick="checkMemory()">記憶チェック</button>
+            <button class="btn" onclick="newMemoryGame()">新しいゲーム</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            correct: 0,
+            totalQuestions: 0,
+            memoryItems: [],
+            recallItems: [],
+            currentPhase: 'ready', // ready, memory, recall, complete
+            memoryTimeLeft: 30,
+            selectedSlot: null
+        };
+
+        function initializeGame() {
+            generateMemoryItems();
+            updateDisplay();
+            resetToReadyState();
+        }
+
+        function generateMemoryItems() {
+            gameState.totalQuestions++;
+            gameState.memoryItems = [];
+            gameState.recallItems = [];
+            
+            // Generate 30 diverse memory items
+            const itemTypes = [
+                { type: 'numbers', items: Array.from({length: 10}, (_, i) => i.toString()) },
+                { type: 'letters', items: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') },
+                { type: 'colors', items: ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫', '⚪'] },
+                { type: 'shapes', items: ['▲', '●', '■', '◆', '★', '♠', '♥', '♣', '♦'] },
+                { type: 'emojis', items: ['😀', '😂', '🥰', '🤔', '😎', '🥳', '😴', '🤯', '🥺'] }
+            ];
+            
+            for(let i = 0; i < 30; i++) {
+                const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+                const randomItem = randomType.items[Math.floor(Math.random() * randomType.items.length)];
+                gameState.memoryItems.push(randomItem);
+            }
+        }
+
+        function resetToReadyState() {
+            gameState.currentPhase = 'ready';
+            gameState.memoryTimeLeft = 30;
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('recallBtn').style.display = 'none';
+            document.getElementById('memoryPhase').style.display = 'block';
+            document.getElementById('recallPhase').style.display = 'none';
+            renderMemoryItems();
+        }
+
+        function renderMemoryItems() {
+            const container = document.getElementById('memoryItems');
+            container.innerHTML = '';
+            
+            gameState.memoryItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'memory-item';
+                div.textContent = item;
+                container.appendChild(div);
+            });
+        }
+
+        function startMemoryPhase() {
+            if(gameState.currentPhase !== 'ready') return;
+            
+            gameState.currentPhase = 'memory';
+            gameState.memoryTimeLeft = 30;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('recallBtn').style.display = 'inline-block';
+            
+            const timer = setInterval(() => {
+                gameState.memoryTimeLeft--;
+                document.getElementById('memoryTimer').textContent = gameState.memoryTimeLeft;
+                
+                if(gameState.memoryTimeLeft <= 0) {
+                    clearInterval(timer);
+                    startRecallPhase();
+                }
+            }, 1000);
+        }
+
+        function startRecallPhase() {
+            gameState.currentPhase = 'recall';
+            document.getElementById('memoryPhase').style.display = 'none';
+            document.getElementById('recallPhase').style.display = 'block';
+            document.getElementById('recallBtn').style.display = 'none';
+            
+            renderRecallGrid();
+            renderItemSelection();
+        }
+
+        function renderRecallGrid() {
+            const container = document.getElementById('recallGrid');
+            container.innerHTML = '';
+            
+            for(let i = 0; i < 30; i++) {
+                const div = document.createElement('div');
+                div.className = 'recall-slot';
+                div.dataset.index = i;
+                div.textContent = gameState.recallItems[i] || '?';
+                div.addEventListener('click', () => selectRecallSlot(i));
+                container.appendChild(div);
+            }
+        }
+
+        function renderItemSelection() {
+            const container = document.getElementById('recallPhase');
+            
+            // Remove existing selection if any
+            const existingSelection = container.querySelector('.item-selection');
+            if(existingSelection) existingSelection.remove();
+            
+            const selectionDiv = document.createElement('div');
+            selectionDiv.className = 'item-selection';
+            
+            // Create selection from all unique items in memory
+            const uniqueItems = [...new Set(gameState.memoryItems)];
+            
+            uniqueItems.forEach(item => {
+                const button = document.createElement('button');
+                button.className = 'selectable-item';
+                button.textContent = item;
+                button.addEventListener('click', () => selectItem(item));
+                selectionDiv.appendChild(button);
+            });
+            
+            container.appendChild(selectionDiv);
+        }
+
+        function selectRecallSlot(index) {
+            gameState.selectedSlot = index;
+            
+            // Highlight selected slot
+            document.querySelectorAll('.recall-slot').forEach(slot => {
+                slot.style.background = 'rgba(255, 255, 255, 0.2)';
+            });
+            
+            const selectedSlot = document.querySelector(`[data-index="${index}"]`);
+            selectedSlot.style.background = 'rgba(255, 193, 7, 0.5)';
+        }
+
+        function selectItem(item) {
+            if(gameState.selectedSlot === null) {
+                alert('まず配置したいスロットを選択してください');
+                return;
+            }
+            
+            gameState.recallItems[gameState.selectedSlot] = item;
+            renderRecallGrid();
+            gameState.selectedSlot = null;
+        }
+
+        function checkMemory() {
+            if(gameState.currentPhase !== 'recall') {
+                alert('まず記憶フェーズと再現フェーズを完了してください');
+                return;
+            }
+            
+            let correctCount = 0;
+            
+            for(let i = 0; i < 30; i++) {
+                const recalled = gameState.recallItems[i];
+                const original = gameState.memoryItems[i];
+                
+                const slot = document.querySelector(`[data-index="${i}"]`);
+                
+                if(recalled === original) {
+                    correctCount++;
+                    slot.classList.add('correct');
+                } else {
+                    slot.classList.add('incorrect');
+                }
+            }
+            
+            const accuracy = (correctCount / 30) * 100;
+            const isSuccess = accuracy >= 85;
+            
+            if(isSuccess) {
+                gameState.correct++;
+                gameState.score += Math.floor(accuracy * gameState.level);
+                alert(`🎉 成功です！\n正解率: ${accuracy.toFixed(1)}%\nスコア: +${Math.floor(accuracy * gameState.level)}点`);
+                
+                if(gameState.correct % 3 === 0) {
+                    gameState.level++;
+                    alert(`レベルアップ！ レベル${gameState.level}になりました！`);
+                }
+            } else {
+                alert(`❌ 再現率${accuracy.toFixed(1)}%で基準の85%に届きませんでした。\n正解: ${correctCount}/30`);
+            }
+            
+            updateDisplay();
+            document.getElementById('recallStatus').textContent = `正解率: ${accuracy.toFixed(1)}% (${correctCount}/30)`;
+        }
+
+        function newMemoryGame() {
+            generateMemoryItems();
+            resetToReadyState();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = `${gameState.correct}/${gameState.totalQuestions}`;
+        }
+
+        function resetGame() {
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.totalQuestions = 0;
+            generateMemoryItems();
+            resetToReadyState();
+            updateDisplay();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html>

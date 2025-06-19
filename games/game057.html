@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比例関係 - ゲーム057</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .problem-display {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .scenario-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .scenario-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+
+        .proportion-visual {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .proportion-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .proportion-table th,
+        .proportion-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .proportion-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .proportion-formula {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .question-area {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .answer-option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .answer-option.selected {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .answer-option.correct {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+
+        .answer-option.incorrect {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: #f44336;
+        }
+
+        .calculation-area {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #333;
+            text-align: left;
+        }
+
+        .calculation-steps {
+            list-style: decimal;
+            margin-left: 20px;
+        }
+
+        .calculation-steps li {
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .feedback {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">📊 比例関係</h1>
+        <p class="game-description">比例・反比例関係の理解と実践的応用による関係性分析ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">問題</div>
+                <div class="stat-value" id="currentProblem">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correctAnswers">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">応用率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 15の比例問題を解決し、実生活場面での応用と比例定数の算出を行う</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>各問題で実際的なシナリオが提示される</li>
+                        <li>比例・反比例関係を識別し分析する</li>
+                        <li>比例定数を正確に算出する</li>
+                    </ul>
+                </li>
+                <li><strong>問題種類:</strong> 直接比例、反比例、実生活応用、定数算出、関係性分析</li>
+                <li><strong>勝利条件:</strong> 15問中、応用率85%以上（13問以上正解）でクリア</li>
+                <li><strong>評価システム:</strong> 正解: +100点、部分正解: +50点、不正解: -25点</li>
+                <li><strong>プレイのコツ:</strong> 比例関係の基本式を理解し、実生活への応用を意識する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="problem-display" id="problemDisplay">
+                <!-- 比例問題がここに表示される -->
+            </div>
+
+            <div class="question-area" id="questionArea">
+                <!-- 質問がここに表示される -->
+            </div>
+
+            <div class="feedback" id="feedback">
+                <!-- フィードバックがここに表示される -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="generateNewProblem()">新しい問題</button>
+            <button class="btn primary" onclick="submitAnswer()" id="submitBtn" disabled>回答を提出</button>
+            <button class="btn" onclick="showCalculation()">計算過程を表示</button>
+            <button class="btn" onclick="resetGame()">ゲームリセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentProblem: 1,
+            totalProblems: 15,
+            correctAnswers: 0,
+            score: 0,
+            currentQuestion: null,
+            selectedAnswer: null,
+            isAnswered: false
+        };
+
+        const proportionProblems = [
+            {
+                type: 'direct_proportion',
+                generator: () => {
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const x = Math.floor(Math.random() * 10) + 5;
+                    const y = a * x;
+                    return {
+                        scenario: "商品価格の比例関係",
+                        description: `商品Aの価格は個数に比例します。${x}個で${y}円でした。`,
+                        question: `15個買うといくらになりますか？`,
+                        data: { a, x, y, target: 15 },
+                        answer: a * 15,
+                        calculation: () => `比例定数: ${y}÷${x} = ${a}円/個\n15個の価格: ${a} × 15 = ${a * 15}円`
+                    };
+                }
+            },
+            {
+                type: 'inverse_proportion',
+                generator: () => {
+                    const k = (Math.floor(Math.random() * 5) + 3) * 12;
+                    const x = Math.floor(Math.random() * 4) + 3;
+                    const y = k / x;
+                    return {
+                        scenario: "作業時間と人数の反比例",
+                        description: `ある作業を${x}人で行うと${y}時間かかります。`,
+                        question: `6人で行うと何時間かかりますか？`,
+                        data: { k, x, y, target: 6 },
+                        answer: k / 6,
+                        calculation: () => `反比例定数: ${x} × ${y} = ${k}\n6人での時間: ${k} ÷ 6 = ${k/6}時間`
+                    };
+                }
+            },
+            {
+                type: 'speed_distance',
+                generator: () => {
+                    const speed = Math.floor(Math.random() * 20) + 40;
+                    const time = Math.floor(Math.random() * 4) + 2;
+                    const distance = speed * time;
+                    return {
+                        scenario: "速度と距離の比例関係",
+                        description: `時速${speed}kmで${time}時間走ると${distance}km進みます。`,
+                        question: `同じ速度で5時間走ると何km進みますか？`,
+                        data: { speed, time, distance, target: 5 },
+                        answer: speed * 5,
+                        calculation: () => `速度: ${distance}÷${time} = ${speed}km/h\n5時間での距離: ${speed} × 5 = ${speed * 5}km`
+                    };
+                }
+            },
+            {
+                type: 'density_volume',
+                generator: () => {
+                    const density = (Math.floor(Math.random() * 30) + 20) / 10;
+                    const volume = Math.floor(Math.random() * 10) + 5;
+                    const mass = density * volume;
+                    return {
+                        scenario: "密度と体積の比例関係",
+                        description: `密度${density}g/cm³の物質の体積${volume}cm³の質量は${mass}gです。`,
+                        question: `同じ物質で体積20cm³の質量は何gですか？`,
+                        data: { density, volume, mass, target: 20 },
+                        answer: density * 20,
+                        calculation: () => `密度: ${mass}÷${volume} = ${density}g/cm³\n20cm³の質量: ${density} × 20 = ${density * 20}g`
+                    };
+                }
+            },
+            {
+                type: 'mixture_ratio',
+                generator: () => {
+                    const ratio = Math.floor(Math.random() * 3) + 2;
+                    const water = Math.floor(Math.random() * 50) + 100;
+                    const sugar = water / ratio;
+                    return {
+                        scenario: "混合比率の比例関係",
+                        description: `水${water}mlに砂糖${sugar}gを混ぜて砂糖水を作ります。`,
+                        question: `水300mlの場合、砂糖は何g必要ですか？`,
+                        data: { ratio, water, sugar, target: 300 },
+                        answer: 300 / ratio,
+                        calculation: () => `比率: ${water}:${sugar} = ${ratio}:1\n300mlの砂糖: 300 ÷ ${ratio} = ${300/ratio}g`
+                    };
+                }
+            }
+        ];
+
+        function initializeGame() {
+            resetGameState();
+            generateNewProblem();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentProblem: 1,
+                totalProblems: 15,
+                correctAnswers: 0,
+                score: 0,
+                currentQuestion: null,
+                selectedAnswer: null,
+                isAnswered: false
+            };
+        }
+
+        function generateNewProblem() {
+            if (gameState.currentProblem > gameState.totalProblems) {
+                endGame();
+                return;
+            }
+
+            // ランダムな比例問題を選択
+            const problemType = proportionProblems[Math.floor(Math.random() * proportionProblems.length)];
+            gameState.currentQuestion = problemType.generator();
+            
+            gameState.selectedAnswer = null;
+            gameState.isAnswered = false;
+            
+            displayProblem();
+            displayQuestion();
+            hideFeedback();
+            updateDisplay();
+        }
+
+        function displayProblem() {
+            const problemDisplay = document.getElementById('problemDisplay');
+            const question = gameState.currentQuestion;
+            
+            // 比例関係の表を作成
+            const tableData = generateProportionTable(question);
+            
+            problemDisplay.innerHTML = `
+                <div class="scenario-container">
+                    <div class="scenario-title">📊 ${question.scenario}</div>
+                    <div>${question.description}</div>
+                </div>
+                
+                <div class="proportion-visual">
+                    <h4>📈 比例関係の表</h4>
+                    <table class="proportion-table">
+                        ${tableData}
+                    </table>
+                </div>
+
+                <div class="proportion-formula">
+                    ${getFormulaText(question)}
+                </div>
+            `;
+        }
+
+        function generateProportionTable(question) {
+            const data = question.data;
+            let tableHTML = '';
+            
+            if (question.type === 'direct_proportion' || question.type === 'speed_distance' || 
+                question.type === 'density_volume' || question.type === 'mixture_ratio') {
+                tableHTML = `
+                    <tr><th>x</th><th>y</th></tr>
+                    <tr><td>${data.x || data.time || data.volume || data.water}</td><td>${data.y || data.distance || data.mass || data.sugar}</td></tr>
+                    <tr><td>${data.target}</td><td>?</td></tr>
+                `;
+            } else if (question.type === 'inverse_proportion') {
+                tableHTML = `
+                    <tr><th>人数</th><th>時間</th><th>積</th></tr>
+                    <tr><td>${data.x}</td><td>${data.y}</td><td>${data.k}</td></tr>
+                    <tr><td>${data.target}</td><td>?</td><td>${data.k}</td></tr>
+                `;
+            }
+            
+            return tableHTML;
+        }
+
+        function getFormulaText(question) {
+            if (question.type === 'inverse_proportion') {
+                return 'xy = k (一定) ← 反比例の式';
+            } else {
+                return 'y = ax ← 比例の式';
+            }
+        }
+
+        function displayQuestion() {
+            const questionArea = document.getElementById('questionArea');
+            const question = gameState.currentQuestion;
+            
+            // 選択肢を生成
+            const options = generateOptions(question);
+            
+            questionArea.innerHTML = `
+                <div class="question-text">${question.question}</div>
+                <div class="answer-options" id="answerOptions">
+                    ${options.map((option, index) => 
+                        `<div class="answer-option" onclick="selectAnswer(${index})" data-index="${index}">
+                            ${option}
+                        </div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function generateOptions(question) {
+            const correct = question.answer;
+            let options = [correct];
+            
+            // 単位を含む選択肢を生成
+            const unit = getUnit(question.type);
+            const correctWithUnit = `${correct}${unit}`;
+            options = [correctWithUnit];
+            
+            for (let i = 0; i < 3; i++) {
+                let wrong;
+                if (question.type === 'inverse_proportion') {
+                    wrong = Math.round((correct + (Math.random() - 0.5) * correct * 0.6) * 10) / 10;
+                } else {
+                    wrong = Math.round((correct + (Math.random() - 0.5) * correct * 0.8));
+                }
+                
+                const wrongWithUnit = `${wrong}${unit}`;
+                if (!options.includes(wrongWithUnit)) {
+                    options.push(wrongWithUnit);
+                }
+            }
+            
+            return shuffleArray(options);
+        }
+
+        function getUnit(type) {
+            switch (type) {
+                case 'direct_proportion': return '円';
+                case 'inverse_proportion': return '時間';
+                case 'speed_distance': return 'km';
+                case 'density_volume': return 'g';
+                case 'mixture_ratio': return 'g';
+                default: return '';
+            }
+        }
+
+        function selectAnswer(index) {
+            if (gameState.isAnswered) return;
+            
+            // 全ての選択肢から選択状態を削除
+            document.querySelectorAll('.answer-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 選択された選択肢をハイライト
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+            
+            gameState.selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function submitAnswer() {
+            if (gameState.selectedAnswer === null || gameState.isAnswered) return;
+            
+            gameState.isAnswered = true;
+            
+            const options = Array.from(document.querySelectorAll('.answer-option')).map(el => el.textContent.trim());
+            const selectedOption = options[gameState.selectedAnswer];
+            const correctAnswer = `${gameState.currentQuestion.answer}${getUnit(gameState.currentQuestion.type)}`;
+            
+            const isCorrect = selectedOption === correctAnswer;
+            
+            // 回答の表示を更新
+            document.querySelectorAll('.answer-option').forEach((option, index) => {
+                const optionText = option.textContent.trim();
+                if (optionText === correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === gameState.selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // スコアと統計の更新
+            if (isCorrect) {
+                gameState.correctAnswers++;
+                gameState.score += 100;
+                showFeedback(true, '正解です！比例関係の理解が正確でした。');
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+                showFeedback(false, `不正解です。正解は「${correctAnswer}」でした。`);
+            }
+            
+            gameState.currentProblem++;
+            document.getElementById('submitBtn').disabled = true;
+            
+            updateDisplay();
+            
+            // 次の問題への自動進行
+            setTimeout(() => {
+                generateNewProblem();
+            }, 3000);
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">
+                    ${isCorrect ? '✅ 正解' : '❌ 不正解'}
+                </div>
+                <div>${message}</div>
+            `;
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function showCalculation() {
+            if (!gameState.currentQuestion) return;
+            
+            const calculationHTML = `
+                <div class="calculation-area">
+                    <h4>🧮 計算過程</h4>
+                    <div style="white-space: pre-line; font-family: monospace;">
+                        ${gameState.currentQuestion.calculation()}
+                    </div>
+                </div>
+            `;
+            
+            const problemDisplay = document.getElementById('problemDisplay');
+            if (!problemDisplay.querySelector('.calculation-area')) {
+                problemDisplay.innerHTML += calculationHTML;
+            }
+        }
+
+        function resetGame() {
+            if (confirm('ゲームをリセットしますか？進行状況が失われます。')) {
+                initializeGame();
+            }
+        }
+
+        function endGame() {
+            const accuracy = ((gameState.correctAnswers / gameState.totalProblems) * 100).toFixed(1);
+            const passed = accuracy >= 85;
+            
+            let message = `🎊 比例関係ゲーム完了！\n\n`;
+            message += `正解数: ${gameState.correctAnswers} / ${gameState.totalProblems}\n`;
+            message += `応用率: ${accuracy}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な関係性分析能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n85%以上の応用率を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentProblem').textContent = Math.min(gameState.currentProblem, gameState.totalProblems);
+            document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const accuracy = gameState.currentProblem > 1 ? 
+                ((gameState.correctAnswers / (gameState.currentProblem - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const progress = ((gameState.currentProblem - 1) / gameState.totalProblems) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

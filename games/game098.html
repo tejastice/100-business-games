@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武道型 - ゲーム098</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF9800, #FFC107, #FFEB3B, #8BC34A);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #FF9800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #3F51B5, #2196F3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .race-track {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to right, #FFC107 0%, #FF9800 25%, #FF5722 50%, #4CAF50 75%, #2196F3 100%);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #E65100;
+            overflow: hidden;
+        }
+
+        .distance-markers {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .runner-icon {
+            position: absolute;
+            bottom: 30px;
+            left: 2%;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: white;
+            border: 3px solid white;
+            transition: left 1s ease;
+        }
+
+        .energy-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .energy-meter {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .meter-bar {
+            width: 100%;
+            height: 25px;
+            background: #ddd;
+            border-radius: 12px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .energy-fill {
+            background: linear-gradient(90deg, #F44336, #FF9800, #4CAF50);
+        }
+
+        .pace-fill {
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+        }
+
+        .pace-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .pace-btn {
+            background: linear-gradient(45deg, #FF9800, #FFC107);
+            color: white;
+            border: none;
+            padding: 15px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .pace-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(255, 152, 0, 0.4);
+        }
+
+        .pace-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pace-btn.active {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            animation: pulse 1s infinite;
+        }
+
+        .weather-conditions {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .condition-item {
+            background: linear-gradient(45deg, #607D8B, #90A4AE);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #FF9800, #FFC107);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes finish-celebration {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            75% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        .finish-celebration {
+            animation: finish-celebration 0.8s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .pace-controls { grid-template-columns: repeat(2, 1fr); }
+            .energy-panel { grid-template-columns: 1fr; }
+            .game-title { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🥋 武道型</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: 武道精神・形の習得・集中力・礼儀作法・精神統一・修練の継続
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>距離</div>
+                <div id="distance">0km</div>
+            </div>
+            <div class="stat-item">
+                <div>エネルギー</div>
+                <div id="energy">100%</div>
+            </div>
+            <div class="stat-item">
+                <div>現在ペース</div>
+                <div id="currentPace">5.0分/km</div>
+            </div>
+            <div class="stat-item">
+                <div>完走時間</div>
+                <div id="finishTime">---</div>
+            </div>
+        </div>
+
+        <div class="energy-panel">
+            <div class="energy-meter">
+                <h4>⚡ エネルギー残量</h4>
+                <div class="meter-bar">
+                    <div class="meter-fill energy-fill" id="energyFill" style="width: 100%;"></div>
+                </div>
+                <div>残量: <span id="energyLevel">100%</span></div>
+            </div>
+            <div class="energy-meter">
+                <h4>🏃‍♂️ ペース指標</h4>
+                <div class="meter-bar">
+                    <div class="meter-fill pace-fill" id="paceFill" style="width: 50%;"></div>
+                </div>
+                <div>ペース: <span id="paceLevel">普通</span></div>
+            </div>
+        </div>
+
+        <div class="race-track">
+            <div class="distance-markers">
+                <span>スタート</span>
+                <span>10km</span>
+                <span>21km</span>
+                <span>30km</span>
+                <span>ゴール</span>
+            </div>
+            <div class="runner-icon" id="runner">🏃‍♂️</div>
+        </div>
+
+        <div class="pace-controls">
+            <button class="pace-btn" id="slowPace" disabled>🐌 ゆっくり<br>(6.0分/km)</button>
+            <button class="pace-btn" id="normalPace" disabled>🏃‍♂️ 普通<br>(5.0分/km)</button>
+            <button class="pace-btn" id="fastPace" disabled>⚡ 速め<br>(4.0分/km)</button>
+            <button class="pace-btn" id="sprintPace" disabled>🚀 全力<br>(3.5分/km)</button>
+        </div>
+
+        <div class="weather-conditions">
+            <h4>🌤️ レース状況</h4>
+            <div class="conditions-grid">
+                <div class="condition-item">
+                    <div>天候</div>
+                    <div id="weather">晴れ</div>
+                </div>
+                <div class="condition-item">
+                    <div>気温</div>
+                    <div id="temperature">20°C</div>
+                </div>
+                <div class="condition-item">
+                    <div>風向</div>
+                    <div id="wind">無風</div>
+                </div>
+                <div class="condition-item">
+                    <div>コース</div>
+                    <div id="course">平坦</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">レース開始</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+            <button class="control-btn" id="strategyBtn">戦略変更</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>持久力とペース配分・目標達成のための戦略的計画・困難な状況での忍耐力・一定のパフォーマンス維持能力を向上させます</p>
+        </div>
+    </div>
+
+    <script>
+        class MarathonPacing {
+            constructor() {
+                this.distance = 0; // km
+                this.totalDistance = 42.195; // フルマラソン
+                this.energy = 100;
+                this.currentPace = 5.0; // 分/km
+                this.gameActive = false;
+                this.startTime = null;
+                this.updateInterval = null;
+                this.paceMultiplier = 1.0;
+                this.weatherEffect = 1.0;
+                this.targetTime = 4 * 60; // 4時間目標（分）
+                
+                this.paceSettings = {
+                    slow: { pace: 6.0, energy: -0.5, label: 'ゆっくり' },
+                    normal: { pace: 5.0, energy: -1.0, label: '普通' },
+                    fast: { pace: 4.0, energy: -2.0, label: '速め' },
+                    sprint: { pace: 3.5, energy: -4.0, label: '全力' }
+                };
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+                this.updateKataInfo();
+            }
+
+            initializeElements() {
+                this.distanceEl = document.getElementById('distance');
+                this.energyEl = document.getElementById('energy');
+                this.currentPaceEl = document.getElementById('currentPace');
+                this.finishTimeEl = document.getElementById('finishTime');
+                this.energyFillEl = document.getElementById('energyFill');
+                this.energyLevelEl = document.getElementById('energyLevel');
+                this.paceFillEl = document.getElementById('paceFill');
+                this.paceLevelEl = document.getElementById('paceLevel');
+                this.runnerEl = document.getElementById('runner');
+                
+                this.weatherEl = document.getElementById('weather');
+                this.temperatureEl = document.getElementById('temperature');
+                this.windEl = document.getElementById('wind');
+                this.courseEl = document.getElementById('course');
+                
+                this.slowPaceBtn = document.getElementById('slowPace');
+                this.normalPaceBtn = document.getElementById('normalPace');
+                this.fastPaceBtn = document.getElementById('fastPace');
+                this.sprintPaceBtn = document.getElementById('sprintPace');
+                
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.strategyBtn = document.getElementById('strategyBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startRace());
+                this.resetBtn.addEventListener('click', () => this.resetRace());
+                this.strategyBtn.addEventListener('click', () => this.changeStrategy());
+                
+                this.slowPaceBtn.addEventListener('click', () => this.setPace('slow'));
+                this.normalPaceBtn.addEventListener('click', () => this.setPace('normal'));
+                this.fastPaceBtn.addEventListener('click', () => this.setPace('fast'));
+                this.sprintPaceBtn.addEventListener('click', () => this.setPace('sprint'));
+            }
+
+            startRace() {
+                this.gameActive = true;
+                this.startTime = Date.now();
+                this.enablePaceControls();
+                this.setPace('normal'); // デフォルトペース
+                this.startRaceLoop();
+                this.startBtn.textContent = 'レース中...';
+                this.startBtn.disabled = true;
+                this.strategyBtn.disabled = false;
+            }
+
+            startRaceLoop() {
+                this.updateInterval = setInterval(() => {
+                    if (this.gameActive) {
+                        this.updateRace();
+                    }
+                }, 500);
+            }
+
+            updateRace() {
+                // 距離の進行
+                const kmPerUpdate = (1 / this.currentPace) * (0.5 / 60); // 0.5秒間の距離
+                this.distance += kmPerUpdate * this.paceMultiplier * this.weatherEffect;
+                
+                // エネルギーの消費
+                this.updateEnergy();
+                
+                // ランナー位置の更新
+                this.updateRunnerPosition();
+                
+                // ゴール判定
+                if (this.distance >= this.totalDistance) {
+                    this.finishRace();
+                }
+                
+                this.updateDisplay();
+            }
+
+            updateEnergy() {
+                const currentSettings = this.getCurrentPaceSettings();
+                const energyDrain = currentSettings.energy * this.weatherEffect;
+                
+                this.energy = Math.max(0, this.energy + energyDrain);
+                
+                // エネルギー不足時の自動ペース調整
+                if (this.energy < 20 && this.currentPace < 5.5) {
+                    this.setPace('slow');
+                }
+            }
+
+            updateRunnerPosition() {
+                const percentage = Math.min(90, (this.distance / this.totalDistance) * 90);
+                this.runnerEl.style.left = (2 + percentage) + '%';
+            }
+
+            getCurrentPaceSettings() {
+                for (const [key, settings] of Object.entries(this.paceSettings)) {
+                    if (Math.abs(settings.pace - this.currentPace) < 0.1) {
+                        return settings;
+                    }
+                }
+                return this.paceSettings.normal;
+            }
+
+            setPace(paceType) {
+                const settings = this.paceSettings[paceType];
+                if (!settings) return;
+                
+                this.currentPace = settings.pace;
+                this.clearPaceSelection();
+                
+                // ボタンのハイライト
+                const buttons = {
+                    'slow': this.slowPaceBtn,
+                    'normal': this.normalPaceBtn,
+                    'fast': this.fastPaceBtn,
+                    'sprint': this.sprintPaceBtn
+                };
+                
+                buttons[paceType].classList.add('active');
+                this.updatePaceDisplay();
+            }
+
+            clearPaceSelection() {
+                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+                    .forEach(btn => btn.classList.remove('active'));
+            }
+
+            updatePaceDisplay() {
+                const pacePercentage = ((6.0 - this.currentPace) / 2.5) * 100;
+                this.paceFillEl.style.width = Math.max(0, Math.min(100, pacePercentage)) + '%';
+                
+                let paceLabel = '普通';
+                if (this.currentPace >= 5.5) paceLabel = 'ゆっくり';
+                else if (this.currentPace <= 3.8) paceLabel = '全力';
+                else if (this.currentPace <= 4.5) paceLabel = '速め';
+                
+                this.paceLevelEl.textContent = paceLabel;
+            }
+
+            enablePaceControls() {
+                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+                    .forEach(btn => btn.disabled = false);
+            }
+
+            disablePaceControls() {
+                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+                    .forEach(btn => btn.disabled = true);
+                this.clearPaceSelection();
+            }
+
+            finishRace() {
+                this.gameActive = false;
+                clearInterval(this.updateInterval);
+                this.disablePaceControls();
+                
+                const finishTime = (Date.now() - this.startTime) / 1000 / 60; // 分
+                this.runnerEl.classList.add('finish-celebration');
+                
+                const performance = this.evaluatePerformance(finishTime);
+                
+                setTimeout(() => {
+                    alert(`🏆 フルマラソン完走!\n\n完走時間: ${this.formatTime(finishTime)}\n評価: ${performance.rating}\n\n${performance.comment}`);
+                }, 1000);
+                
+                this.finishTimeEl.textContent = this.formatTime(finishTime);
+                this.startBtn.textContent = 'レース開始';
+                this.startBtn.disabled = false;
+                this.strategyBtn.disabled = true;
+            }
+
+            changeStrategy() {
+                // ペース戦略のアドバイス
+                const suggestions = this.getStrategySuggestions();
+                alert(`🏃‍♂️ ペース戦略アドバイス\n\n${suggestions.join('\n\n')}`);
+            }
+
+            getStrategySuggestions() {
+                const suggestions = [];
+                
+                if (this.distance < 10) {
+                    suggestions.push('序盤: 無理をせず、体を温めながら走りましょう');
+                } else if (this.distance < 30) {
+                    suggestions.push('中盤: 一定のペースを保ち、エネルギーを温存しましょう');
+                } else {
+                    suggestions.push('終盤: 残りエネルギーを考慮してラストスパートを!');
+                }
+                
+                if (this.energy < 30) {
+                    suggestions.push('⚠️ エネルギー不足: ペースを落として回復を図りましょう');
+                } else if (this.energy > 70 && this.distance > 20) {
+                    suggestions.push('💪 エネルギー十分: ペースアップを検討してみましょう');
+                }
+                
+                if (this.currentPace < 4.0 && this.energy < 50) {
+                    suggestions.push('🎯 ペース調整: 速すぎるペースはエネルギー切れの原因です');
+                }
+                
+                return suggestions;
+            }
+
+            formatTime(minutes) {
+                const hours = Math.floor(minutes / 60);
+                const mins = Math.floor(minutes % 60);
+                const secs = Math.floor((minutes % 1) * 60);
+                return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            evaluatePerformance(finishTime) {
+                const targetTime = this.targetTime;
+                const energyRemaining = this.energy;
+                
+                if (finishTime <= targetTime * 0.85) {
+                    return { rating: 'エリートランナー', comment: 'サブ3.5の素晴らしい記録です！' };
+                } else if (finishTime <= targetTime) {
+                    return { rating: '上級ランナー', comment: '目標時間達成！素晴らしい走りでした！' };
+                } else if (finishTime <= targetTime * 1.15) {
+                    return { rating: '中級ランナー', comment: '安定した走りで完走できました' };
+                } else if (finishTime <= targetTime * 1.3) {
+                    return { rating: '初級ランナー', comment: '完走おめでとう！次回はもっと良いタイムを！' };
+                } else {
+                    return { rating: 'チャレンジャー', comment: '完走が何より大切です。次回に向けて練習しましょう' };
+                }
+            }
+
+            resetRace() {
+                this.gameActive = false;
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                }
+                
+                this.distance = 0;
+                this.energy = 100;
+                this.currentPace = 5.0;
+                this.startTime = null;
+                this.paceMultiplier = 1.0;
+                this.weatherEffect = 1.0;
+                
+                this.runnerEl.style.left = '2%';
+                this.runnerEl.classList.remove('finish-celebration');
+                this.disablePaceControls();
+                this.generateWeatherConditions();
+                this.updateDisplay();
+                
+                this.startBtn.textContent = 'レース開始';
+                this.startBtn.disabled = false;
+                this.strategyBtn.disabled = true;
+                this.finishTimeEl.textContent = '---';
+            }
+
+            generateWeatherConditions() {
+                const weathers = ['晴れ', '曇り', '小雨', '強風'];
+                const temperatures = ['15°C', '20°C', '25°C', '30°C'];
+                const winds = ['無風', '追い風', '向かい風', '横風'];
+                const courses = ['平坦', '起伏あり', '上り坂', '下り坂'];
+                
+                this.weatherEl.textContent = weathers[Math.floor(Math.random() * weathers.length)];
+                this.temperatureEl.textContent = temperatures[Math.floor(Math.random() * temperatures.length)];
+                this.windEl.textContent = winds[Math.floor(Math.random() * winds.length)];
+                this.courseEl.textContent = courses[Math.floor(Math.random() * courses.length)];
+                
+                // 天候効果を設定
+                this.weatherEffect = 0.8 + Math.random() * 0.4; // 0.8-1.2の範囲
+            }
+
+            updateDisplay() {
+                this.distanceEl.textContent = this.distance.toFixed(1) + 'km';
+                this.energyEl.textContent = Math.round(this.energy) + '%';
+                this.currentPaceEl.textContent = this.currentPace.toFixed(1) + '分/km';
+                
+                this.energyFillEl.style.width = Math.max(0, this.energy) + '%';
+                this.energyLevelEl.textContent = Math.round(this.energy) + '%';
+                
+                this.updatePaceDisplay();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new MarathonPacing();
+        });
+    </script>
+</body>
+</html>

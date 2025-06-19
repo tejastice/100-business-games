@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゴルフパッティング - ゲーム090</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2E7D32, #4CAF50, #81C784);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2E7D32;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .court {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #4CAF50 0%, #2E7D32 50%, #4CAF50 100%);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #1B5E20;
+            overflow: hidden;
+        }
+
+        .net {
+            position: absolute;
+            top: 45%;
+            left: 0;
+            right: 0;
+            height: 10%;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            border-top: 3px solid #333;
+            border-bottom: 3px solid #333;
+        }
+
+        .ball {
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, #FFEB3B, #F57F17);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 25%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 2px solid #333;
+        }
+
+        .player-area {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .rally-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .rally-btn {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .rally-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .rally-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #2E7D32, #4CAF50);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.4);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .timing-indicator {
+            width: 100%;
+            height: 40px;
+            background: #ddd;
+            border-radius: 20px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timing-zone {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, #F44336, #FFC107, #4CAF50, #FFC107, #F44336);
+            width: 40px;
+            border-radius: 20px;
+            transition: left 0.1s ease;
+        }
+
+        .perfect-zone {
+            position: absolute;
+            left: 45%;
+            width: 10%;
+            height: 100%;
+            background: rgba(76, 175, 80, 0.5);
+            border: 2px dashed #4CAF50;
+        }
+
+        .endurance-bar {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .endurance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+            width: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @keyframes rally-success {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .rally-success {
+            animation: rally-success 0.4s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .game-title {
+                font-size: 2em;
+            }
+            
+            .court {
+                height: 350px;
+            }
+            
+            .rally-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+    
+    <div class="game-container">
+        <h1 class="game-title">⛳ ゴルフパッティング</h1>
+        
+        <div class="business-skill">
+            🎯 ビジネススキル強化: 精密制御・距離感・集中力・微細調整能力
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div>パット数</div>
+                <div id="puttCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div>成功パット</div>
+                <div id="successfulPutts">0</div>
+            </div>
+            <div class="stat-item">
+                <div>精度</div>
+                <div id="accuracy">0%</div>
+            </div>
+            <div class="stat-item">
+                <div>スコア</div>
+                <div id="score">0</div>
+            </div>
+        </div>
+
+        <div class="timing-indicator">
+            <div class="perfect-zone"></div>
+            <div class="timing-zone" id="timingZone"></div>
+        </div>
+        <div style="text-align: center; margin: 5px 0;">⭐ 緑の範囲でタイミングを合わせてください</div>
+
+        <div class="endurance-bar">
+            <div class="endurance-fill" id="enduranceFill"></div>
+        </div>
+        <div style="text-align: center; margin: 5px 0;">💪 持久力: <span id="enduranceLevel">100%</span></div>
+
+        <div class="court">
+            <div class="net"></div>
+            <div class="ball" id="ball"></div>
+            <div class="player-area">🎾 プレイヤーエリア</div>
+        </div>
+
+        <div class="rally-buttons">
+            <button class="rally-btn" id="forehandBtn" disabled>フォアハンド</button>
+            <button class="rally-btn" id="backhandBtn" disabled>バックハンド</button>
+            <button class="rally-btn" id="volleyBtn" disabled>ボレー</button>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">ゲーム開始</button>
+            <button class="control-btn" id="resetBtn">リセット</button>
+            <button class="control-btn" id="practiceBtn">練習モード</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
+            <h3>🏆 ビジネス応用</h3>
+            <p>長時間の会議や集中作業でのタイミング感覚・持続的な集中力・リズムを保った業務遂行能力を向上させます</p>
+        </div>
+    </div>
+
+    <script>
+        class TennisRally {
+            constructor() {
+                this.rallyCount = 0;
+                this.bestRally = 0;
+                this.totalShots = 0;
+                this.successfulShots = 0;
+                this.score = 0;
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.endurance = 100;
+                this.timingPosition = 0;
+                this.timingDirection = 1;
+                this.animationId = null;
+                this.ballPosition = 0;
+                this.expectedShot = 'forehand';
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.rallyCountEl = document.getElementById('rallyCount');
+                this.bestRallyEl = document.getElementById('bestRally');
+                this.accuracyEl = document.getElementById('accuracy');
+                this.scoreEl = document.getElementById('score');
+                this.enduranceFillEl = document.getElementById('enduranceFill');
+                this.enduranceLevelEl = document.getElementById('enduranceLevel');
+                this.timingZoneEl = document.getElementById('timingZone');
+                this.ballEl = document.getElementById('ball');
+                this.forehandBtn = document.getElementById('forehandBtn');
+                this.backhandBtn = document.getElementById('backhandBtn');
+                this.volleyBtn = document.getElementById('volleyBtn');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.practiceBtn = document.getElementById('practiceBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.practiceBtn.addEventListener('click', () => this.togglePracticeMode());
+                this.forehandBtn.addEventListener('click', () => this.makeShot('forehand'));
+                this.backhandBtn.addEventListener('click', () => this.makeShot('forehand')); // バックハンドもフォアハンドと同じ扱い
+                this.volleyBtn.addEventListener('click', () => this.makeShot('volley'));
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.practiceMode = false;
+                this.rallyCount = 0;
+                this.totalShots = 0;
+                this.successfulShots = 0;
+                this.score = 0;
+                this.endurance = 100;
+                this.startTimingAnimation();
+                this.enableRallyButtons();
+                this.nextShot();
+                this.updateDisplay();
+                this.startBtn.textContent = 'プレイ中...';
+                this.startBtn.disabled = true;
+            }
+
+            togglePracticeMode() {
+                this.practiceMode = !this.practiceMode;
+                if (this.practiceMode) {
+                    this.gameActive = true;
+                    this.endurance = 100;
+                    this.startTimingAnimation();
+                    this.enableRallyButtons();
+                    this.nextShot();
+                    this.practiceBtn.textContent = '練習終了';
+                    this.startBtn.disabled = true;
+                } else {
+                    this.gameActive = false;
+                    this.stopTimingAnimation();
+                    this.disableRallyButtons();
+                    this.practiceBtn.textContent = '練習モード';
+                    this.startBtn.disabled = false;
+                }
+                this.updateDisplay();
+            }
+
+            startTimingAnimation() {
+                const animate = () => {
+                    if (!this.gameActive) return;
+
+                    this.timingPosition += this.timingDirection * 2;
+                    if (this.timingPosition >= 90) {
+                        this.timingPosition = 90;
+                        this.timingDirection = -1;
+                    } else if (this.timingPosition <= 0) {
+                        this.timingPosition = 0;
+                        this.timingDirection = 1;
+                    }
+
+                    this.timingZoneEl.style.left = this.timingPosition + '%';
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            stopTimingAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            enableRallyButtons() {
+                this.forehandBtn.disabled = false;
+                this.backhandBtn.disabled = false;
+                this.volleyBtn.disabled = false;
+            }
+
+            disableRallyButtons() {
+                this.forehandBtn.disabled = true;
+                this.backhandBtn.disabled = true;
+                this.volleyBtn.disabled = true;
+            }
+
+            nextShot() {
+                // ボールの位置を変更
+                this.ballPosition = this.ballPosition === 0 ? 1 : 0;
+                const positions = ['25%', '75%'];
+                this.ballEl.style.left = positions[this.ballPosition];
+                
+                // 期待されるショットタイプを決定
+                this.expectedShot = Math.random() < 0.7 ? 'forehand' : 'volley';
+            }
+
+            makeShot(shotType) {
+                if (!this.gameActive) return;
+
+                const timingScore = this.calculateTimingScore();
+                const shotTypeCorrect = shotType === this.expectedShot;
+                const isSuccess = timingScore >= 60 && shotTypeCorrect;
+
+                this.totalShots++;
+
+                if (isSuccess) {
+                    this.successfulShots++;
+                    this.rallyCount++;
+                    this.score += this.rallyCount; // ラリーが続くほど高得点
+                    this.animateSuccess();
+                    this.nextShot();
+                } else {
+                    this.endRally();
+                }
+
+                if (!this.practiceMode) {
+                    this.reduceEndurance();
+                }
+
+                this.updateDisplay();
+            }
+
+            calculateTimingScore() {
+                // 理想的なタイミングは45-55%の範囲
+                const idealTiming = 50;
+                const deviation = Math.abs(this.timingPosition - idealTiming);
+                return Math.max(0, 100 - deviation * 10);
+            }
+
+            animateSuccess() {
+                this.ballEl.classList.add('rally-success');
+                setTimeout(() => {
+                    this.ballEl.classList.remove('rally-success');
+                }, 400);
+            }
+
+            endRally() {
+                this.bestRally = Math.max(this.bestRally, this.rallyCount);
+                this.rallyCount = 0;
+                
+                if (!this.practiceMode && this.endurance <= 0) {
+                    this.endGame();
+                } else {
+                    setTimeout(() => {
+                        if (this.gameActive) {
+                            this.nextShot();
+                        }
+                    }, 1000);
+                }
+            }
+
+            reduceEndurance() {
+                this.endurance = Math.max(0, this.endurance - 2);
+                if (this.endurance <= 0) {
+                    setTimeout(() => this.endGame(), 500);
+                }
+            }
+
+            endGame() {
+                this.gameActive = false;
+                this.stopTimingAnimation();
+                this.disableRallyButtons();
+                this.startBtn.textContent = 'ゲーム開始';
+                this.startBtn.disabled = false;
+
+                const accuracy = this.totalShots > 0 ? ((this.successfulShots / this.totalShots) * 100).toFixed(1) : '0';
+                const enduranceLevel = this.bestRally >= 20 ? '優秀' : this.bestRally >= 10 ? '良好' : '要改善';
+
+                alert(`🏆 ゲーム終了！\n\n最高ラリー数: ${this.bestRally}\n総スコア: ${this.score}\n精度: ${accuracy}%\n\n持久力評価: ${enduranceLevel}\n\nビジネススキル: 長時間集中での${enduranceLevel}なパフォーマンスを発揮しました！`);
+            }
+
+            resetGame() {
+                this.gameActive = false;
+                this.practiceMode = false;
+                this.rallyCount = 0;
+                this.bestRally = 0;
+                this.totalShots = 0;
+                this.successfulShots = 0;
+                this.score = 0;
+                this.endurance = 100;
+                this.timingPosition = 0;
+                this.stopTimingAnimation();
+                this.disableRallyButtons();
+                this.updateDisplay();
+                this.startBtn.textContent = 'ゲーム開始';
+                this.startBtn.disabled = false;
+                this.practiceBtn.textContent = '練習モード';
+            }
+
+            updateDisplay() {
+                this.rallyCountEl.textContent = this.rallyCount;
+                this.bestRallyEl.textContent = this.bestRally;
+                this.scoreEl.textContent = this.score;
+                
+                const accuracy = this.totalShots > 0 ? ((this.successfulShots / this.totalShots) * 100).toFixed(1) : '0';
+                this.accuracyEl.textContent = accuracy + '%';
+                
+                this.enduranceFillEl.style.width = this.endurance + '%';
+                this.enduranceLevelEl.textContent = this.endurance + '%';
+            }
+        }
+
+        // ゲーム開始
+        window.addEventListener('DOMContentLoaded', () => {
+            new TennisRally();
+        });
+    </script>
+</body>
+</html>

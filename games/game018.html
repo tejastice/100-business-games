@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選択操作 - ゲーム018</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selection-field {
+            width: 600px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .selectable-object {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .selectable-object.red {
+            background: radial-gradient(circle, #f44336, #d32f2f);
+        }
+
+        .selectable-object.blue {
+            background: radial-gradient(circle, #2196f3, #1976d2);
+        }
+
+        .selectable-object.green {
+            background: radial-gradient(circle, #4caf50, #388e3c);
+        }
+
+        .selectable-object.yellow {
+            background: radial-gradient(circle, #ffeb3b, #f57f17);
+        }
+
+        .selectable-object.purple {
+            background: radial-gradient(circle, #9c27b0, #7b1fa2);
+        }
+
+        .selectable-object.orange {
+            background: radial-gradient(circle, #ff9800, #f57c00);
+        }
+
+        .selectable-object.selected {
+            border-color: #00bcd4;
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.6);
+            transform: scale(1.1);
+        }
+
+        .selectable-object.correct {
+            animation: correctPulse 0.6s ease-in-out;
+        }
+
+        .selectable-object.incorrect {
+            animation: errorShake 0.6s ease-in-out;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .selection-tools {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tool-btn.active {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .task-indicator {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196f3;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .selection-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .selection-counter {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(45deg, #45a049, #3d8b40);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #4caf50;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+
+            .selection-field {
+                width: 400px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 選択操作</h1>
+        <p class="game-description">複数のオブジェクトから条件に合致するものを迅速かつ正確に選択し、選択技能と判断力を向上させましょう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">選択精度</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">タスク</div>
+                <div class="stat-value" id="currentTask">1/20</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="game-instructions" id="instructions">
+                <h3>🎯 ゲームの遊び方</h3>
+                <p>条件に合致するオブジェクトを選択してください。</p>
+                <p>単一選択、複数選択、範囲選択など様々な選択方法を習得しましょう。</p>
+                <p>選択精度90%以上で20のタスクをクリアすることが目標です。</p>
+                <p>選択技能はビジネスの効率的な判断力と実行力を向上させます。</p>
+            </div>
+
+            <div class="task-indicator" id="taskIndicator" style="display: none;">
+                <span id="taskDescription">赤い四角を全て選択してください</span>
+            </div>
+
+            <div class="selection-tools" id="selectionTools" style="display: none;">
+                <button class="tool-btn active" id="singleTool" onclick="setSelectionMode('single')">単一選択</button>
+                <button class="tool-btn" id="multiTool" onclick="setSelectionMode('multi')">複数選択</button>
+                <button class="tool-btn" id="rangeTool" onclick="setSelectionMode('range')">範囲選択</button>
+                <button class="btn" onclick="clearSelection()">選択解除</button>
+                <button class="btn primary" onclick="submitSelection()">選択確定</button>
+            </div>
+
+            <div class="selection-field" id="selectionField" style="display: none;">
+                <!-- Objects will be dynamically generated here -->
+            </div>
+
+            <div class="selection-info" id="selectionInfo" style="display: none;">
+                <div class="selection-counter">
+                    選択中: <span id="selectedCount">0</span>個
+                </div>
+                <div class="selection-counter">
+                    必要数: <span id="requiredCount">0</span>個
+                </div>
+                <div class="selection-counter">
+                    残り時間: <span id="timeLeft">30</span>秒
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" style="display: none;">一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🎯</div>
+                    <h4>選択精度</h4>
+                    <p>正確に条件を満たす対象を選択</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>判断速度</h4>
+                    <p>素早い選択判断能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🔧</div>
+                    <h4>効率性</h4>
+                    <p>最適な選択方法の活用</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>正確性</h4>
+                    <p>ミスのない確実な選択</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <div class="game-over-content">
+            <h2>🎉 ゲーム終了！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="gameOverMessage">お疲れ様でした！</p>
+            <div style="margin: 20px 0;">
+                <p>最高レベル: <span id="maxLevel">1</span></p>
+                <p>最終精度: <span id="finalAccuracy">100%</span></p>
+                <p>完了タスク: <span id="completedTasks">0</span>/20</p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn primary" onclick="restartGame()">もう一度プレイ</button>
+                <button class="btn" onclick="closeGameOver()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            isPlaying: false,
+            isPaused: false,
+            currentTaskIndex: 0,
+            totalTasks: 20,
+            selectedObjects: [],
+            selectionMode: 'single', // 'single', 'multi', 'range'
+            accuracy: 100,
+            totalSelections: 0,
+            correctSelections: 0,
+            timeLeft: 30,
+            maxLevel: 1,
+            currentTask: null,
+            objects: [],
+            gameTimer: null
+        };
+
+        const taskTypes = [
+            { type: 'color', description: '赤い図形を全て選択', condition: obj => obj.color === 'red' },
+            { type: 'color', description: '青い図形を全て選択', condition: obj => obj.color === 'blue' },
+            { type: 'color', description: '緑の図形を全て選択', condition: obj => obj.color === 'green' },
+            { type: 'shape', description: '四角形を全て選択', condition: obj => obj.shape === 'square' },
+            { type: 'shape', description: '円形を全て選択', condition: obj => obj.shape === 'circle' },
+            { type: 'number', description: '偶数を全て選択', condition: obj => obj.number % 2 === 0 },
+            { type: 'number', description: '奇数を全て選択', condition: obj => obj.number % 2 === 1 },
+            { type: 'size', description: '大きな図形を全て選択', condition: obj => obj.size === 'large' },
+            { type: 'size', description: '小さな図形を全て選択', condition: obj => obj.size === 'small' },
+            { type: 'complex', description: '赤い円を全て選択', condition: obj => obj.color === 'red' && obj.shape === 'circle' },
+            { type: 'complex', description: '青い四角を全て選択', condition: obj => obj.color === 'blue' && obj.shape === 'square' },
+            { type: 'range', description: '5以上の数字を全て選択', condition: obj => obj.number >= 5 },
+            { type: 'range', description: '3以下の数字を全て選択', condition: obj => obj.number <= 3 },
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('taskIndicator').style.display = 'block';
+            document.getElementById('selectionTools').style.display = 'flex';
+            document.getElementById('selectionField').style.display = 'block';
+            document.getElementById('selectionInfo').style.display = 'flex';
+            
+            startNewTask();
+            startTimer();
+            updateDisplay();
+        }
+
+        function pauseGame() {
+            if (gameState.isPlaying) {
+                gameState.isPaused = !gameState.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (gameState.isPaused) {
+                    pauseBtn.textContent = '再開';
+                    clearInterval(gameState.gameTimer);
+                } else {
+                    pauseBtn.textContent = '一時停止';
+                    startTimer();
+                }
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                level: 1,
+                score: 0,
+                isPlaying: false,
+                isPaused: false,
+                currentTaskIndex: 0,
+                totalTasks: 20,
+                selectedObjects: [],
+                selectionMode: 'single',
+                accuracy: 100,
+                totalSelections: 0,
+                correctSelections: 0,
+                timeLeft: 30,
+                maxLevel: Math.max(gameState.maxLevel, gameState.level),
+                currentTask: null,
+                objects: [],
+                gameTimer: null
+            };
+
+            clearInterval(gameState.gameTimer);
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('taskIndicator').style.display = 'none';
+            document.getElementById('selectionTools').style.display = 'none';
+            document.getElementById('selectionField').style.display = 'none';
+            document.getElementById('selectionInfo').style.display = 'none';
+            
+            clearField();
+            updateDisplay();
+        }
+
+        function startNewTask() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            // Generate new task
+            const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)];
+            gameState.currentTask = taskType;
+            gameState.selectedObjects = [];
+            
+            document.getElementById('taskDescription').textContent = taskType.description;
+            
+            // Generate objects
+            generateObjects();
+            
+            // Calculate required count
+            const requiredObjects = gameState.objects.filter(obj => taskType.condition(obj));
+            document.getElementById('requiredCount').textContent = requiredObjects.length;
+            
+            // Reset timer for this task
+            gameState.timeLeft = Math.max(20, 35 - gameState.level);
+            
+            updateDisplay();
+        }
+
+        function generateObjects() {
+            const field = document.getElementById('selectionField');
+            field.innerHTML = '';
+            gameState.objects = [];
+            
+            const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+            const shapes = ['square', 'circle'];
+            const sizes = ['small', 'large'];
+            
+            // Generate 15-25 objects
+            const numObjects = 15 + Math.floor(Math.random() * 11);
+            
+            for (let i = 0; i < numObjects; i++) {
+                const obj = {
+                    id: i,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    shape: shapes[Math.floor(Math.random() * shapes.length)],
+                    size: sizes[Math.floor(Math.random() * sizes.length)],
+                    number: Math.floor(Math.random() * 9) + 1,
+                    x: 40 + Math.random() * 520,
+                    y: 40 + Math.random() * 320
+                };
+                
+                gameState.objects.push(obj);
+                
+                const element = document.createElement('div');
+                element.className = `selectable-object ${obj.color}`;
+                element.id = `obj-${obj.id}`;
+                element.textContent = obj.number;
+                element.style.left = obj.x + 'px';
+                element.style.top = obj.y + 'px';
+                
+                if (obj.shape === 'circle') {
+                    element.style.borderRadius = '50%';
+                }
+                
+                if (obj.size === 'large') {
+                    element.style.width = '50px';
+                    element.style.height = '50px';
+                    element.style.fontSize = '1.2rem';
+                }
+                
+                element.onclick = () => selectObject(obj.id);
+                field.appendChild(element);
+            }
+        }
+
+        function setSelectionMode(mode) {
+            gameState.selectionMode = mode;
+            
+            // Update tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + 'Tool').classList.add('active');
+            
+            // Clear current selection when changing modes
+            clearSelection();
+        }
+
+        function selectObject(objectId) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const element = document.getElementById(`obj-${objectId}`);
+            
+            if (gameState.selectionMode === 'single') {
+                // Clear previous selection and select new one
+                clearSelection();
+                gameState.selectedObjects = [objectId];
+                element.classList.add('selected');
+            } else if (gameState.selectionMode === 'multi') {
+                // Toggle selection
+                if (gameState.selectedObjects.includes(objectId)) {
+                    gameState.selectedObjects = gameState.selectedObjects.filter(id => id !== objectId);
+                    element.classList.remove('selected');
+                } else {
+                    gameState.selectedObjects.push(objectId);
+                    element.classList.add('selected');
+                }
+            }
+            
+            updateSelectionDisplay();
+        }
+
+        function clearSelection() {
+            gameState.selectedObjects = [];
+            document.querySelectorAll('.selectable-object').forEach(obj => {
+                obj.classList.remove('selected');
+            });
+            updateSelectionDisplay();
+        }
+
+        function submitSelection() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const correctObjects = gameState.objects.filter(obj => gameState.currentTask.condition(obj));
+            const correctIds = correctObjects.map(obj => obj.id);
+            
+            const selectedCorrect = gameState.selectedObjects.filter(id => correctIds.includes(id));
+            const selectedIncorrect = gameState.selectedObjects.filter(id => !correctIds.includes(id));
+            const missedCorrect = correctIds.filter(id => !gameState.selectedObjects.includes(id));
+            
+            gameState.totalSelections++;
+            
+            // Calculate accuracy for this selection
+            const isCorrect = selectedIncorrect.length === 0 && missedCorrect.length === 0;
+            
+            if (isCorrect) {
+                gameState.correctSelections++;
+                
+                // Highlight correct selections
+                gameState.selectedObjects.forEach(id => {
+                    document.getElementById(`obj-${id}`).classList.add('correct');
+                });
+                
+                // Calculate score
+                const timeBonus = Math.floor(gameState.timeLeft / 5);
+                const accuracyBonus = selectedCorrect.length * 20;
+                const levelBonus = gameState.level * 10;
+                const points = 100 + timeBonus + accuracyBonus + levelBonus;
+                
+                gameState.score += points;
+                
+                showScorePopup(`+${points}`, '#4caf50');
+            } else {
+                // Highlight incorrect selections
+                selectedIncorrect.forEach(id => {
+                    document.getElementById(`obj-${id}`).classList.add('incorrect');
+                });
+                
+                // Show missed correct objects
+                missedCorrect.forEach(id => {
+                    const element = document.getElementById(`obj-${id}`);
+                    element.style.border = '3px solid #ffc107';
+                });
+                
+                showScorePopup('不正解', '#f44336');
+            }
+            
+            // Update accuracy
+            gameState.accuracy = Math.round((gameState.correctSelections / gameState.totalSelections) * 100);
+            
+            // Move to next task
+            gameState.currentTaskIndex++;
+            
+            setTimeout(() => {
+                if (gameState.currentTaskIndex >= gameState.totalTasks) {
+                    endGame();
+                } else {
+                    // Level up check
+                    if (gameState.currentTaskIndex % 5 === 0) {
+                        gameState.level++;
+                        gameState.maxLevel = Math.max(gameState.maxLevel, gameState.level);
+                        showLevelUpMessage();
+                    }
+                    
+                    setTimeout(() => {
+                        startNewTask();
+                    }, 1000);
+                }
+                
+                updateDisplay();
+            }, 2000);
+        }
+
+        function startTimer() {
+            clearInterval(gameState.gameTimer);
+            
+            gameState.gameTimer = setInterval(() => {
+                if (!gameState.isPaused) {
+                    gameState.timeLeft--;
+                    updateDisplay();
+                    
+                    if (gameState.timeLeft <= 0) {
+                        // Auto-submit with current selection
+                        submitSelection();
+                    }
+                }
+            }, 1000);
+        }
+
+        function showScorePopup(text, color) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = text;
+            popup.style.color = color;
+            popup.style.position = 'absolute';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.fontSize = '2rem';
+            popup.style.fontWeight = 'bold';
+            popup.style.pointerEvents = 'none';
+            popup.style.zIndex = '100';
+            popup.style.animation = 'fadeIn 0.5s ease-in-out, fadeOut 0.5s ease-in-out 1s forwards';
+            
+            document.getElementById('selectionField').appendChild(popup);
+            
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.remove();
+                }
+            }, 1500);
+        }
+
+        function showLevelUpMessage() {
+            const gameArea = document.getElementById('gameArea');
+            const levelUpDiv = document.createElement('div');
+            levelUpDiv.innerHTML = `<h2 style="color: #4caf50; font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 レベル ${gameState.level} 🎉</h2>`;
+            levelUpDiv.style.position = 'absolute';
+            levelUpDiv.style.top = '50%';
+            levelUpDiv.style.left = '50%';
+            levelUpDiv.style.transform = 'translate(-50%, -50%)';
+            levelUpDiv.style.zIndex = '100';
+            levelUpDiv.style.background = 'rgba(0,0,0,0.8)';
+            levelUpDiv.style.padding = '20px';
+            levelUpDiv.style.borderRadius = '15px';
+            
+            gameArea.style.position = 'relative';
+            gameArea.appendChild(levelUpDiv);
+            
+            setTimeout(() => {
+                if (levelUpDiv.parentNode) {
+                    gameArea.removeChild(levelUpDiv);
+                }
+            }, 2000);
+        }
+
+        function updateSelectionDisplay() {
+            document.getElementById('selectedCount').textContent = gameState.selectedObjects.length;
+        }
+
+        function clearField() {
+            document.getElementById('selectionField').innerHTML = '';
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('accuracy').textContent = gameState.accuracy + '%';
+            document.getElementById('currentTask').textContent = `${gameState.currentTaskIndex + 1}/${gameState.totalTasks}`;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            showGameOverScreen();
+        }
+
+        function showGameOverScreen() {
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('maxLevel').textContent = gameState.maxLevel;
+            document.getElementById('finalAccuracy').textContent = gameState.accuracy + '%';
+            document.getElementById('completedTasks').textContent = gameState.currentTaskIndex;
+            
+            let message = '';
+            if (gameState.accuracy >= 90) {
+                message = '🏆 選択操作マスター！ 完璧な選択技能です！';
+            } else if (gameState.accuracy >= 80) {
+                message = '🥈 上級者レベル！ 優れた選択判断力を発揮しました！';
+            } else if (gameState.accuracy >= 70) {
+                message = '🥉 中級者レベル！ 良い選択技能を持っています！';
+            } else {
+                message = '📈 練習を重ねて、選択技能を向上させましょう！';
+            }
+            
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+
+        function restartGame() {
+            closeGameOver();
+            resetGame();
+            startGame();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+                to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

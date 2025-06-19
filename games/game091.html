@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バレーボールスパイク - ゲーム091</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF5722, #FF9800, #FFC107);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .volleyball-game {
+            width: 900px;
+            height: 700px;
+            background: linear-gradient(135deg, #FF5722, #FF9800);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .volleyball-court {
+            width: 90%;
+            height: 400px;
+            margin: 20px auto;
+            background: #8BC34A;
+            border: 3px solid white;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .net {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            transform: translateX(-50%);
+        }
+
+        .court-line {
+            position: absolute;
+            background: white;
+            height: 2px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: #2196F3;
+            border-radius: 20px 20px 5px 5px;
+            bottom: 0;
+            left: 20%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .volleyball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #FFE082;
+            border-radius: 50%;
+            border: 2px solid #FFA000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .power-meter {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            border: 2px solid white;
+        }
+
+        .power-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #4CAF50, #FFC107, #F44336);
+            border-radius: 13px;
+            transition: height 0.1s ease;
+        }
+
+        .power-indicator {
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .angle-control {
+            position: absolute;
+            left: 20px;
+            bottom: 80px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        .angle-pointer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 3px;
+            background: white;
+            transform-origin: left center;
+            transform: translate(0, -50%) rotate(45deg);
+            border-radius: 2px;
+            transition: transform 0.1s ease;
+        }
+
+        .angle-display {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .spike-trail {
+            position: absolute;
+            width: 3px;
+            background: #FFE082;
+            opacity: 0.7;
+            border-radius: 2px;
+            animation: fadeOut 2s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        .target-zone {
+            position: absolute;
+            right: 10%;
+            bottom: 0;
+            width: 60px;
+            height: 60px;
+            background: rgba(76, 175, 80, 0.3);
+            border: 3px dashed #4CAF50;
+            border-radius: 10px;
+            animation: targetPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .spike-btn {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            font-size: 20px;
+            padding: 20px 40px;
+        }
+
+        .spike-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .spike-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #FF5722, #FF9800);
+            color: white;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .score-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .success-rate {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .game-results {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #333;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .block-indicator {
+            position: absolute;
+            right: 40%;
+            bottom: 150px;
+            width: 20px;
+            height: 80px;
+            background: #F44336;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .block-indicator.active {
+            opacity: 0.7;
+            animation: blockMove 1s ease-in-out infinite;
+        }
+
+        @keyframes blockMove {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .instruction-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="volleyball-game">
+        <div class="game-header">
+            <div class="spike-count">スパイク: <span id="spikeCount">0</span>/20</div>
+            <div class="success-count">成功: <span id="successCount">0</span></div>
+            <div class="success-rate-header">成功率: <span id="successRate">0</span>%</div>
+        </div>
+
+        <div class="volleyball-court" id="court">
+            <div class="net"></div>
+            <div class="court-line"></div>
+            <div class="player" id="player">🏐</div>
+            <div class="volleyball" id="volleyball" style="left: 25%; bottom: 70px;">🏐</div>
+            <div class="target-zone" id="targetZone"></div>
+            <div class="block-indicator" id="blockIndicator"></div>
+            
+            <div class="power-meter">
+                <div class="power-fill" id="powerFill" style="height: 0%"></div>
+                <div class="power-indicator" id="powerIndicator">0%</div>
+            </div>
+
+            <div class="angle-control">
+                <div class="angle-pointer" id="anglePointer"></div>
+                <div class="angle-display" id="angleDisplay">45°</div>
+            </div>
+        </div>
+
+        <div class="instruction-panel">
+            <strong>操作方法:</strong> パワーメーターとアングルコントロールでスパイクの威力と角度を調整し、ブロックを回避してターゲットゾーンを狙おう！
+        </div>
+
+        <div class="game-controls">
+            <button id="spikeBtn" class="control-btn spike-btn">🏐 スパイク!</button>
+            <button id="resetBtn" class="control-btn reset-btn">リセット</button>
+        </div>
+
+        <div class="score-display">
+            <div class="success-rate">成功率: <span id="displaySuccessRate">0</span>%</div>
+            <div>平均パワー: <span id="avgPower">0</span>% | 平均角度: <span id="avgAngle">0</span>°</div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+        
+        <div class="game-results" id="results" style="display: none;">
+            <h1 class="game-title">🏐 バレーボールスパイク</h1>
+            <p class="game-description">スパイクタイミングと角度制御による攻撃技術ゲーム</p>
+            <h3>最終結果</h3>
+            <p>成功数: <span id="finalSuccess">0</span>/20</p>
+            <p>成功率: <span id="finalSuccessRate">0</span>%</p>
+            <p>技術評価: <span id="techniqueRating">--</span></p>
+        </div>
+    </div>
+
+    <script>
+        class VolleyballSpikeGame {
+            constructor() {
+                this.spikeCount = 0;
+                this.successCount = 0;
+                this.powerValues = [];
+                this.angleValues = [];
+                this.currentPower = 0;
+                this.currentAngle = 45;
+                this.powerDirection = 1;
+                this.angleDirection = 1;
+                this.gameActive = false;
+                this.animationId = null;
+                
+                this.initElements();
+                this.bindEvents();
+                this.startAnimations();
+            }
+
+            initElements() {
+                this.court = document.getElementById('court');
+                this.player = document.getElementById('player');
+                this.volleyball = document.getElementById('volleyball');
+                this.targetZone = document.getElementById('targetZone');
+                this.blockIndicator = document.getElementById('blockIndicator');
+                this.powerFill = document.getElementById('powerFill');
+                this.powerIndicator = document.getElementById('powerIndicator');
+                this.anglePointer = document.getElementById('anglePointer');
+                this.angleDisplay = document.getElementById('angleDisplay');
+                this.spikeBtn = document.getElementById('spikeBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.results = document.getElementById('results');
+                
+                // Display elements
+                this.spikeCountEl = document.getElementById('spikeCount');
+                this.successCountEl = document.getElementById('successCount');
+                this.successRateEl = document.getElementById('successRate');
+                this.displaySuccessRateEl = document.getElementById('displaySuccessRate');
+                this.avgPowerEl = document.getElementById('avgPower');
+                this.avgAngleEl = document.getElementById('avgAngle');
+            }
+
+            bindEvents() {
+                this.spikeBtn.addEventListener('click', () => this.executeSpike());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+            }
+
+            startAnimations() {
+                this.gameActive = true;
+                this.animate();
+            }
+
+            animate() {
+                if (!this.gameActive) return;
+
+                // パワーメーター
+                this.currentPower += this.powerDirection * 2;
+                if (this.currentPower >= 100) {
+                    this.currentPower = 100;
+                    this.powerDirection = -1;
+                } else if (this.currentPower <= 0) {
+                    this.currentPower = 0;
+                    this.powerDirection = 1;
+                }
+
+                // アングルコントロール
+                this.currentAngle += this.angleDirection * 1;
+                if (this.currentAngle >= 80) {
+                    this.currentAngle = 80;
+                    this.angleDirection = -1;
+                } else if (this.currentAngle <= 10) {
+                    this.currentAngle = 10;
+                    this.angleDirection = 1;
+                }
+
+                this.updateDisplays();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+
+            updateDisplays() {
+                this.powerFill.style.height = this.currentPower + '%';
+                this.powerIndicator.textContent = Math.round(this.currentPower) + '%';
+                this.anglePointer.style.transform = `translate(0, -50%) rotate(${this.currentAngle}deg)`;
+                this.angleDisplay.textContent = Math.round(this.currentAngle) + '°';
+
+                // ゲーム統計
+                this.spikeCountEl.textContent = this.spikeCount;
+                this.successCountEl.textContent = this.successCount;
+                const successRate = this.spikeCount > 0 ? Math.round((this.successCount / this.spikeCount) * 100) : 0;
+                this.successRateEl.textContent = successRate;
+                this.displaySuccessRateEl.textContent = successRate;
+                
+                const avgPower = this.powerValues.length > 0 ? Math.round(this.powerValues.reduce((a, b) => a + b, 0) / this.powerValues.length) : 0;
+                const avgAngle = this.angleValues.length > 0 ? Math.round(this.angleValues.reduce((a, b) => a + b, 0) / this.angleValues.length) : 0;
+                this.avgPowerEl.textContent = avgPower;
+                this.avgAngleEl.textContent = avgAngle;
+            }
+
+            executeSpike() {
+                if (this.spikeCount >= 20) {
+                    this.endGame();
+                    return;
+                }
+
+                this.spikeCount++;
+                this.powerValues.push(this.currentPower);
+                this.angleValues.push(this.currentAngle);
+
+                // ブロック判定（ランダム）
+                const blockActive = Math.random() < 0.3;
+                if (blockActive) {
+                    this.blockIndicator.classList.add('active');
+                    setTimeout(() => {
+                        this.blockIndicator.classList.remove('active');
+                    }, 1000);
+                }
+
+                // スパイク成功判定
+                const success = this.calculateSpikeSuccess(this.currentPower, this.currentAngle, blockActive);
+                
+                this.animateSpike(success);
+                
+                if (success) {
+                    this.successCount++;
+                    this.showSuccessEffect();
+                } else {
+                    this.showFailEffect();
+                }
+
+                this.updateDisplays();
+
+                // 20回完了チェック
+                if (this.spikeCount >= 20) {
+                    setTimeout(() => this.endGame(), 2000);
+                }
+            }
+
+            calculateSpikeSuccess(power, angle, blockActive) {
+                // 理想的なパワー範囲: 60-90%
+                // 理想的な角度範囲: 25-55度
+                
+                const powerScore = power >= 60 && power <= 90 ? 1 : Math.max(0, 1 - Math.abs((power - 75) / 50));
+                const angleScore = angle >= 25 && angle <= 55 ? 1 : Math.max(0, 1 - Math.abs((angle - 40) / 40));
+                
+                let baseSuccess = (powerScore + angleScore) / 2;
+                
+                // ブロック回避
+                if (blockActive) {
+                    // 高角度（50度以上）または低角度（30度以下）でブロック回避可能
+                    const blockAvoid = (angle >= 50 || angle <= 30) ? 1 : 0.3;
+                    baseSuccess *= blockAvoid;
+                }
+                
+                // ランダム要素
+                const randomFactor = 0.8 + Math.random() * 0.4; // 0.8-1.2
+                
+                return (baseSuccess * randomFactor) > 0.6;
+            }
+
+            animateSpike(success) {
+                const ball = this.volleyball;
+                const startX = 25;
+                const startY = 70;
+                const targetX = success ? 85 : 60 + Math.random() * 20;
+                const targetY = success ? 0 : 20 + Math.random() * 40;
+                
+                // スパイク軌道アニメーション
+                let progress = 0;
+                const animateTrajectory = () => {
+                    progress += 0.05;
+                    
+                    if (progress <= 1) {
+                        const currentX = startX + (targetX - startX) * progress;
+                        const currentY = startY - (startY - targetY) * progress - Math.sin(progress * Math.PI) * 30;
+                        
+                        ball.style.left = currentX + '%';
+                        ball.style.bottom = currentY + 'px';
+                        
+                        // 軌跡エフェクト
+                        this.createTrail(currentX + '%', currentY + 'px');
+                        
+                        requestAnimationFrame(animateTrajectory);
+                    } else {
+                        // アニメーション終了後、ボールを元の位置に戻す
+                        setTimeout(() => {
+                            ball.style.left = '25%';
+                            ball.style.bottom = '70px';
+                        }, 500);
+                    }
+                };
+                
+                animateTrajectory();
+            }
+
+            createTrail(x, y) {
+                const trail = document.createElement('div');
+                trail.className = 'spike-trail';
+                trail.style.left = x;
+                trail.style.bottom = y;
+                trail.style.height = '20px';
+                this.court.appendChild(trail);
+                
+                setTimeout(() => {
+                    if (trail.parentNode) {
+                        trail.parentNode.removeChild(trail);
+                    }
+                }, 2000);
+            }
+
+            showSuccessEffect() {
+                this.targetZone.style.background = 'rgba(76, 175, 80, 0.8)';
+                this.targetZone.style.transform = 'scale(1.2)';
+                
+                setTimeout(() => {
+                    this.targetZone.style.background = 'rgba(76, 175, 80, 0.3)';
+                    this.targetZone.style.transform = 'scale(1)';
+                }, 500);
+
+                this.playSuccessSound();
+            }
+
+            showFailEffect() {
+                this.court.style.background = '#FFCDD2';
+                
+                setTimeout(() => {
+                    this.court.style.background = '#8BC34A';
+                }, 300);
+
+                this.playFailSound();
+            }
+
+            playSuccessSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1100, audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            playFailSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            endGame() {
+                this.gameActive = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+
+                const successRate = Math.round((this.successCount / this.spikeCount) * 100);
+                let techniqueRating;
+
+                if (successRate >= 80) techniqueRating = '🏆 スパイクマスター';
+                else if (successRate >= 60) techniqueRating = '🥇 上級者';
+                else if (successRate >= 40) techniqueRating = '🥈 中級者';
+                else if (successRate >= 20) techniqueRating = '🥉 初級者';
+                else techniqueRating = '💪 要練習';
+
+                document.getElementById('finalSuccess').textContent = this.successCount;
+                document.getElementById('finalSuccessRate').textContent = successRate;
+                document.getElementById('techniqueRating').textContent = techniqueRating;
+
+                this.results.style.display = 'block';
+                this.spikeBtn.disabled = true;
+            }
+
+            resetGame() {
+                this.spikeCount = 0;
+                this.successCount = 0;
+                this.powerValues = [];
+                this.angleValues = [];
+                this.currentPower = 0;
+                this.currentAngle = 45;
+                this.powerDirection = 1;
+                this.angleDirection = 1;
+                
+                this.results.style.display = 'none';
+                this.spikeBtn.disabled = false;
+                
+                this.volleyball.style.left = '25%';
+                this.volleyball.style.bottom = '70px';
+                
+                this.updateDisplays();
+                
+                if (!this.gameActive) {
+                    this.startAnimations();
+                }
+            }
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new VolleyballSpikeGame();
+        });
+    </script>
+</body>
+</html>

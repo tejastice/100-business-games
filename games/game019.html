@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フォーム入力 - ゲーム019</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .form-task {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196f3;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .form-field {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .form-field.required label::after {
+            content: ' *';
+            color: #f44336;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .form-field input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-field.error input,
+        .form-field.error select,
+        .form-field.error textarea {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .form-field.valid input,
+        .form-field.valid select,
+        .form-field.valid textarea {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-field.error .error-message {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-grid .form-field {
+            margin-bottom: 0;
+        }
+
+        .form-submit {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .auto-complete {
+            position: relative;
+        }
+
+        .auto-complete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .auto-complete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auto-complete-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .efficiency-meter {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .efficiency-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .efficiency-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .efficiency-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(45deg, #45a049, #3d8b40);
+        }
+
+        .btn.submit {
+            background: linear-gradient(45deg, #2196f3, #1976d2);
+            border-color: #2196f3;
+        }
+
+        .btn.submit:hover {
+            background: linear-gradient(45deg, #1976d2, #1565c0);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #4caf50;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">📝 フォーム入力</h1>
+        <p class="game-description">Webフォームへの効率的なデータ入力を行い、タブ移動・自動補完・バリデーション対応などフォーム操作技能を向上させましょう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">タスク</div>
+                <div class="stat-value" id="currentTask">1/20</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">入力効率</div>
+                <div class="stat-value" id="efficiency">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">エラー率</div>
+                <div class="stat-value" id="errorRate">0%</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="game-instructions" id="instructions">
+                <h3>🎯 ゲームの遊び方</h3>
+                <p>20種類のフォーム入力タスクを効率的に完了してください。</p>
+                <p>タブキーでの移動、自動補完機能、バリデーション対応などの技術を習得しましょう。</p>
+                <p>入力効率90%以上、エラー率5%以下を目指してください。</p>
+                <p>フォーム操作技能はビジネスの生産性向上に直結します。</p>
+            </div>
+
+            <div class="form-container" id="formContainer" style="display: none;">
+                <div class="form-task" id="formTask">
+                    顧客情報を入力してください
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+
+                <form id="gameForm" onsubmit="submitForm(event)">
+                    <!-- Dynamic form fields will be generated here -->
+                </form>
+
+                <div class="efficiency-meter">
+                    <div class="efficiency-item">
+                        <div class="efficiency-value" id="inputSpeed">0</div>
+                        <div class="efficiency-label">文字/分</div>
+                    </div>
+                    <div class="efficiency-item">
+                        <div class="efficiency-value" id="tabUsage">0%</div>
+                        <div class="efficiency-label">Tab使用率</div>
+                    </div>
+                    <div class="efficiency-item">
+                        <div class="efficiency-value" id="autoComplete">0%</div>
+                        <div class="efficiency-label">自動補完利用</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" style="display: none;">一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">📝</div>
+                    <h4>入力精度</h4>
+                    <p>正確なデータ入力技能</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>入力速度</h4>
+                    <p>効率的な高速入力能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚠️</div>
+                    <h4>エラー回避</h4>
+                    <p>バリデーション対応とミス防止</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🔧</div>
+                    <h4>効率性</h4>
+                    <p>タブ移動と自動補完活用</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <div class="game-over-content">
+            <h2>🎉 ゲーム終了！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="gameOverMessage">お疲れ様でした！</p>
+            <div style="margin: 20px 0;">
+                <p>完了タスク: <span id="completedTasks">0</span>/20</p>
+                <p>最終効率: <span id="finalEfficiency">100%</span></p>
+                <p>最終エラー率: <span id="finalErrorRate">0%</span></p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn primary" onclick="restartGame()">もう一度プレイ</button>
+                <button class="btn" onclick="closeGameOver()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            isPaused: false,
+            currentTaskIndex: 0,
+            totalTasks: 20,
+            score: 0,
+            efficiency: 100,
+            errorRate: 0,
+            totalInputs: 0,
+            totalErrors: 0,
+            totalTabUsage: 0,
+            totalAutoComplete: 0,
+            currentForm: null,
+            startTime: null,
+            formStartTime: null,
+            totalCharacters: 0,
+            gameTimer: null
+        };
+
+        const formTemplates = [
+            {
+                title: "顧客情報登録",
+                fields: [
+                    { name: "lastName", label: "姓", type: "text", required: true, autoComplete: ["田中", "佐藤", "鈴木", "高橋", "渡辺"] },
+                    { name: "firstName", label: "名", type: "text", required: true, autoComplete: ["太郎", "花子", "次郎", "美咲", "健太"] },
+                    { name: "email", label: "メールアドレス", type: "email", required: true, validation: "email" },
+                    { name: "phone", label: "電話番号", type: "tel", required: true, validation: "phone" },
+                    { name: "company", label: "会社名", type: "text", required: false, autoComplete: ["株式会社ABC", "XYZ商事", "テック企業"] }
+                ]
+            },
+            {
+                title: "商品注文フォーム",
+                fields: [
+                    { name: "productName", label: "商品名", type: "select", required: true, options: ["ノートPC", "デスクトップPC", "タブレット", "スマートフォン"] },
+                    { name: "quantity", label: "数量", type: "number", required: true, min: 1, max: 99 },
+                    { name: "deliveryDate", label: "希望配送日", type: "date", required: true },
+                    { name: "notes", label: "備考", type: "textarea", required: false }
+                ]
+            },
+            {
+                title: "従業員情報入力",
+                fields: [
+                    { name: "employeeId", label: "社員ID", type: "text", required: true, validation: "employeeId" },
+                    { name: "department", label: "部署", type: "select", required: true, options: ["営業部", "開発部", "人事部", "経理部"] },
+                    { name: "position", label: "役職", type: "text", required: true, autoComplete: ["部長", "課長", "主任", "一般"] },
+                    { name: "startDate", label: "入社日", type: "date", required: true },
+                    { name: "salary", label: "年収", type: "number", required: true, min: 3000000, max: 20000000 }
+                ]
+            }
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            gameState.startTime = Date.now();
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('formContainer').style.display = 'block';
+            
+            generateNewForm();
+            updateDisplay();
+        }
+
+        function pauseGame() {
+            if (gameState.isPlaying) {
+                gameState.isPaused = !gameState.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (gameState.isPaused) {
+                    pauseBtn.textContent = '再開';
+                } else {
+                    pauseBtn.textContent = '一時停止';
+                }
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                isPlaying: false,
+                isPaused: false,
+                currentTaskIndex: 0,
+                totalTasks: 20,
+                score: 0,
+                efficiency: 100,
+                errorRate: 0,
+                totalInputs: 0,
+                totalErrors: 0,
+                totalTabUsage: 0,
+                totalAutoComplete: 0,
+                currentForm: null,
+                startTime: null,
+                formStartTime: null,
+                totalCharacters: 0,
+                gameTimer: null
+            };
+
+            clearInterval(gameState.gameTimer);
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('formContainer').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function generateNewForm() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const template = formTemplates[Math.floor(Math.random() * formTemplates.length)];
+            gameState.currentForm = template;
+            gameState.formStartTime = Date.now();
+            
+            document.getElementById('formTask').textContent = template.title;
+            
+            const form = document.getElementById('gameForm');
+            form.innerHTML = '';
+            
+            template.fields.forEach((field, index) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = `form-field ${field.required ? 'required' : ''}`;
+                
+                const label = document.createElement('label');
+                label.textContent = field.label;
+                label.setAttribute('for', field.name);
+                fieldDiv.appendChild(label);
+                
+                let input;
+                if (field.type === 'select') {
+                    input = document.createElement('select');
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '選択してください';
+                    input.appendChild(defaultOption);
+                    
+                    field.options.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option;
+                        optionElement.textContent = option;
+                        input.appendChild(optionElement);
+                    });
+                } else if (field.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.rows = 3;
+                } else {
+                    input = document.createElement('input');
+                    input.type = field.type;
+                }
+                
+                input.name = field.name;
+                input.id = field.name;
+                input.required = field.required;
+                
+                if (field.min) input.min = field.min;
+                if (field.max) input.max = field.max;
+                
+                // Add event listeners
+                input.addEventListener('input', handleInput);
+                input.addEventListener('keydown', handleKeyDown);
+                input.addEventListener('blur', handleBlur);
+                
+                // Auto-complete setup
+                if (field.autoComplete) {
+                    setupAutoComplete(input, field.autoComplete);
+                }
+                
+                fieldDiv.appendChild(input);
+                
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                fieldDiv.appendChild(errorMessage);
+                
+                form.appendChild(fieldDiv);
+            });
+            
+            // Add submit button
+            const submitDiv = document.createElement('div');
+            submitDiv.className = 'form-submit';
+            const submitBtn = document.createElement('button');
+            submitBtn.type = 'submit';
+            submitBtn.className = 'btn submit';
+            submitBtn.textContent = '送信';
+            submitDiv.appendChild(submitBtn);
+            form.appendChild(submitDiv);
+            
+            // Focus first field
+            const firstInput = form.querySelector('input, select, textarea');
+            if (firstInput) firstInput.focus();
+            
+            updateProgress();
+        }
+
+        function setupAutoComplete(input, options) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'auto-complete';
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+            
+            const list = document.createElement('div');
+            list.className = 'auto-complete-list';
+            wrapper.appendChild(list);
+            
+            input.addEventListener('input', (e) => {
+                const value = e.target.value.toLowerCase();
+                if (value.length < 1) {
+                    list.style.display = 'none';
+                    return;
+                }
+                
+                const filtered = options.filter(option => 
+                    option.toLowerCase().includes(value)
+                );
+                
+                if (filtered.length > 0) {
+                    list.innerHTML = '';
+                    filtered.forEach(option => {
+                        const item = document.createElement('div');
+                        item.className = 'auto-complete-item';
+                        item.textContent = option;
+                        item.onclick = () => {
+                            input.value = option;
+                            list.style.display = 'none';
+                            gameState.totalAutoComplete++;
+                            updateDisplay();
+                        };
+                        list.appendChild(item);
+                    });
+                    list.style.display = 'block';
+                } else {
+                    list.style.display = 'none';
+                }
+            });
+            
+            input.addEventListener('blur', () => {
+                setTimeout(() => list.style.display = 'none', 200);
+            });
+        }
+
+        function handleInput(e) {
+            gameState.totalCharacters++;
+            
+            const field = e.target;
+            const fieldDiv = field.closest('.form-field');
+            
+            // Clear previous validation state
+            fieldDiv.classList.remove('error', 'valid');
+            
+            // Real-time validation
+            if (field.value) {
+                if (validateField(field)) {
+                    fieldDiv.classList.add('valid');
+                } else {
+                    fieldDiv.classList.add('error');
+                }
+            }
+            
+            updateDisplay();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Tab') {
+                gameState.totalTabUsage++;
+                updateDisplay();
+            }
+        }
+
+        function handleBlur(e) {
+            const field = e.target;
+            const fieldDiv = field.closest('.form-field');
+            
+            if (field.required && !field.value) {
+                fieldDiv.classList.add('error');
+                const errorMsg = fieldDiv.querySelector('.error-message');
+                errorMsg.textContent = 'この項目は必須です';
+                gameState.totalErrors++;
+            }
+        }
+
+        function validateField(field) {
+            const value = field.value;
+            const validation = field.dataset.validation || 
+                gameState.currentForm.fields.find(f => f.name === field.name)?.validation;
+            
+            if (!value && field.required) return false;
+            
+            switch (validation) {
+                case 'email':
+                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                case 'phone':
+                    return /^\d{10,11}$/.test(value.replace(/-/g, ''));
+                case 'employeeId':
+                    return /^[A-Z]{2}\d{4}$/.test(value);
+                default:
+                    return true;
+            }
+        }
+
+        function submitForm(e) {
+            e.preventDefault();
+            
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const form = e.target;
+            const fields = form.querySelectorAll('input, select, textarea');
+            let isValid = true;
+            let errors = 0;
+            
+            fields.forEach(field => {
+                const fieldDiv = field.closest('.form-field');
+                fieldDiv.classList.remove('error', 'valid');
+                
+                if (field.required && !field.value) {
+                    fieldDiv.classList.add('error');
+                    const errorMsg = fieldDiv.querySelector('.error-message');
+                    errorMsg.textContent = 'この項目は必須です';
+                    isValid = false;
+                    errors++;
+                } else if (field.value && !validateField(field)) {
+                    fieldDiv.classList.add('error');
+                    const errorMsg = fieldDiv.querySelector('.error-message');
+                    errorMsg.textContent = '入力形式が正しくありません';
+                    isValid = false;
+                    errors++;
+                } else if (field.value) {
+                    fieldDiv.classList.add('valid');
+                }
+            });
+            
+            gameState.totalInputs++;
+            gameState.totalErrors += errors;
+            
+            if (isValid) {
+                // Calculate form completion time
+                const completionTime = (Date.now() - gameState.formStartTime) / 1000;
+                const timeBonus = Math.max(0, 60 - completionTime) * 10;
+                const accuracyBonus = errors === 0 ? 100 : 0;
+                const efficiencyBonus = Math.floor((gameState.totalTabUsage + gameState.totalAutoComplete) / 2) * 5;
+                
+                const points = 200 + timeBonus + accuracyBonus + efficiencyBonus;
+                gameState.score += points;
+                
+                showFormCompletedMessage(points);
+                
+                gameState.currentTaskIndex++;
+                
+                setTimeout(() => {
+                    if (gameState.currentTaskIndex >= gameState.totalTasks) {
+                        endGame();
+                    } else {
+                        generateNewForm();
+                    }
+                }, 2000);
+            } else {
+                showFormErrorMessage(errors);
+            }
+            
+            updateDisplay();
+        }
+
+        function showFormCompletedMessage(points) {
+            const message = document.createElement('div');
+            message.style.position = 'fixed';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.background = 'rgba(76, 175, 80, 0.9)';
+            message.style.color = 'white';
+            message.style.padding = '20px 40px';
+            message.style.borderRadius = '15px';
+            message.style.fontSize = '1.5rem';
+            message.style.fontWeight = 'bold';
+            message.style.zIndex = '1000';
+            message.textContent = `フォーム完了！ +${points}点`;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                document.body.removeChild(message);
+            }, 2000);
+        }
+
+        function showFormErrorMessage(errors) {
+            const message = document.createElement('div');
+            message.style.position = 'fixed';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.background = 'rgba(244, 67, 54, 0.9)';
+            message.style.color = 'white';
+            message.style.padding = '20px 40px';
+            message.style.borderRadius = '15px';
+            message.style.fontSize = '1.2rem';
+            message.style.fontWeight = 'bold';
+            message.style.zIndex = '1000';
+            message.textContent = `${errors}個のエラーがあります`;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                document.body.removeChild(message);
+            }, 2000);
+        }
+
+        function updateProgress() {
+            const progress = (gameState.currentTaskIndex / gameState.totalTasks) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentTask').textContent = `${gameState.currentTaskIndex + 1}/${gameState.totalTasks}`;
+            document.getElementById('score').textContent = gameState.score;
+            
+            // Calculate efficiency
+            const timePlayed = gameState.startTime ? (Date.now() - gameState.startTime) / 1000 / 60 : 1;
+            const inputSpeed = Math.round(gameState.totalCharacters / timePlayed);
+            const tabUsage = gameState.totalInputs > 0 ? Math.round((gameState.totalTabUsage / gameState.totalInputs) * 100) : 0;
+            const autoCompleteUsage = gameState.totalInputs > 0 ? Math.round((gameState.totalAutoComplete / gameState.totalInputs) * 100) : 0;
+            
+            gameState.efficiency = gameState.totalInputs > 0 ? 
+                Math.round(((gameState.totalInputs - gameState.totalErrors) / gameState.totalInputs) * 100) : 100;
+            gameState.errorRate = gameState.totalInputs > 0 ? 
+                Math.round((gameState.totalErrors / gameState.totalInputs) * 100) : 0;
+            
+            document.getElementById('efficiency').textContent = gameState.efficiency + '%';
+            document.getElementById('errorRate').textContent = gameState.errorRate + '%';
+            document.getElementById('inputSpeed').textContent = inputSpeed;
+            document.getElementById('tabUsage').textContent = tabUsage + '%';
+            document.getElementById('autoComplete').textContent = autoCompleteUsage + '%';
+            
+            updateProgress();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            showGameOverScreen();
+        }
+
+        function showGameOverScreen() {
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('completedTasks').textContent = gameState.currentTaskIndex;
+            document.getElementById('finalEfficiency').textContent = gameState.efficiency + '%';
+            document.getElementById('finalErrorRate').textContent = gameState.errorRate + '%';
+            
+            let message = '';
+            if (gameState.efficiency >= 90 && gameState.errorRate <= 5) {
+                message = '🏆 フォーム入力マスター！ 完璧な入力技能です！';
+            } else if (gameState.efficiency >= 80) {
+                message = '🥈 上級者レベル！ 優れたフォーム操作能力を発揮しました！';
+            } else if (gameState.efficiency >= 70) {
+                message = '🥉 中級者レベル！ 良いフォーム入力技能を持っています！';
+            } else {
+                message = '📈 練習を重ねて、フォーム入力技能を向上させましょう！';
+            }
+            
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+
+        function restartGame() {
+            closeGameOver();
+            resetGame();
+            startGame();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

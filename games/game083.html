@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>51戦略 - ゲーム083</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            gap: 20px;
+        }
+
+        .target-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .target-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f1c40f;
+            margin: 10px 0;
+        }
+
+        .hand-area {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .player-hand {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .player-hand.active {
+            background: rgba(255, 255, 0, 0.2);
+            border: 2px solid #f1c40f;
+        }
+
+        .hand-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .cards-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            min-height: 100px;
+            margin: 10px 0;
+        }
+
+        .playing-card {
+            background: white;
+            color: #333;
+            border: 1px solid #333;
+            border-radius: 4px;
+            width: 40px;
+            height: 55px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .playing-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .playing-card.selected {
+            border-color: #f1c40f;
+            border-width: 2px;
+            transform: scale(1.15);
+        }
+
+        .playing-card.red {
+            color: #e74c3c;
+        }
+
+        .playing-card.black {
+            color: #333;
+        }
+
+        .card-value {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .card-suit {
+            font-size: 12px;
+        }
+
+        .hand-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #3498db;
+        }
+
+        .exchange-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .exchange-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+
+        .exchange-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .strategy-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .strategy-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+
+        .strategy-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .hand-area {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .playing-card {
+                width: 30px;
+                height: 42px;
+                font-size: 8px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 51戦略</h1>
+        <p class="game-description">カード交換戦略と手札最適化による計算的思考ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ゲーム数</div>
+                <div class="stat-value" id="gameCount">0/20</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">達成数</div>
+                <div class="stat-value" id="achievementCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">達成率</div>
+                <div class="stat-value" id="achievementRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">交換精度</div>
+                <div class="stat-value" id="exchangeAccuracy">0%</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div id="gameStatus">新しいゲームを開始してください</div>
+        </div>
+
+        <div class="game-board">
+            <div class="target-area">
+                <div class="target-display">目標: 51</div>
+                <div>手札合計を51ぴったりまたは可能な限り近づけよう</div>
+            </div>
+
+            <div class="hand-area">
+                <div class="player-hand active" id="playerArea">
+                    <div class="hand-title">あなたの手札</div>
+                    <div class="cards-display" id="playerCards"></div>
+                    <div class="hand-total">合計: <span id="playerTotal">0</span></div>
+                </div>
+                
+                <div class="player-hand" id="opponentArea">
+                    <div class="hand-title">相手の手札</div>
+                    <div class="cards-display" id="opponentCards"></div>
+                    <div class="hand-total">合計: <span id="opponentTotal">?</span></div>
+                </div>
+            </div>
+
+            <div class="exchange-area">
+                <div class="exchange-title">🔄 カード交換システム</div>
+                <div class="exchange-options">
+                    <div>選択したカードを新しいカードと交換します</div>
+                </div>
+                <div id="exchangeAdvice" class="strategy-content">
+                    カードを選択して交換戦略を確認してください
+                </div>
+            </div>
+        </div>
+
+        <div class="strategy-panel">
+            <div class="strategy-title">🎯 最適化戦略</div>
+            <div class="strategy-content" id="strategyAdvice">
+                新しいゲームを開始してください。手札を51に近づける最適な交換戦略をアドバイスします。
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="exchangeCard()" id="exchangeBtn" disabled>カード交換</button>
+            <button class="btn warning" onclick="analyzeStrategy()">戦略分析</button>
+            <button class="btn" onclick="finishTurn()" id="finishBtn" disabled>ターン終了</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 20ゲーム中85%以上の達成率で51戦略マスター認定</li>
+                <li><strong>基本ルール:</strong>
+                    <ul>
+                        <li>手札5枚の合計を51ぴったりまたは可能な限り近づける</li>
+                        <li>各ターンで1枚のカードを交換できる</li>
+                        <li>A=1、J/Q/K=11/12/13、その他は数字通り</li>
+                        <li>相手よりも51に近い方が勝利</li>
+                    </ul>
+                </li>
+                <li><strong>交換戦略:</strong>
+                    <ul>
+                        <li>現在の合計から51までの差を計算</li>
+                        <li>必要な数値のカードを狙って交換</li>
+                        <li>相手の手札合計を推測して戦略調整</li>
+                        <li>オーバーしないよう慎重な計算が重要</li>
+                    </ul>
+                </li>
+                <li><strong>評価要素:</strong> 目標達成率、交換戦略精度、計算的思考力、相手推測力</li>
+                <li><strong>クリア条件:</strong> 20ゲーム中85%以上の達成率で51戦略マスター認定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            playerHand: [],
+            opponentHand: [],
+            deck: [],
+            gameCount: 0,
+            achievementCount: 0,
+            totalGames: 20,
+            gameActive: false,
+            selectedCard: null,
+            exchangeCount: 0,
+            maxExchanges: 3,
+            exchangeSuccess: 0,
+            turn: 1
+        };
+
+        const suits = ['spades', 'hearts', 'clubs', 'diamonds'];
+        const suitSymbols = {'spades': '♠️', 'hearts': '♥️', 'clubs': '♣️', 'diamonds': '♦️'};
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+        function createDeck() {
+            const deck = [];
+            suits.forEach(suit => {
+                values.forEach((value, index) => {
+                    deck.push({
+                        suit: suit,
+                        value: value,
+                        numValue: value === 'A' ? 1 : 
+                                 value === 'J' ? 11 : 
+                                 value === 'Q' ? 12 : 
+                                 value === 'K' ? 13 : 
+                                 parseInt(value),
+                        color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black'
+                    });
+                });
+            });
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function dealCards() {
+            gameState.deck = createDeck();
+            
+            // 各プレイヤーに5枚配る
+            gameState.playerHand = [];
+            gameState.opponentHand = [];
+            
+            for (let i = 0; i < 5; i++) {
+                gameState.playerHand.push(gameState.deck.pop());
+                gameState.opponentHand.push(gameState.deck.pop());
+            }
+            
+            gameState.gameActive = true;
+            gameState.selectedCard = null;
+            gameState.exchangeCount = 0;
+            gameState.turn = 1;
+        }
+
+        function renderHands() {
+            const playerCards = document.getElementById('playerCards');
+            const opponentCards = document.getElementById('opponentCards');
+            
+            // プレイヤーの手札
+            playerCards.innerHTML = gameState.playerHand.map(card => {
+                const cardElement = renderCard(card);
+                if (gameState.selectedCard === card) {
+                    cardElement.classList.add('selected');
+                }
+                cardElement.onclick = () => selectCard(card);
+                return cardElement.outerHTML;
+            }).join('');
+            
+            // 相手の手札（裏面）
+            opponentCards.innerHTML = gameState.opponentHand.map(() => 
+                '<div class="playing-card" style="background: #333; color: white;">🂠</div>'
+            ).join('');
+            
+            updateTotals();
+        }
+
+        function renderCard(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `playing-card ${card.color}`;
+            
+            cardElement.innerHTML = `
+                <div class="card-value">${card.value}</div>
+                <div class="card-suit">${suitSymbols[card.suit]}</div>
+            `;
+            
+            return cardElement;
+        }
+
+        function selectCard(card) {
+            if (!gameState.gameActive) return;
+            
+            gameState.selectedCard = gameState.selectedCard === card ? null : card;
+            renderHands();
+            updateButtons();
+            updateExchangeAdvice();
+        }
+
+        function updateTotals() {
+            const playerTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            const opponentTotal = gameState.opponentHand.reduce((sum, card) => sum + card.numValue, 0);
+            
+            document.getElementById('playerTotal').textContent = playerTotal;
+            document.getElementById('opponentTotal').textContent = gameState.gameActive ? '?' : opponentTotal;
+        }
+
+        function exchangeCard() {
+            if (!gameState.selectedCard || !gameState.gameActive || gameState.exchangeCount >= gameState.maxExchanges) return;
+            
+            const cardIndex = gameState.playerHand.indexOf(gameState.selectedCard);
+            const newCard = gameState.deck.pop();
+            
+            gameState.playerHand[cardIndex] = newCard;
+            gameState.selectedCard = null;
+            gameState.exchangeCount++;
+            
+            // 交換精度評価
+            const newTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            const distanceFrom51 = Math.abs(51 - newTotal);
+            if (distanceFrom51 <= 3) {
+                gameState.exchangeSuccess++;
+            }
+            
+            renderHands();
+            updateButtons();
+            updateStrategy();
+        }
+
+        function finishTurn() {
+            if (!gameState.gameActive) return;
+            
+            gameState.gameActive = false;
+            
+            const playerTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            const opponentTotal = gameState.opponentHand.reduce((sum, card) => sum + card.numValue, 0);
+            
+            const playerDistance = Math.abs(51 - playerTotal);
+            const opponentDistance = Math.abs(51 - opponentTotal);
+            
+            gameState.gameCount++;
+            
+            let result = '';
+            if (playerDistance < opponentDistance) {
+                gameState.achievementCount++;
+                result = `🎉 勝利！ あなた: ${playerTotal} (差${playerDistance}) vs 相手: ${opponentTotal} (差${opponentDistance})`;
+            } else if (playerDistance === opponentDistance) {
+                result = `🤝 引き分け！ 両者とも51からの差: ${playerDistance}`;
+            } else {
+                result = `😔 敗北... あなた: ${playerTotal} (差${playerDistance}) vs 相手: ${opponentTotal} (差${opponentDistance})`;
+            }
+            
+            const achievementRate = Math.round((gameState.achievementCount / gameState.gameCount) * 100);
+            const isComplete = gameState.gameCount >= gameState.totalGames;
+            
+            result += `\\n\\nゲーム ${gameState.gameCount}/${gameState.totalGames} 完了`;
+            result += `\\n達成率: ${achievementRate}%`;
+            
+            if (isComplete) {
+                if (achievementRate >= 85) {
+                    result += `\\n\\n🏆 クリア達成！51戦略マスター認定！`;
+                } else {
+                    result += `\\n\\n💪 クリア条件: 達成率85%以上`;
+                }
+            } else {
+                result += `\\n\\n次のゲームに進みます`;
+            }
+            
+            alert(result);
+            
+            updateTotals();
+            updateStats();
+            
+            if (!isComplete) {
+                setTimeout(() => newGame(), 2000);
+            }
+        }
+
+        function updateExchangeAdvice() {
+            if (!gameState.selectedCard) {
+                document.getElementById('exchangeAdvice').textContent = 'カードを選択して交換戦略を確認してください';
+                return;
+            }
+            
+            const currentTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            const selectedValue = gameState.selectedCard.numValue;
+            const totalWithoutSelected = currentTotal - selectedValue;
+            const needed = 51 - totalWithoutSelected;
+            
+            let advice = `現在の合計: ${currentTotal}\\n`;
+            advice += `選択カード除去後: ${totalWithoutSelected}\\n`;
+            advice += `必要な値: ${needed}\\n`;
+            
+            if (needed >= 1 && needed <= 13) {
+                const cardName = needed === 1 ? 'A' : needed === 11 ? 'J' : needed === 12 ? 'Q' : needed === 13 ? 'K' : needed.toString();
+                advice += `推奨: ${cardName}を狙う`;
+            } else if (needed < 1) {
+                advice += `注意: 既に合計が51を超える可能性`;
+            } else {
+                advice += `注意: 必要値が高すぎる（${needed}）`;
+            }
+            
+            document.getElementById('exchangeAdvice').textContent = advice;
+        }
+
+        function updateStrategy() {
+            const currentTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            const distanceFrom51 = Math.abs(51 - currentTotal);
+            
+            let strategy = '';
+            if (currentTotal === 51) {
+                strategy = '🎯 完璧！51ジャストです！';
+            } else if (distanceFrom51 <= 2) {
+                strategy = '⭐ 非常に良い！51に非常に近いです';
+            } else if (distanceFrom51 <= 5) {
+                strategy = '👍 良い！51に近づいています';
+            } else if (currentTotal < 51) {
+                const needed = 51 - currentTotal;
+                strategy = `📈 もう少し！${needed}ポイント不足です`;
+            } else {
+                const over = currentTotal - 51;
+                strategy = `⚠️ オーバー！${over}ポイント超過です`;
+            }
+            
+            strategy += `\\n交換回数: ${gameState.exchangeCount}/${gameState.maxExchanges}`;
+            
+            document.getElementById('strategyAdvice').textContent = strategy;
+        }
+
+        function analyzeStrategy() {
+            const currentTotal = gameState.playerHand.reduce((sum, card) => sum + card.numValue, 0);
+            
+            let analysis = '🎯 詳細戦略分析\\n\\n';
+            analysis += `現在の手札合計: ${currentTotal}\\n`;
+            analysis += `51までの距離: ${Math.abs(51 - currentTotal)}\\n\\n`;
+            
+            analysis += '手札構成:\\n';
+            gameState.playerHand.forEach((card, index) => {
+                analysis += `${index + 1}. ${card.value}${suitSymbols[card.suit]} (${card.numValue})\\n`;
+            });
+            
+            analysis += '\\n推奨戦略:\\n';
+            if (currentTotal < 46) {
+                analysis += '• 高い値のカード（J,Q,K）を狙う\\n';
+            } else if (currentTotal > 56) {
+                analysis += '• 低い値のカード（A,2,3）を狙う\\n';
+            } else {
+                const needed = 51 - currentTotal;
+                analysis += `• ${needed}前後の値のカードを狙う\\n`;
+            }
+            
+            alert(analysis);
+        }
+
+        function updateButtons() {
+            const exchangeBtn = document.getElementById('exchangeBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            
+            exchangeBtn.disabled = !gameState.gameActive || !gameState.selectedCard || gameState.exchangeCount >= gameState.maxExchanges;
+            finishBtn.disabled = !gameState.gameActive;
+        }
+
+        function updateStats() {
+            document.getElementById('gameCount').textContent = `${gameState.gameCount}/${gameState.totalGames}`;
+            document.getElementById('achievementCount').textContent = gameState.achievementCount;
+            
+            const achievementRate = gameState.gameCount > 0 ? 
+                Math.round((gameState.achievementCount / gameState.gameCount) * 100) : 0;
+            document.getElementById('achievementRate').textContent = `${achievementRate}%`;
+            
+            const exchangeAccuracy = gameState.gameCount > 0 ? 
+                Math.round((gameState.exchangeSuccess / Math.max(1, gameState.gameCount * 2)) * 100) : 0;
+            document.getElementById('exchangeAccuracy').textContent = `${exchangeAccuracy}%`;
+            
+            // ゲーム状況更新
+            let status = '';
+            if (!gameState.gameActive && gameState.gameCount === 0) {
+                status = '新しいゲームを開始してください';
+            } else if (gameState.gameActive) {
+                status = `ゲーム${gameState.gameCount + 1}進行中 - 手札合計を51に近づけよう`;
+            } else {
+                status = `ゲーム${gameState.gameCount}完了 - 次のゲームへ`;
+            }
+            
+            document.getElementById('gameStatus').textContent = status;
+        }
+
+        function newGame() {
+            dealCards();
+            renderHands();
+            updateButtons();
+            updateStats();
+            updateStrategy();
+        }
+
+        // ゲーム初期化
+        updateStats();
+        updateButtons();
+    </script>
+</body>
+</html>

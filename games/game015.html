@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座標精度 - ゲーム015</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .memory-grid {
+            display: grid;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .grid-cell {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .grid-cell:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .grid-cell.highlighted {
+            background: #4caf50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+        .grid-cell.selected {
+            background: #2196f3;
+            border-color: #0d47a1;
+        }
+        .grid-cell.correct {
+            background: #4caf50;
+            border-color: #2e7d32;
+        }
+        .grid-cell.incorrect {
+            background: #f44336;
+            border-color: #c62828;
+        }
+        .phase-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 15px 30px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .phase-indicator.memorize {
+            background: rgba(255, 193, 7, 0.3);
+            border: 2px solid #ffc107;
+        }
+        .phase-indicator.recall {
+            background: rgba(33, 150, 243, 0.3);
+            border: 2px solid #2196f3;
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .demo-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .coming-soon {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .implementation-note {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎯 座標精度</h1>
+        <p class="game-description">画面上の正確な座標位置にマウスカーソルを移動させ、ピクセル単位での精密な位置決めを行いましょう！</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">ターゲット</div>
+                <div class="stat-value" id="targetCount">1/50</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">精度</div>
+                <div class="stat-value" id="precision">0px</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">残り時間</div>
+                <div class="stat-value" id="timeLeft">180</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="phase-indicator" id="phaseIndicator">ゲーム開始ボタンを押してスタート</div>
+            <div class="coordinate-area" id="coordinateArea" style="width: 500px; height: 400px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); border-radius: 15px; position: relative; cursor: crosshair; margin: 20px auto;">
+                <div class="target-circle" id="targetCircle" style="position: absolute; width: 20px; height: 20px; background: #4caf50; border: 2px solid white; border-radius: 50%; display: none; transform: translate(-50%, -50%);"></div>
+                <div class="click-marker" id="clickMarker" style="position: absolute; width: 16px; height: 16px; background: #2196f3; border: 2px solid white; border-radius: 50%; display: none; transform: translate(-50%, -50%);"></div>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver" style="display: none; background: rgba(76, 175, 80, 0.2); padding: 30px; border-radius: 15px; margin-top: 20px; border: 2px solid #4caf50;">
+            <h2>🎉 ゲーム終了！</h2>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <p>平均精度: <span id="finalAccuracy">0</span>px</p>
+            <p>完了ターゲット: <span id="finalTargets">0</span>/50</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="instructions" style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left;">
+            <h3>🎯 遊び方</h3>
+            <p>• 緑の円ターゲットが表示されたら、その中心をクリック</p>
+            <p>• 誤差3ピクセル以内でクリアポイント獲得</p>
+            <p>• 50個のターゲットを攻略してください</p>
+            <p>• 高精度マウス操作でビジネスの細密作業力を強化</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            targetIndex: 1,
+            timeLeft: 180,
+            totalAccuracy: 0,
+            targetCount: 50,
+            currentTarget: { x: 0, y: 0 },
+            gameTimer: null
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState = {
+                isPlaying: true,
+                score: 0,
+                targetIndex: 1,
+                timeLeft: 180,
+                totalAccuracy: 0,
+                targetCount: 50,
+                currentTarget: { x: 0, y: 0 },
+                gameTimer: null
+            };
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('phaseIndicator').textContent = 'ターゲットをクリックしてください';
+            
+            const coordinateArea = document.getElementById('coordinateArea');
+            coordinateArea.onclick = handleAreaClick;
+            
+            generateNewTarget();
+            startTimer();
+            updateDisplay();
+        }
+
+        function generateNewTarget() {
+            const area = document.getElementById('coordinateArea');
+            const target = document.getElementById('targetCircle');
+            
+            // ランダムな位置を生成（境界から少し離れた位置）
+            const margin = 30;
+            const x = margin + Math.random() * (500 - 2 * margin);
+            const y = margin + Math.random() * (400 - 2 * margin);
+            
+            gameState.currentTarget = { x, y };
+            
+            target.style.left = x + 'px';
+            target.style.top = y + 'px';
+            target.style.display = 'block';
+        }
+
+        function handleAreaClick(event) {
+            if (!gameState.isPlaying) return;
+            
+            const area = document.getElementById('coordinateArea');
+            const rect = area.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            
+            const target = gameState.currentTarget;
+            const distance = Math.sqrt(Math.pow(clickX - target.x, 2) + Math.pow(clickY - target.y, 2));
+            
+            // クリック位置にマーカーを表示
+            const marker = document.getElementById('clickMarker');
+            marker.style.left = clickX + 'px';
+            marker.style.top = clickY + 'px';
+            marker.style.display = 'block';
+            
+            // 精度計算とスコア更新
+            gameState.totalAccuracy += distance;
+            
+            let points = 0;
+            if (distance <= 3) {
+                points = 100; // Perfect
+            } else if (distance <= 10) {
+                points = 50; // Good
+            } else if (distance <= 20) {
+                points = 25; // OK
+            } else {
+                points = 10; // Miss
+            }
+            
+            gameState.score += points;
+            gameState.targetIndex++;
+            
+            // 次のターゲットまたはゲーム終了
+            setTimeout(() => {
+                marker.style.display = 'none';
+                document.getElementById('targetCircle').style.display = 'none';
+                
+                if (gameState.targetIndex > gameState.targetCount) {
+                    endGame();
+                } else {
+                    generateNewTarget();
+                }
+                updateDisplay();
+            }, 500);
+            
+            updateDisplay();
+        }
+
+        function startTimer() {
+            gameState.gameTimer = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('targetCount').textContent = `${gameState.targetIndex}/${gameState.targetCount}`;
+            
+            const avgAccuracy = gameState.targetIndex > 1 ? 
+                Math.round(gameState.totalAccuracy / (gameState.targetIndex - 1)) : 0;
+            document.getElementById('precision').textContent = avgAccuracy + 'px';
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('phaseIndicator').textContent = 'ゲーム終了';
+            document.getElementById('targetCircle').style.display = 'none';
+            document.getElementById('clickMarker').style.display = 'none';
+            
+            const avgAccuracy = gameState.targetIndex > 1 ? 
+                Math.round(gameState.totalAccuracy / (gameState.targetIndex - 1)) : 0;
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalAccuracy').textContent = avgAccuracy;
+            document.getElementById('finalTargets').textContent = Math.max(0, gameState.targetIndex - 1);
+            document.getElementById('gameOver').style.display = 'block';
+            
+            // クリックイベントを削除
+            document.getElementById('coordinateArea').onclick = null;
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            
+            gameState = {
+                isPlaying: false,
+                score: 0,
+                targetIndex: 1,
+                timeLeft: 180,
+                totalAccuracy: 0,
+                targetCount: 50,
+                currentTarget: { x: 0, y: 0 },
+                gameTimer: null
+            };
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('phaseIndicator').textContent = 'ゲーム開始ボタンを押してスタート';
+            document.getElementById('targetCircle').style.display = 'none';
+            document.getElementById('clickMarker').style.display = 'none';
+            document.getElementById('coordinateArea').onclick = null;
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

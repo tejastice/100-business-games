@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七並べ戦略 - ゲーム080</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 500px;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            gap: 20px;
+        }
+
+        .board-area {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 200px;
+        }
+
+        .card-slot {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            position: relative;
+        }
+
+        .card-slot.playable {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+            cursor: pointer;
+        }
+
+        .card-slot.filled {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+
+        .playing-card {
+            background: white;
+            color: #333;
+            border: 1px solid #333;
+            border-radius: 4px;
+            width: 100%;
+            height: 55px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .playing-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .playing-card.selected {
+            border-color: #f1c40f;
+            border-width: 2px;
+            transform: scale(1.1);
+        }
+
+        .playing-card.red {
+            color: #e74c3c;
+        }
+
+        .playing-card.black {
+            color: #333;
+        }
+
+        .card-value {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .card-suit {
+            font-size: 14px;
+        }
+
+        .players-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .player-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-area.active {
+            background: rgba(255, 255, 0, 0.2);
+            border: 2px solid #f1c40f;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .player-hand {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .hand-card {
+            width: 35px;
+            height: 50px;
+        }
+
+        .strategy-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .strategy-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 10px;
+        }
+
+        .strategy-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .board-area {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 3px;
+            }
+
+            .players-area {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .hand-card {
+                width: 25px;
+                height: 35px;
+            }
+
+            .playing-card {
+                height: 40px;
+                font-size: 8px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .stat {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href = '../index.html'">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🃏 七並べ戦略</h1>
+        <p class="game-description">カード配置戦略と相手妨害による戦略的思考ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">ゲーム数</div>
+                <div class="stat-value" id="gameCount">0/10</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">上位成績</div>
+                <div class="stat-value" id="topRanks">0/6</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">戦略効果</div>
+                <div class="stat-value" id="strategyScore">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">妨害成功</div>
+                <div class="stat-value" id="blockScore">0%</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div id="gameStatus">新しいゲームを開始してください</div>
+        </div>
+
+        <div class="game-board">
+            <div class="board-area" id="gameBoard">
+                <!-- 13×4のカードスロット -->
+            </div>
+
+            <div class="players-area">
+                <div class="player-area" id="player0">
+                    <div class="player-name">あなた</div>
+                    <div class="player-hand" id="hand0"></div>
+                    <div class="player-status">残り: <span id="count0">13</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player1">
+                    <div class="player-name">プレイヤー1</div>
+                    <div class="player-hand" id="hand1"></div>
+                    <div class="player-status">残り: <span id="count1">13</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player2">
+                    <div class="player-name">プレイヤー2</div>
+                    <div class="player-hand" id="hand2"></div>
+                    <div class="player-status">残り: <span id="count2">13</span>枚</div>
+                </div>
+                
+                <div class="player-area" id="player3">
+                    <div class="player-name">プレイヤー3</div>
+                    <div class="player-hand" id="hand3"></div>
+                    <div class="player-status">残り: <span id="count3">13</span>枚</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strategy-panel">
+            <div class="strategy-title">🎯 戦略アドバイス</div>
+            <div class="strategy-content" id="strategyAdvice">
+                新しいゲームを開始してください。カード配置戦略と相手妨害の最適な戦術をアドバイスします。
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" onclick="newGame()">新しいゲーム</button>
+            <button class="btn" onclick="passMove()" id="passBtn" disabled>パス</button>
+            <button class="btn warning" onclick="showStrategy()">戦略分析</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <ul>
+                <li><strong>目的:</strong> 4人対戦で10ゲーム中6回以上上位2位以内でクリア</li>
+                <li><strong>基本ルール:</strong>
+                    <ul>
+                        <li>7を中心として順番にカードを配置（6-5-4...、8-9-10...）</li>
+                        <li>手札を全て出し切った順に順位が決まる</li>
+                        <li>出せるカードがない場合はパス（パス回数制限あり）</li>
+                        <li>戦略的にパスして相手を妨害することも重要</li>
+                    </ul>
+                </li>
+                <li><strong>配置戦略:</strong>
+                    <ul>
+                        <li>7の近くのカード（6, 8）を優先的に出す</li>
+                        <li>相手が困るカードを意図的に止める</li>
+                        <li>自分の手札の流れを作りながら相手を妨害</li>
+                        <li>パスタイミングで相手の手札を推測</li>
+                    </ul>
+                </li>
+                <li><strong>戦略要素:</strong> カード配置順序、相手妨害、パス管理、手札推測</li>
+                <li><strong>評価基準:</strong> 順位成績、戦略実行精度、妨害効果、パス管理能力</li>
+                <li><strong>クリア条件:</strong> 10ゲーム中6回以上上位2位以内で七並べマスター認定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            players: [
+                { name: 'あなた', cards: [], isHuman: true, passCount: 0 },
+                { name: 'プレイヤー1', cards: [], isHuman: false, passCount: 0 },
+                { name: 'プレイヤー2', cards: [], isHuman: false, passCount: 0 },
+                { name: 'プレイヤー3', cards: [], isHuman: false, passCount: 0 }
+            ],
+            board: {},
+            currentPlayer: 0,
+            gameCount: 0,
+            topRankCount: 0,
+            totalGames: 10,
+            gameActive: false,
+            selectedCard: null,
+            strategySuccess: 0,
+            blockSuccess: 0,
+            rankings: []
+        };
+
+        const suits = ['spades', 'hearts', 'clubs', 'diamonds'];
+        const suitSymbols = {'spades': '♠️', 'hearts': '♥️', 'clubs': '♣️', 'diamonds': '♦️'};
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+        function createDeck() {
+            const deck = [];
+            suits.forEach(suit => {
+                values.forEach((value, index) => {
+                    deck.push({
+                        suit: suit,
+                        value: value,
+                        rank: index + 1,
+                        color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black'
+                    });
+                });
+            });
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function dealCards() {
+            const deck = createDeck();
+            
+            // 各プレイヤーに13枚配る
+            for (let i = 0; i < 4; i++) {
+                gameState.players[i].cards = [];
+                gameState.players[i].passCount = 0;
+                for (let j = 0; j < 13; j++) {
+                    gameState.players[i].cards.push(deck[i * 13 + j]);
+                }
+                // 手札をソート
+                gameState.players[i].cards.sort((a, b) => {
+                    if (a.suit !== b.suit) {
+                        return suits.indexOf(a.suit) - suits.indexOf(b.suit);
+                    }
+                    return a.rank - b.rank;
+                });
+            }
+            
+            // ボードを初期化（7から開始）
+            gameState.board = {};
+            suits.forEach(suit => {
+                gameState.board[suit] = { 7: true };
+            });
+            
+            // 7を持っているプレイヤーからスタート
+            for (let i = 0; i < 4; i++) {
+                const hasSeven = gameState.players[i].cards.some(card => card.rank === 7);
+                if (hasSeven) {
+                    gameState.currentPlayer = i;
+                    break;
+                }
+            }
+            
+            gameState.gameActive = true;
+            gameState.selectedCard = null;
+            gameState.rankings = [];
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            // 4×13グリッド（スート×ランク）
+            suits.forEach(suit => {
+                for (let rank = 1; rank <= 13; rank++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'card-slot';
+                    slot.dataset.suit = suit;
+                    slot.dataset.rank = rank;
+                    
+                    if (gameState.board[suit] && gameState.board[suit][rank]) {
+                        slot.classList.add('filled');
+                        const card = {suit: suit, rank: rank, value: values[rank - 1], color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black'};
+                        slot.appendChild(renderCard(card));
+                    } else if (canPlaceCard(suit, rank)) {
+                        slot.classList.add('playable');
+                        slot.onclick = () => placeCard(suit, rank);
+                        slot.textContent = `${suitSymbols[suit]}${values[rank - 1]}`;
+                    } else {
+                        slot.textContent = `${suitSymbols[suit]}${values[rank - 1]}`;
+                    }
+                    
+                    board.appendChild(slot);
+                }
+            });
+        }
+
+        function renderCard(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `playing-card ${card.color}`;
+            
+            cardElement.innerHTML = `
+                <div class="card-value">${card.value}</div>
+                <div class="card-suit">${suitSymbols[card.suit]}</div>
+            `;
+            
+            return cardElement;
+        }
+
+        function renderHands() {
+            gameState.players.forEach((player, index) => {
+                const handElement = document.getElementById(`hand${index}`);
+                const countElement = document.getElementById(`count${index}`);
+                
+                if (player.isHuman) {
+                    // プレイヤーの手札は表示
+                    handElement.innerHTML = player.cards.map(card => {
+                        const cardElement = renderCard(card);
+                        cardElement.className += ' hand-card';
+                        if (gameState.selectedCard === card) {
+                            cardElement.classList.add('selected');
+                        }
+                        cardElement.onclick = () => selectCard(card);
+                        return cardElement.outerHTML;
+                    }).join('');
+                } else {
+                    // AIの手札は裏面
+                    handElement.innerHTML = player.cards.map(() => 
+                        '<div class="playing-card hand-card" style="background: #333; color: white;">🂠</div>'
+                    ).join('');
+                }
+                
+                countElement.textContent = player.cards.length;
+            });
+            
+            updateActivePlayer();
+        }
+
+        function updateActivePlayer() {
+            document.querySelectorAll('.player-area').forEach((area, index) => {
+                area.classList.toggle('active', index === gameState.currentPlayer);
+            });
+        }
+
+        function selectCard(card) {
+            if (gameState.currentPlayer !== 0 || !gameState.gameActive) return;
+            
+            gameState.selectedCard = gameState.selectedCard === card ? null : card;
+            renderHands();
+            updateButtons();
+        }
+
+        function canPlaceCard(suit, rank) {
+            if (!gameState.board[suit]) return false;
+            
+            // 7が置かれている場合
+            if (gameState.board[suit][7]) {
+                // 隣接するカードがあるかチェック
+                return gameState.board[suit][rank - 1] || gameState.board[suit][rank + 1];
+            }
+            
+            return rank === 7; // 最初は7のみ
+        }
+
+        function placeCard(suit, rank) {
+            if (gameState.currentPlayer !== 0 || !gameState.selectedCard) return;
+            
+            const card = gameState.selectedCard;
+            if (card.suit === suit && card.rank === rank && canPlaceCard(suit, rank)) {
+                // カードを配置
+                if (!gameState.board[suit]) gameState.board[suit] = {};
+                gameState.board[suit][rank] = true;
+                
+                // 手札から削除
+                const playerIndex = gameState.players[0].cards.indexOf(card);
+                gameState.players[0].cards.splice(playerIndex, 1);
+                
+                gameState.selectedCard = null;
+                gameState.strategySuccess++;
+                
+                if (gameState.players[0].cards.length === 0) {
+                    endRound(0);
+                } else {
+                    nextPlayer();
+                }
+                
+                renderBoard();
+                renderHands();
+                updateStrategy();
+            }
+        }
+
+        function passMove() {
+            if (gameState.currentPlayer !== 0 || !gameState.gameActive) return;
+            
+            gameState.players[0].passCount++;
+            nextPlayer();
+            renderHands();
+            updateStrategy();
+        }
+
+        function nextPlayer() {
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % 4;
+            
+            if (gameState.currentPlayer !== 0) {
+                setTimeout(() => aiPlay(), 1000);
+            } else {
+                updateButtons();
+            }
+        }
+
+        function aiPlay() {
+            const player = gameState.players[gameState.currentPlayer];
+            let played = false;
+            
+            // プレイ可能なカードを探す
+            for (const card of player.cards) {
+                if (canPlaceCard(card.suit, card.rank)) {
+                    // カードを配置
+                    if (!gameState.board[card.suit]) gameState.board[card.suit] = {};
+                    gameState.board[card.suit][card.rank] = true;
+                    
+                    // 手札から削除
+                    const cardIndex = player.cards.indexOf(card);
+                    player.cards.splice(cardIndex, 1);
+                    
+                    played = true;
+                    
+                    if (player.cards.length === 0) {
+                        endRound(gameState.currentPlayer);
+                        return;
+                    }
+                    break;
+                }
+            }
+            
+            if (!played) {
+                player.passCount++;
+            }
+            
+            if (gameState.gameActive) {
+                nextPlayer();
+            }
+            
+            renderBoard();
+            renderHands();
+            updateStrategy();
+        }
+
+        function endRound(winnerIndex) {
+            gameState.gameActive = false;
+            gameState.rankings.push(winnerIndex);
+            
+            // 残りプレイヤーの順位決め（手札数で判定）
+            const remaining = gameState.players
+                .map((player, index) => ({index, cards: player.cards.length}))
+                .filter(p => !gameState.rankings.includes(p.index))
+                .sort((a, b) => a.cards - b.cards);
+            
+            remaining.forEach(p => gameState.rankings.push(p.index));
+            
+            gameState.gameCount++;
+            
+            const playerRank = gameState.rankings.indexOf(0) + 1;
+            if (playerRank <= 2) {
+                gameState.topRankCount++;
+            }
+            
+            const isComplete = gameState.gameCount >= gameState.totalGames;
+            const successRate = Math.round((gameState.topRankCount / gameState.gameCount) * 100);
+            
+            let message = `ゲーム ${gameState.gameCount} 終了\n`;
+            message += `あなたの順位: ${playerRank}位\n`;
+            message += `上位成績: ${gameState.topRankCount}/${gameState.gameCount}\n`;
+            message += `成功率: ${successRate}%\n\n`;
+            
+            if (isComplete) {
+                if (gameState.topRankCount >= 6) {
+                    message += `🏆 クリア達成！七並べマスター認定！`;
+                } else {
+                    message += `💪 クリア条件: 上位2位以内を6回以上`;
+                }
+            } else {
+                message += `次のゲームに進みます`;
+            }
+            
+            alert(message);
+            
+            if (!isComplete) {
+                setTimeout(() => newRound(), 2000);
+            }
+        }
+
+        function newRound() {
+            dealCards();
+            renderBoard();
+            renderHands();
+            updateStats();
+        }
+
+        function updateStrategy() {
+            let strategy = '';
+            
+            if (gameState.currentPlayer === 0) {
+                const playableCards = gameState.players[0].cards.filter(card => 
+                    canPlaceCard(card.suit, card.rank)
+                );
+                
+                if (playableCards.length > 0) {
+                    if (playableCards.some(card => Math.abs(card.rank - 7) <= 2)) {
+                        strategy = '🎯 基本戦略: 7近くのカード（5,6,8,9）を優先的に出しましょう';
+                    } else {
+                        strategy = '⚡ 展開戦略: 場を広げるカードを出して次の手を作りましょう';
+                    }
+                } else {
+                    strategy = '🛡️ 妨害戦略: パスで相手の手を止めて戦略的な妨害を行いましょう';
+                }
+            } else {
+                strategy = `🎮 ${gameState.players[gameState.currentPlayer].name}のターンです`;
+            }
+            
+            document.getElementById('strategyAdvice').textContent = strategy;
+        }
+
+        function showStrategy() {
+            const hand = gameState.players[0].cards;
+            const analysis = analyzeHand(hand);
+            alert(`🎯 詳細戦略分析\n\n${analysis}`);
+        }
+
+        function analyzeHand(hand) {
+            const suitCount = {};
+            suits.forEach(suit => suitCount[suit] = hand.filter(card => card.suit === suit).length);
+            
+            let analysis = `手札構成:\n`;
+            Object.entries(suitCount).forEach(([suit, count]) => {
+                if (count > 0) analysis += `${suitSymbols[suit]}: ${count}枚\n`;
+            });
+            
+            analysis += `\n推奨戦略:\n`;
+            
+            const sevens = hand.filter(card => card.rank === 7);
+            if (sevens.length > 0) {
+                analysis += `• 7を早めに出して場を作りましょう\n`;
+            }
+            
+            const nearSevens = hand.filter(card => Math.abs(card.rank - 7) <= 2);
+            if (nearSevens.length > 2) {
+                analysis += `• 7近くのカードが多いので積極的に攻めましょう\n`;
+            }
+            
+            const edgeCards = hand.filter(card => card.rank === 1 || card.rank === 13);
+            if (edgeCards.length > 1) {
+                analysis += `• 端札（A,K）を温存して相手を妨害しましょう\n`;
+            }
+            
+            return analysis;
+        }
+
+        function updateButtons() {
+            const passBtn = document.getElementById('passBtn');
+            const canPlay = gameState.selectedCard && canPlaceCard(gameState.selectedCard.suit, gameState.selectedCard.rank);
+            const hasPlayableCard = gameState.players[0].cards.some(card => canPlaceCard(card.suit, card.rank));
+            
+            passBtn.disabled = !gameState.gameActive || gameState.currentPlayer !== 0 || hasPlayableCard;
+        }
+
+        function updateStats() {
+            document.getElementById('gameCount').textContent = `${gameState.gameCount}/${gameState.totalGames}`;
+            document.getElementById('topRanks').textContent = `${gameState.topRankCount}/6`;
+            
+            const strategyScore = gameState.gameCount > 0 ? 
+                Math.round((gameState.strategySuccess / (gameState.gameCount * 13)) * 100) : 0;
+            document.getElementById('strategyScore').textContent = `${strategyScore}%`;
+            
+            const blockScore = gameState.gameCount > 0 ? 
+                Math.round((gameState.blockSuccess / gameState.gameCount) * 100) : 0;
+            document.getElementById('blockScore').textContent = `${blockScore}%`;
+            
+            // ゲーム状況更新
+            let status = '';
+            if (!gameState.gameActive && gameState.gameCount === 0) {
+                status = '新しいゲームを開始してください';
+            } else if (gameState.gameActive) {
+                status = `ゲーム${gameState.gameCount + 1}進行中 - ${gameState.players[gameState.currentPlayer].name}のターン`;
+            } else {
+                status = `ゲーム${gameState.gameCount}完了 - 次のゲームへ`;
+            }
+            
+            document.getElementById('gameStatus').textContent = status;
+        }
+
+        function newGame() {
+            gameState.gameCount = 0;
+            gameState.topRankCount = 0;
+            gameState.strategySuccess = 0;
+            gameState.blockSuccess = 0;
+            
+            newRound();
+            updateStats();
+        }
+
+        // ゲーム初期化
+        updateStats();
+    </script>
+</body>
+</html>

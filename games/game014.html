@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マルチタスク操作 - ゲーム014</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; color: white; }
+        .game-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; max-width: 900px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        .game-title { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+        .game-description { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9; }
+        .game-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat { background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px; }
+        .stat-label { font-size: 0.9rem; opacity: 0.8; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        .multitask-area { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
+        .task-panel { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; border: 2px solid rgba(255, 255, 255, 0.3); }
+        .task-panel.active { border-color: #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+        .task-panel.urgent { border-color: #f44336; animation: urgent-pulse 1s infinite; }
+        @keyframes urgent-pulse { 0%, 100% { box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); } 50% { box-shadow: 0 0 25px rgba(244, 67, 54, 0.8); } }
+        .task-content { margin: 15px 0; }
+        .task-progress { height: 10px; background: rgba(255, 255, 255, 0.2); border-radius: 5px; overflow: hidden; margin-top: 15px; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.3s ease; }
+        .color-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .color-btn { width: 40px; height: 40px; border: none; border-radius: 50%; cursor: pointer; }
+        .color-btn.red { background: #f44336; }
+        .color-btn.blue { background: #2196f3; }
+        .color-btn.green { background: #4caf50; }
+        .phase-indicator { background: rgba(255, 255, 255, 0.2); padding: 15px 30px; border-radius: 25px; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; }
+        .phase-indicator.memorize { background: rgba(255, 193, 7, 0.3); border: 2px solid #ffc107; }
+        .phase-indicator.recall { background: rgba(33, 150, 243, 0.3); border: 2px solid #2196f3; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 1rem; }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .back-btn { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .game-over { display: none; background: rgba(76, 175, 80, 0.2); padding: 30px; border-radius: 15px; margin-top: 20px; border: 2px solid #4caf50; }
+        .instructions { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left; }
+        @media (max-width: 768px) { .light-grid { grid-template-columns: repeat(3, 1fr); max-width: 300px; } .light-cell { width: 60px; height: 60px; } }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+    <div class="game-container">
+        <h1 class="game-title">📊 マルチタスク操作</h1>
+        <p class="game-description">複数のタスクを同時並行で実行し、優先度に応じた効率的なタスク切り替えと並行処理を行いましょう！</p>
+        <div class="game-stats">
+            <div class="stat"><div class="stat-label">スコア</div><div class="stat-value" id="score">0</div></div>
+            <div class="stat"><div class="stat-label">アクティブタスク</div><div class="stat-value" id="activeTasks">0</div></div>
+            <div class="stat"><div class="stat-label">完了率</div><div class="stat-value" id="completionRate">0%</div></div>
+            <div class="stat"><div class="stat-label">残り時間</div><div class="stat-value" id="timeLeft">120</div></div>
+        </div>
+        <div class="phase-indicator" id="phaseIndicator">ゲーム開始ボタンを押してスタート</div>
+        <div class="multitask-area" id="multitaskArea">
+            <div class="task-panel" id="task1" data-task="1">
+                <h4>タスク1: 数値計算</h4>
+                <div class="task-content">
+                    <div id="mathProblem">5 + 3 = ?</div>
+                    <input type="number" id="mathInput" placeholder="答え">
+                    <button onclick="submitMath()">提出</button>
+                </div>
+                <div class="task-progress"><div class="progress-bar" id="mathProgress"></div></div>
+            </div>
+            <div class="task-panel" id="task2" data-task="2">
+                <h4>タスク2: クリックカウンター</h4>
+                <div class="task-content">
+                    <button id="clickButton" onclick="clickCount()">クリック</button>
+                    <div>目標: <span id="clickTarget">10</span> / 現在: <span id="clickCurrent">0</span></div>
+                </div>
+                <div class="task-progress"><div class="progress-bar" id="clickProgress"></div></div>
+            </div>
+            <div class="task-panel" id="task3" data-task="3">
+                <h4>タスク3: カラー選択</h4>
+                <div class="task-content">
+                    <div id="colorTarget">選択: 赤</div>
+                    <div class="color-buttons">
+                        <button class="color-btn red" onclick="selectColor('red')">赤</button>
+                        <button class="color-btn blue" onclick="selectColor('blue')">青</button>
+                        <button class="color-btn green" onclick="selectColor('green')">緑</button>
+                    </div>
+                </div>
+                <div class="task-progress"><div class="progress-bar" id="colorProgress"></div></div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>🎉 ゲーム終了！</h2>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <p>到達レベル: <span id="finalLevel">1</span></p>
+            <p>最大シーケンス長: <span id="maxSequence">3</span></p>
+        </div>
+        <div class="instructions">
+            <h3>🎯 遊び方</h3>
+            <p>• 3つのタスクを同時に管理してください</p>
+            <p>• 各タスクの優先度を判断して効率的に処理</p>
+            <p>• 時間内にできるだけ多くのタスクを完了</p>
+            <p>• マルチタスク能力でビジネス効率を向上</p>
+        </div>
+    </div>
+    <script>
+        let gameState = {
+            isPlaying: false,
+            score: 0,
+            timeLeft: 120,
+            completedTasks: 0,
+            totalTasks: 0,
+            activeTasks: 0,
+            tasks: {
+                math: { 
+                    current: { problem: '5 + 3', answer: 8 }, 
+                    completed: 0, 
+                    progress: 0,
+                    deadline: Date.now() + 30000
+                },
+                click: { 
+                    target: 10, 
+                    current: 0, 
+                    completed: 0, 
+                    progress: 0,
+                    deadline: Date.now() + 20000
+                },
+                color: { 
+                    target: '赤', 
+                    completed: 0, 
+                    progress: 0,
+                    deadline: Date.now() + 15000
+                }
+            },
+            gameTimer: null
+        };
+
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            gameState.score = 0;
+            gameState.timeLeft = 120;
+            gameState.completedTasks = 0;
+            gameState.totalTasks = 0;
+            gameState.activeTasks = 3;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('phaseIndicator').textContent = '複数のタスクを同時に管理してください';
+            
+            initializeTasks();
+            startTimer();
+            updateDisplay();
+        }
+
+        function initializeTasks() {
+            // Initialize math task
+            generateMathProblem();
+            
+            // Initialize click task
+            gameState.tasks.click.target = 10 + Math.floor(Math.random() * 20);
+            gameState.tasks.click.current = 0;
+            updateClickDisplay();
+            
+            // Initialize color task
+            const colors = ['赤', '青', '緑'];
+            gameState.tasks.color.target = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('colorTarget').textContent = '選択: ' + gameState.tasks.color.target;
+            
+            // Set deadlines
+            const now = Date.now();
+            gameState.tasks.math.deadline = now + 30000;
+            gameState.tasks.click.deadline = now + 25000;
+            gameState.tasks.color.deadline = now + 20000;
+            
+            updateTaskPriorities();
+        }
+
+        function generateMathProblem() {
+            const a = Math.floor(Math.random() * 20) + 1;
+            const b = Math.floor(Math.random() * 20) + 1;
+            const operators = ['+', '-', '*'];
+            const op = operators[Math.floor(Math.random() * operators.length)];
+            
+            let answer;
+            switch(op) {
+                case '+': answer = a + b; break;
+                case '-': answer = a - b; break;
+                case '*': answer = a * b; break;
+            }
+            
+            gameState.tasks.math.current = {
+                problem: `${a} ${op} ${b}`,
+                answer: answer
+            };
+            
+            document.getElementById('mathProblem').textContent = gameState.tasks.math.current.problem + ' = ?';
+            document.getElementById('mathInput').value = '';
+        }
+
+        function submitMath() {
+            if (!gameState.isPlaying) return;
+            
+            const input = parseInt(document.getElementById('mathInput').value);
+            if (input === gameState.tasks.math.current.answer) {
+                gameState.tasks.math.completed++;
+                gameState.completedTasks++;
+                gameState.totalTasks++;
+                gameState.score += 100;
+                
+                // Generate new problem
+                generateMathProblem();
+                gameState.tasks.math.deadline = Date.now() + 30000;
+                
+                updateDisplay();
+            }
+        }
+
+        function clickCount() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.tasks.click.current++;
+            updateClickDisplay();
+            
+            if (gameState.tasks.click.current >= gameState.tasks.click.target) {
+                gameState.tasks.click.completed++;
+                gameState.completedTasks++;
+                gameState.totalTasks++;
+                gameState.score += 75;
+                
+                // Reset click task
+                gameState.tasks.click.target = 10 + Math.floor(Math.random() * 20);
+                gameState.tasks.click.current = 0;
+                gameState.tasks.click.deadline = Date.now() + 25000;
+                updateClickDisplay();
+                
+                updateDisplay();
+            }
+        }
+
+        function updateClickDisplay() {
+            document.getElementById('clickTarget').textContent = gameState.tasks.click.target;
+            document.getElementById('clickCurrent').textContent = gameState.tasks.click.current;
+        }
+
+        function selectColor(color) {
+            if (!gameState.isPlaying) return;
+            
+            const colorMap = { 'red': '赤', 'blue': '青', 'green': '緑' };
+            if (colorMap[color] === gameState.tasks.color.target) {
+                gameState.tasks.color.completed++;
+                gameState.completedTasks++;
+                gameState.totalTasks++;
+                gameState.score += 50;
+                
+                // Generate new color task
+                const colors = ['赤', '青', '緑'];
+                gameState.tasks.color.target = colors[Math.floor(Math.random() * colors.length)];
+                document.getElementById('colorTarget').textContent = '選択: ' + gameState.tasks.color.target;
+                gameState.tasks.color.deadline = Date.now() + 20000;
+                
+                updateDisplay();
+            }
+        }
+
+        function updateTaskPriorities() {
+            if (!gameState.isPlaying) return;
+            
+            const now = Date.now();
+            const tasks = ['task1', 'task2', 'task3'];
+            const deadlines = [
+                gameState.tasks.math.deadline,
+                gameState.tasks.click.deadline,
+                gameState.tasks.color.deadline
+            ];
+            
+            tasks.forEach((taskId, index) => {
+                const taskElement = document.getElementById(taskId);
+                const timeToDeadline = deadlines[index] - now;
+                
+                taskElement.classList.remove('active', 'urgent');
+                
+                if (timeToDeadline < 5000) {
+                    taskElement.classList.add('urgent');
+                } else if (timeToDeadline < 10000) {
+                    taskElement.classList.add('active');
+                }
+            });
+            
+            // Update progress bars
+            updateProgressBars();
+        }
+
+        function updateProgressBars() {
+            const now = Date.now();
+            
+            // Math progress
+            const mathTimeLeft = Math.max(0, gameState.tasks.math.deadline - now);
+            const mathProgress = (1 - mathTimeLeft / 30000) * 100;
+            document.getElementById('mathProgress').style.width = mathProgress + '%';
+            
+            // Click progress
+            const clickProgress = (gameState.tasks.click.current / gameState.tasks.click.target) * 100;
+            document.getElementById('clickProgress').style.width = clickProgress + '%';
+            
+            // Color progress (time-based)
+            const colorTimeLeft = Math.max(0, gameState.tasks.color.deadline - now);
+            const colorProgress = (1 - colorTimeLeft / 20000) * 100;
+            document.getElementById('colorProgress').style.width = colorProgress + '%';
+        }
+
+        function startTimer() {
+            gameState.gameTimer = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+                updateTaskPriorities();
+                
+                // Check for expired tasks
+                const now = Date.now();
+                if (gameState.tasks.math.deadline < now) {
+                    gameState.tasks.math.deadline = now + 30000;
+                    generateMathProblem();
+                }
+                if (gameState.tasks.click.deadline < now) {
+                    gameState.tasks.click.deadline = now + 25000;
+                    gameState.tasks.click.current = 0;
+                    gameState.tasks.click.target = 10 + Math.floor(Math.random() * 20);
+                    updateClickDisplay();
+                }
+                if (gameState.tasks.color.deadline < now) {
+                    gameState.tasks.color.deadline = now + 20000;
+                    const colors = ['赤', '青', '緑'];
+                    gameState.tasks.color.target = colors[Math.floor(Math.random() * colors.length)];
+                    document.getElementById('colorTarget').textContent = '選択: ' + gameState.tasks.color.target;
+                }
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('activeTasks').textContent = gameState.activeTasks;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+            
+            const completionRate = gameState.totalTasks > 0 ? 
+                Math.round((gameState.completedTasks / gameState.totalTasks) * 100) : 0;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('phaseIndicator').textContent = 'ゲーム終了';
+            
+            setTimeout(() => {
+                alert(`ゲーム終了！\\nスコア: ${gameState.score}\\n完了タスク: ${gameState.completedTasks}\\n完了率: ${document.getElementById('completionRate').textContent}`);
+            }, 500);
+        }
+
+        function resetGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            
+            gameState = {
+                isPlaying: false,
+                score: 0,
+                timeLeft: 120,
+                completedTasks: 0,
+                totalTasks: 0,
+                activeTasks: 3,
+                tasks: {
+                    math: { current: { problem: '5 + 3', answer: 8 }, completed: 0, progress: 0 },
+                    click: { target: 10, current: 0, completed: 0, progress: 0 },
+                    color: { target: '赤', completed: 0, progress: 0 }
+                },
+                gameTimer: null
+            };
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('phaseIndicator').textContent = 'ゲーム開始ボタンを押してスタート';
+            
+            // Reset UI
+            document.getElementById('mathProblem').textContent = '5 + 3 = ?';
+            document.getElementById('mathInput').value = '';
+            updateClickDisplay();
+            document.getElementById('colorTarget').textContent = '選択: 赤';
+            
+            updateDisplay();
+        }
+
+        function goBack() {
+            if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            window.close(); 
+            window.history.back();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

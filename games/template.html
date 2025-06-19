@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲームタイトル - ゲーム000</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .demo-text {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .coming-soon {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .implementation-note {
+            background: rgba(33, 150, 243, 0.2);
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎮 ゲームタイトル</h1>
+        <p class="game-description">このゲームでビジネススキルを向上させましょう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">経験値</div>
+                <div class="stat-value" id="experience">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">達成度</div>
+                <div class="stat-value" id="progress">0%</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="demo-content">
+                <div class="demo-icon">🚀</div>
+                <div class="demo-text">
+                    このゲームは現在実装中です。<br>
+                    以下の機能を予定しています：
+                </div>
+                
+                <div class="feature-list">
+                    <div class="feature-item">📊 リアルタイムのパフォーマンス測定</div>
+                    <div class="feature-item">🎯 段階的な難易度調整</div>
+                    <div class="feature-item">📈 学習進度の可視化</div>
+                    <div class="feature-item">🏆 達成度によるレベルアップ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="coming-soon">
+            <h3>⏳ 実装予定</h3>
+            <p>このゲームは段階的に実装されます。完成版では以下の体験が可能になります：</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>インタラクティブなゲームプレイ</li>
+                <li>詳細なスコアリングシステム</li>
+                <li>個人の成長記録</li>
+                <li>他のゲームとの連携機能</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="simulateDemo()">デモ体験</button>
+            <button class="btn" onclick="viewSpecifications()">仕様確認</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🧠</div>
+                    <h4>思考力</h4>
+                    <p>論理的思考と問題解決</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>反応力</h4>
+                    <p>素早い判断と行動</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🎨</div>
+                    <h4>創造力</h4>
+                    <p>新しいアイデアの発想</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">📊</div>
+                    <h4>分析力</h4>
+                    <p>データの理解と活用</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="implementation-note">
+            <strong>📝 開発ノート:</strong> 
+            この画面は汎用テンプレートです。実際のゲームでは、カテゴリに応じた専用のUIとゲームロジックが実装されます。
+            営業デモ用として、ゲームの概念と価値提案を確認いただけます。
+        </div>
+    </div>
+
+    <script>
+        let demoState = {
+            level: 1,
+            experience: 0,
+            progress: 0
+        };
+
+        function simulateDemo() {
+            // デモシミュレーション
+            let progressInterval = setInterval(() => {
+                demoState.progress += 10;
+                if (demoState.progress > 100) {
+                    demoState.progress = 100;
+                    demoState.level++;
+                    demoState.experience += 100;
+                    clearInterval(progressInterval);
+                    
+                    setTimeout(() => {
+                        alert(`レベルアップ！ レベル${demoState.level}になりました！`);
+                        demoState.progress = 0;
+                        updateDisplay();
+                    }, 500);
+                }
+                updateDisplay();
+            }, 200);
+        }
+
+        function viewSpecifications() {
+            alert(`
+🎮 ゲーム仕様書
+
+【ゲームタイプ】
+カテゴリ別の専用ゲーム
+
+【主な機能】
+• インタラクティブなゲームプレイ
+• リアルタイム成績測定
+• 段階的難易度調整
+• 学習進度追跡
+
+【習得スキル】
+• ビジネス関連スキル
+• 認知能力向上
+• 問題解決能力
+• チームワーク
+
+【実装状況】
+現在テンプレート版
+完全版は段階的に実装予定
+            `);
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = demoState.level;
+            document.getElementById('experience').textContent = demoState.experience;
+            document.getElementById('progress').textContent = demoState.progress + '%';
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // ページ読み込み時にゲーム情報を設定
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLからゲーム番号を取得
+            const gameNumber = window.location.pathname.match(/game(\d+)\.html/);
+            if (gameNumber) {
+                const gameId = parseInt(gameNumber[1]);
+                // ここで各ゲームの詳細情報を設定
+                updateGameInfo(gameId);
+            }
+        });
+
+        function updateGameInfo(gameId) {
+            // 簡単なゲーム情報マッピング
+            const gameInfo = {
+                title: `ゲーム${gameId.toString().padStart(3, '0')}`,
+                description: 'ビジネススキル向上のための実践的トレーニング',
+                icon: '🎮'
+            };
+
+            // カテゴリ別のアイコンと説明
+            if (gameId <= 40) {
+                gameInfo.icon = '⚡';
+                gameInfo.description = 'アクション系スキル - 反射神経と瞬間判断力を鍛える';
+            } else if (gameId <= 70) {
+                gameInfo.icon = '🧩';
+                gameInfo.description = 'パズル系スキル - 論理的思考と問題解決能力を向上';
+            } else if (gameId <= 85) {
+                gameInfo.icon = '🃏';
+                gameInfo.description = 'カード系スキル - 戦略的思考と記憶力を強化';
+            } else if (gameId <= 100) {
+                gameInfo.icon = '⚽';
+                gameInfo.description = 'スポーツ系スキル - 集中力と協調性を育成';
+            }
+
+            // DOM更新
+            document.querySelector('.game-title').innerHTML = `${gameInfo.icon} ${gameInfo.title}`;
+            document.querySelector('.game-description').textContent = gameInfo.description;
+            document.querySelector('.demo-icon').textContent = gameInfo.icon;
+            document.title = `${gameInfo.title} - 100ミニゲーム統合システム`;
+        }
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>

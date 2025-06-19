@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶トランプ - ゲーム073</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1000px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .memory-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            min-height: 400px;
+            text-align: center;
+        }
+
+        .current-card {
+            margin: 20px 0;
+        }
+
+        .card-display {
+            width: 150px;
+            height: 200px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            color: #333;
+        }
+
+        .memory-progress {
+            margin-top: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .recall-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .recall-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 8px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .grid-card {
+            width: 60px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            color: #333;
+        }
+
+        .grid-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .grid-card.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .grid-card.correct {
+            background: #27ae60;
+            color: white;
+        }
+
+        .grid-card.incorrect {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .card {
+            width: 60px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card.red {
+            color: #e74c3c;
+        }
+
+        .card.black {
+            color: #2c3e50;
+        }
+
+        .recall-progress {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            color: #f1c40f;
+        }
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .bet-input {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 100px;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn.fold {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .btn.call {
+            background: rgba(52, 152, 219, 0.3);
+        }
+
+        .btn.raise {
+            background: rgba(46, 204, 113, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 60vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .instructions h3 {
+            color: #f1c40f;
+            margin-bottom: 15px;
+        }
+
+        .rule-section {
+            margin-bottom: 15px;
+        }
+
+        .rule-section h4 {
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+
+        .rule-section ol, .rule-section ul {
+            margin-left: 20px;
+            line-height: 1.5;
+        }
+
+        .rule-section li {
+            margin-bottom: 5px;
+        }
+
+        .skill-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .hand-ranking {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .player-hands {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .community-cards {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .card {
+                width: 50px;
+                height: 70px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎴 記憶トランプ</h1>
+        <p class="game-description">52枚のカード記憶と順序再現による記憶術習得ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">記憶済み</div>
+                <div class="stat-value" id="memorized">0/52</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">時間</div>
+                <div class="stat-value" id="timeLeft">300</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解率</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+
+        <div class="memory-area" id="memoryArea">
+            <div class="current-card" id="currentCard">
+                <div class="card-display" id="cardDisplay">開始ボタンを押してください</div>
+            </div>
+            <div class="memory-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">カード 0/52</div>
+            </div>
+        </div>
+
+        <div class="recall-area" id="recallArea" style="display: none;">
+            <div class="recall-info">
+                <h3>記憶したカードを順番通りに選択してください</h3>
+                <div class="recall-progress" id="recallProgress">1/52</div>
+            </div>
+            <div class="card-grid" id="cardGrid"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startMemorization()">記憶開始</button>
+            <button class="btn" id="nextBtn" onclick="nextCard()" style="display: none;">次のカード</button>
+            <button class="btn" id="recallBtn" onclick="startRecall()" style="display: none;">再現開始</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 詳細ルール・遊び方</h3>
+            <div class="rule-section">
+                <h4>🎯 目的</h4>
+                <p>52枚の標準トランプカードを正確に記憶し、制限時間内に順序通りに再現する記憶術習得ゲームです。</p>
+            </div>
+            <div class="rule-section">
+                <h4>📖 ゲームの流れ</h4>
+                <ol>
+                    <li><strong>記憶フェーズ</strong>: 1枚ずつカードが表示されるので、順序を含めて記憶</li>
+                    <li><strong>制限時間</strong>: 記憶時間は5分（300秒）以内</li>
+                    <li><strong>再現フェーズ</strong>: グリッドから記憶した順番通りにカードを選択</li>
+                    <li><strong>評価</strong>: 正解率と記憶効率を総合評価</li>
+                </ol>
+            </div>
+            <div class="rule-section">
+                <h4>⭐ 勝利条件</h4>
+                <ul>
+                    <li>52枚すべてのカードを記憶</li>
+                    <li>再現率90%以上でクリア</li>
+                    <li>記憶時間5分以内</li>
+                    <li>順序の正確性維持</li>
+                </ul>
+            </div>
+            <div class="rule-section">
+                <h4>🎮 操作方法</h4>
+                <ul>
+                    <li><strong>記憶開始</strong>: ゲーム開始ボタンをクリック</li>
+                    <li><strong>次のカード</strong>: カードを確認後、次のカードボタンで進行</li>
+                    <li><strong>再現開始</strong>: 記憶完了後、再現フェーズに移行</li>
+                    <li><strong>カード選択</strong>: グリッドから記憶した順番通りにクリック</li>
+                </ul>
+            </div>
+            <div class="rule-section">
+                <h4>💡 プレイのコツ</h4>
+                <ul>
+                    <li>カードを単純に覚えるのではなく、ストーリーを作って関連付ける</li>
+                    <li>数字とスートの組み合わせでパターンを見つける</li>
+                    <li>記憶の宮殿法（場所法）を活用して空間記憶を利用</li>
+                    <li>定期的な復習で記憶の定着を図る</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="skill-info">
+            <h3>🎯 ビジネススキル強化ポイント</h3>
+            <p><strong>記憶術:</strong> 大量の情報を効率的に記憶・保持する技術</p>
+            <p><strong>集中力:</strong> 長時間の集中による詳細情報の正確な把握</p>
+            <p><strong>順序管理:</strong> 複雑な情報の順序と関係性を管理</p>
+            <p><strong>情報処理:</strong> 限られた時間での大量情報処理能力</p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            deck: [],
+            currentCardIndex: 0,
+            memoryPhase: true,
+            recallPhase: false,
+            memorizedCards: [],
+            recallCards: [],
+            correctRecalls: 0,
+            timeLeft: 300,
+            timer: null,
+            gameStarted: false
+        };
+
+        const suits = ['♠', '♥', '♣', '♦'];
+        const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const colors = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
+
+        function createDeck() {
+            const deck = [];
+            for (let suit of suits) {
+                for (let rank of ranks) {
+                    deck.push({
+                        suit: suit,
+                        rank: rank,
+                        color: colors[suit],
+                        display: `${rank}${suit}`
+                    });
+                }
+            }
+            return shuffleDeck(deck);
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function startMemorization() {
+            gameState.deck = createDeck();
+            gameState.memorizedCards = [...gameState.deck];
+            gameState.currentCardIndex = 0;
+            gameState.memoryPhase = true;
+            gameState.gameStarted = true;
+            gameState.timeLeft = 300;
+            
+            startTimer();
+            showCurrentCard();
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        function nextCard() {
+            gameState.currentCardIndex++;
+            if (gameState.currentCardIndex >= gameState.deck.length) {
+                endMemoryPhase();
+            } else {
+                showCurrentCard();
+            }
+            updateStats();
+        }
+
+        function showCurrentCard() {
+            const card = gameState.deck[gameState.currentCardIndex];
+            const cardDisplay = document.getElementById('cardDisplay');
+            cardDisplay.textContent = card.display;
+            cardDisplay.className = `card-display ${card.color}`;
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = ((gameState.currentCardIndex + 1) / gameState.deck.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = 
+                `カード ${gameState.currentCardIndex + 1}/52`;
+        }
+
+        function endMemoryPhase() {
+            gameState.memoryPhase = false;
+            document.getElementById('memoryArea').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('recallBtn').style.display = 'inline-block';
+            
+            createCardGrid();
+        }
+
+        function startRecall() {
+            gameState.recallPhase = true;
+            gameState.currentCardIndex = 0;
+            
+            document.getElementById('recallArea').style.display = 'block';
+            document.getElementById('recallBtn').style.display = 'none';
+            
+            updateRecallProgress();
+        }
+
+        function createCardGrid() {
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.innerHTML = '';
+            
+            const shuffledDeck = [...gameState.deck].sort(() => Math.random() - 0.5);
+            
+            shuffledDeck.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'grid-card';
+                cardElement.textContent = card.display;
+                cardElement.style.color = card.color === 'red' ? '#e74c3c' : '#2c3e50';
+                cardElement.onclick = () => selectCard(card, cardElement);
+                cardGrid.appendChild(cardElement);
+            });
+        }
+
+        function selectCard(selectedCard, element) {
+            if (!gameState.recallPhase) return;
+            
+            const correctCard = gameState.memorizedCards[gameState.currentCardIndex];
+            
+            if (selectedCard.display === correctCard.display) {
+                element.classList.add('correct');
+                gameState.correctRecalls++;
+                gameState.currentCardIndex++;
+                
+                if (gameState.currentCardIndex >= gameState.deck.length) {
+                    endGame();
+                } else {
+                    updateRecallProgress();
+                }
+            } else {
+                element.classList.add('incorrect');
+                setTimeout(() => {
+                    element.classList.remove('incorrect');
+                }, 1000);
+            }
+        }
+
+        function updateRecallProgress() {
+            document.getElementById('recallProgress').textContent = 
+                `${gameState.currentCardIndex + 1}/52`;
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timeLeft').textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    if (gameState.memoryPhase) {
+                        endMemoryPhase();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateStats() {
+            document.getElementById('memorized').textContent = 
+                `${gameState.currentCardIndex}/${gameState.deck.length}`;
+            
+            const accuracy = gameState.deck.length > 0 ? 
+                Math.round((gameState.correctRecalls / gameState.deck.length) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+        }
+
+        function endGame() {
+            clearInterval(gameState.timer);
+            gameState.recallPhase = false;
+            
+            const accuracy = Math.round((gameState.correctRecalls / gameState.deck.length) * 100);
+            
+            if (accuracy >= 90) {
+                alert(`🎉 素晴らしい！記憶マスター認定！\n正解率: ${accuracy}%\n記憶術の習得度が非常に高いです！`);
+            } else if (accuracy >= 70) {
+                alert(`👍 良い成績です！\n正解率: ${accuracy}%\nさらなる記憶術の向上を目指しましょう！`);
+            } else {
+                alert(`📚 記憶術の練習を続けましょう\n正解率: ${accuracy}%\n継続的な練習で必ず向上します！`);
+            }
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timer);
+            gameState = {
+                deck: [],
+                currentCardIndex: 0,
+                memoryPhase: true,
+                recallPhase: false,
+                memorizedCards: [],
+                recallCards: [],
+                correctRecalls: 0,
+                timeLeft: 300,
+                timer: null,
+                gameStarted: false
+            };
+            
+            document.getElementById('memoryArea').style.display = 'block';
+            document.getElementById('recallArea').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('recallBtn').style.display = 'none';
+            
+            document.getElementById('cardDisplay').textContent = '開始ボタンを押してください';
+            document.getElementById('cardDisplay').className = 'card-display';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = 'カード 0/52';
+            
+            updateStats();
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            resetGame();
+        });
+    </script>
+</body>
+</html>

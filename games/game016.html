@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>速度制御 - ゲーム016</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speed-track {
+            width: 600px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0;
+            cursor: none;
+            overflow: hidden;
+        }
+
+        .speed-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .target-speed-bar {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            right: 20px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+        }
+
+        .target-speed-range {
+            position: absolute;
+            height: 100%;
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            border: 2px solid #4caf50;
+        }
+
+        .current-speed-bar {
+            position: absolute;
+            top: 150px;
+            left: 20px;
+            right: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .speed-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #2196f3, #00bcd4);
+            border-radius: 10px;
+            transition: width 0.1s ease;
+        }
+
+        .mouse-cursor {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .speed-zones {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 100px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .speed-zone {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .speed-zone.active {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+
+        .speed-zone.complete {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #4caf50, #45a049);
+            border-color: #4caf50;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(45deg, #45a049, #3d8b40);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: #4caf50;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .skills-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .game-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat {
+                min-width: 200px;
+            }
+
+            .speed-track {
+                width: 400px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🎛️ 速度制御</h1>
+        <p class="game-description">マウス移動速度を意識的に調整し、要求される速度レベルに合わせた正確な操作を身につけましょう</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">速度精度</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">現在速度</div>
+                <div class="stat-value" id="currentSpeed">0</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="game-instructions" id="instructions">
+                <h3>🎯 ゲームの遊び方</h3>
+                <p>緑のバーで示される目標速度でマウスを移動してください。</p>
+                <p>10段階の速度レベルを習得し、各レベルで90%以上の精度を目指しましょう。</p>
+                <p>速度制御はビジネスにおける作業効率と精密性の向上に役立ちます。</p>
+            </div>
+
+            <div class="speed-track" id="speedTrack" style="display: none;">
+                <div class="speed-indicator" id="speedIndicator">
+                    目標速度: <span id="targetSpeedText">レベル1 - 低速</span>
+                </div>
+                
+                <div class="target-speed-bar">
+                    <div class="target-speed-range" id="targetSpeedRange"></div>
+                </div>
+                
+                <div class="current-speed-bar">
+                    <div class="speed-progress" id="speedProgress"></div>
+                </div>
+
+                <div class="mouse-cursor" id="mouseCursor"></div>
+
+                <div class="speed-zones" id="speedZones">
+                    <div class="speed-zone" data-level="1">
+                        <div>レベル1</div>
+                        <div>低速</div>
+                    </div>
+                    <div class="speed-zone" data-level="2">
+                        <div>レベル2</div>
+                        <div>軽快</div>
+                    </div>
+                    <div class="speed-zone" data-level="3">
+                        <div>レベル3</div>
+                        <div>中速</div>
+                    </div>
+                    <div class="speed-zone" data-level="4">
+                        <div>レベル4</div>
+                        <div>活発</div>
+                    </div>
+                    <div class="speed-zone" data-level="5">
+                        <div>レベル5</div>
+                        <div>高速</div>
+                    </div>
+                    <div class="speed-zone" data-level="6">
+                        <div>レベル6</div>
+                        <div>急速</div>
+                    </div>
+                    <div class="speed-zone" data-level="7">
+                        <div>レベル7</div>
+                        <div>超高速</div>
+                    </div>
+                    <div class="speed-zone" data-level="8">
+                        <div>レベル8</div>
+                        <div>極速</div>
+                    </div>
+                    <div class="speed-zone" data-level="9">
+                        <div>レベル9</div>
+                        <div>光速</div>
+                    </div>
+                    <div class="speed-zone" data-level="10">
+                        <div>レベル10</div>
+                        <div>最高速</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="startBtn" onclick="startGame()">ゲーム開始</button>
+            <button class="btn" id="pauseBtn" onclick="pauseGame()" style="display: none;">一時停止</button>
+            <button class="btn" onclick="resetGame()">リセット</button>
+            <button class="btn" onclick="goBack()">メニューに戻る</button>
+        </div>
+
+        <div class="skills-section">
+            <h3>🎯 習得できるスキル</h3>
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-icon">🎛️</div>
+                    <h4>速度制御</h4>
+                    <p>意識的な速度調整能力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚖️</div>
+                    <h4>制御安定性</h4>
+                    <p>一定速度を維持する力</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">🔄</div>
+                    <h4>変更滑らかさ</h4>
+                    <p>速度変更を滑らかに行う技術</p>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-icon">⚡</div>
+                    <h4>反応時間</h4>
+                    <p>素早い速度調整反応</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <div class="game-over-content">
+            <h2>🎉 ゲーム終了！</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="gameOverMessage">お疲れ様でした！</p>
+            <div style="margin: 20px 0;">
+                <p>到達レベル: <span id="maxLevel">1</span></p>
+                <p>平均精度: <span id="avgAccuracy">100%</span></p>
+                <p>総制御時間: <span id="totalTime">0</span>秒</p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn primary" onclick="restartGame()">もう一度プレイ</button>
+                <button class="btn" onclick="closeGameOver()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            isPlaying: false,
+            isPaused: false,
+            currentSpeed: 0,
+            targetSpeed: 50,
+            targetSpeedMin: 40,
+            targetSpeedMax: 60,
+            accuracy: 100,
+            totalMeasurements: 0,
+            accurateMeasurements: 0,
+            completedLevels: [],
+            lastMouseX: 0,
+            lastMouseY: 0,
+            lastTime: 0,
+            gameStartTime: null,
+            maxLevel: 1
+        };
+
+        const speedLevels = [
+            { name: "低速", min: 10, max: 30, target: 20 },
+            { name: "軽快", min: 25, max: 45, target: 35 },
+            { name: "中速", min: 40, max: 60, target: 50 },
+            { name: "活発", min: 55, max: 75, target: 65 },
+            { name: "高速", min: 70, max: 90, target: 80 },
+            { name: "急速", min: 85, max: 105, target: 95 },
+            { name: "超高速", min: 100, max: 120, target: 110 },
+            { name: "極速", min: 115, max: 135, target: 125 },
+            { name: "光速", min: 130, max: 150, target: 140 },
+            { name: "最高速", min: 145, max: 165, target: 155 }
+        ];
+
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            gameState.gameStartTime = Date.now();
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('speedTrack').style.display = 'block';
+            
+            setTargetSpeed();
+            updateDisplay();
+            startMouseTracking();
+        }
+
+        function pauseGame() {
+            if (gameState.isPlaying) {
+                gameState.isPaused = !gameState.isPaused;
+                const pauseBtn = document.getElementById('pauseBtn');
+                
+                if (gameState.isPaused) {
+                    pauseBtn.textContent = '再開';
+                } else {
+                    pauseBtn.textContent = '一時停止';
+                }
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                level: 1,
+                score: 0,
+                isPlaying: false,
+                isPaused: false,
+                currentSpeed: 0,
+                targetSpeed: 50,
+                targetSpeedMin: 40,
+                targetSpeedMax: 60,
+                accuracy: 100,
+                totalMeasurements: 0,
+                accurateMeasurements: 0,
+                completedLevels: [],
+                lastMouseX: 0,
+                lastMouseY: 0,
+                lastTime: 0,
+                gameStartTime: null,
+                maxLevel: Math.max(gameState.maxLevel, gameState.level)
+            };
+
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('speedTrack').style.display = 'none';
+            
+            // Reset all speed zones
+            document.querySelectorAll('.speed-zone').forEach(zone => {
+                zone.classList.remove('active', 'complete');
+            });
+            
+            updateDisplay();
+        }
+
+        function setTargetSpeed() {
+            const speedLevel = speedLevels[gameState.level - 1];
+            gameState.targetSpeed = speedLevel.target;
+            gameState.targetSpeedMin = speedLevel.min;
+            gameState.targetSpeedMax = speedLevel.max;
+            
+            document.getElementById('targetSpeedText').textContent = 
+                `レベル${gameState.level} - ${speedLevel.name}`;
+            
+            // Update target speed range display
+            const rangeElement = document.getElementById('targetSpeedRange');
+            const percentage = (speedLevel.target / 200) * 100;
+            const rangeWidth = ((speedLevel.max - speedLevel.min) / 200) * 100;
+            const rangeLeft = (speedLevel.min / 200) * 100;
+            
+            rangeElement.style.left = rangeLeft + '%';
+            rangeElement.style.width = rangeWidth + '%';
+            
+            // Update active speed zone
+            document.querySelectorAll('.speed-zone').forEach(zone => {
+                zone.classList.remove('active');
+            });
+            document.querySelector(`[data-level="${gameState.level}"]`).classList.add('active');
+        }
+
+        function startMouseTracking() {
+            const speedTrack = document.getElementById('speedTrack');
+            const mouseCursor = document.getElementById('mouseCursor');
+            
+            speedTrack.addEventListener('mousemove', handleMouseMove);
+            speedTrack.addEventListener('mouseenter', initMouseTracking);
+        }
+
+        function initMouseTracking(event) {
+            gameState.lastMouseX = event.clientX;
+            gameState.lastMouseY = event.clientY;
+            gameState.lastTime = Date.now();
+        }
+
+        function handleMouseMove(event) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const currentTime = Date.now();
+            const deltaTime = currentTime - gameState.lastTime;
+            
+            if (deltaTime > 0) {
+                const deltaX = event.clientX - gameState.lastMouseX;
+                const deltaY = event.clientY - gameState.lastMouseY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Calculate speed (pixels per second)
+                gameState.currentSpeed = (distance / deltaTime) * 1000;
+                
+                // Update mouse cursor position
+                const speedTrack = document.getElementById('speedTrack');
+                const rect = speedTrack.getBoundingClientRect();
+                const mouseCursor = document.getElementById('mouseCursor');
+                
+                mouseCursor.style.left = (event.clientX - rect.left) + 'px';
+                mouseCursor.style.top = (event.clientY - rect.top) + 'px';
+                
+                // Check if speed is within target range
+                gameState.totalMeasurements++;
+                if (gameState.currentSpeed >= gameState.targetSpeedMin && 
+                    gameState.currentSpeed <= gameState.targetSpeedMax) {
+                    gameState.accurateMeasurements++;
+                    gameState.score += 1;
+                }
+                
+                // Update accuracy
+                gameState.accuracy = (gameState.accurateMeasurements / gameState.totalMeasurements) * 100;
+                
+                // Check level completion
+                checkLevelCompletion();
+                
+                updateDisplay();
+            }
+            
+            gameState.lastMouseX = event.clientX;
+            gameState.lastMouseY = event.clientY;
+            gameState.lastTime = currentTime;
+        }
+
+        function checkLevelCompletion() {
+            if (gameState.totalMeasurements >= 100 && gameState.accuracy >= 90) {
+                // Level completed
+                if (!gameState.completedLevels.includes(gameState.level)) {
+                    gameState.completedLevels.push(gameState.level);
+                    gameState.score += 1000; // Level completion bonus
+                    
+                    // Mark level as complete
+                    document.querySelector(`[data-level="${gameState.level}"]`).classList.add('complete');
+                    
+                    if (gameState.level < 10) {
+                        gameState.level++;
+                        gameState.maxLevel = Math.max(gameState.maxLevel, gameState.level);
+                        gameState.totalMeasurements = 0;
+                        gameState.accurateMeasurements = 0;
+                        
+                        setTimeout(() => {
+                            setTargetSpeed();
+                            showLevelUpMessage();
+                        }, 1000);
+                    } else {
+                        // All levels completed
+                        setTimeout(() => {
+                            endGame();
+                        }, 2000);
+                    }
+                }
+            }
+        }
+
+        function showLevelUpMessage() {
+            const gameArea = document.getElementById('gameArea');
+            const levelUpDiv = document.createElement('div');
+            levelUpDiv.innerHTML = `<h2 style="color: #4caf50; font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🎉 レベル ${gameState.level} 🎉</h2>`;
+            levelUpDiv.style.position = 'absolute';
+            levelUpDiv.style.top = '50%';
+            levelUpDiv.style.left = '50%';
+            levelUpDiv.style.transform = 'translate(-50%, -50%)';
+            levelUpDiv.style.zIndex = '100';
+            levelUpDiv.style.background = 'rgba(0,0,0,0.8)';
+            levelUpDiv.style.padding = '20px';
+            levelUpDiv.style.borderRadius = '15px';
+            
+            gameArea.style.position = 'relative';
+            gameArea.appendChild(levelUpDiv);
+            
+            setTimeout(() => {
+                if (levelUpDiv.parentNode) {
+                    gameArea.removeChild(levelUpDiv);
+                }
+            }, 2000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('accuracy').textContent = Math.round(gameState.accuracy) + '%';
+            document.getElementById('currentSpeed').textContent = Math.round(gameState.currentSpeed);
+            
+            // Update speed progress bar
+            const speedProgress = document.getElementById('speedProgress');
+            const speedPercentage = Math.min((gameState.currentSpeed / 200) * 100, 100);
+            speedProgress.style.width = speedPercentage + '%';
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            showGameOverScreen();
+        }
+
+        function showGameOverScreen() {
+            const totalTime = gameState.gameStartTime ? 
+                Math.round((Date.now() - gameState.gameStartTime) / 1000) : 0;
+
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('maxLevel').textContent = gameState.maxLevel;
+            document.getElementById('avgAccuracy').textContent = Math.round(gameState.accuracy) + '%';
+            document.getElementById('totalTime').textContent = totalTime;
+            
+            let message = '';
+            if (gameState.completedLevels.length >= 10) {
+                message = '🏆 速度制御マスター！ 全レベル制覇！';
+            } else if (gameState.completedLevels.length >= 7) {
+                message = '🥈 上級者レベル！ 優れた速度制御能力です！';
+            } else if (gameState.completedLevels.length >= 4) {
+                message = '🥉 中級者レベル！ 良い制御感覚を持っています！';
+            } else {
+                message = '📈 練習を重ねて、速度制御技術を向上させましょう！';
+            }
+            
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+
+        function restartGame() {
+            closeGameOver();
+            resetGame();
+            startGame();
+        }
+
+        function goBack() {
+            if (gameState.isPlaying) {
+                if (confirm('ゲーム中です。本当に戻りますか？')) {
+                    resetGame();
+                    window.close();
+                    window.history.back();
+                }
+            } else {
+                window.close();
+                window.history.back();
+            }
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>対称性 - ゲーム070</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .symmetry-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .symmetry-viewport {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .symmetry-viewport h4 {
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .symmetry-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .symmetry-controls h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .axis-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .axis-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .axis-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .axis-btn.active {
+            background: rgba(255, 193, 7, 0.7);
+            border-color: #ffc107;
+        }
+
+        .symmetry-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .drawing-tools {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .drawing-tools h5 {
+            color: #ffc107;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .tool-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .tool-btn.active {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .axis-controls {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .info-panels {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">⚖️ 対称性</h1>
+        <p class="game-description">図形の対称性理解と対称軸発見による幾何学的美的感覚ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">図形数</div>
+                <div class="stat-value" id="currentShape">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">発見数</div>
+                <div class="stat-value" id="discoveredCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">発見率</div>
+                <div class="stat-value" id="discoveryRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 20種類の図形の対称性を分析し、対称軸・対称中心を発見する</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>様々な図形の対称性パターンを観察する</li>
+                        <li>対称軸（線対称）・対称中心（点対称）を特定する</li>
+                        <li>不完全な図形を対称性に基づいて完成させる</li>
+                    </ul>
+                </li>
+                <li><strong>対称軸操作:</strong> 縦軸・横軸・斜め軸など8種類の対称軸ボタン</li>
+                <li><strong>勝利条件:</strong> 20図形中、発見率85%以上（17図形以上発見）でクリア</li>
+                <li><strong>評価システム:</strong> 正確な発見: +100点、部分発見: +50点、誤発見: -25点</li>
+                <li><strong>プレイのコツ:</strong> 図形の美しさと規則性に注目し、対称性の法則を理解する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="symmetry-area" id="symmetryArea">
+                <div class="symmetry-viewport">
+                    <h4>🎯 図形対称性分析</h4>
+                    <canvas id="symmetryCanvas" width="600" height="400" style="border: 2px solid #fff; border-radius: 10px; background: rgba(255,255,255,0.9);"></canvas>
+                </div>
+                
+                <div class="symmetry-controls">
+                    <h4>📐 対称軸コントロール</h4>
+                    <div class="axis-controls" id="axisControls">
+                        <button class="axis-btn" onclick="findSymmetryAxis('vertical')">縦軸</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('horizontal')">横軸</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('diagonal1')">斜め軸/</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('diagonal2')">斜め軸\\</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('center')">点対称</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('rotational')">回転対称</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('multiple')">複数軸</button>
+                        <button class="axis-btn" onclick="findSymmetryAxis('none')">対称なし</button>
+                    </div>
+                    
+                    <div class="drawing-tools">
+                        <h5>✏️ 描画ツール</h5>
+                        <div class="tool-buttons">
+                            <button class="tool-btn" onclick="setDrawingTool('complete')">図形完成</button>
+                            <button class="tool-btn" onclick="setDrawingTool('axis')">軸表示</button>
+                            <button class="tool-btn" onclick="setDrawingTool('erase')">消去</button>
+                            <button class="tool-btn" onclick="setDrawingTool('hint')">ヒント</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="symmetry-info">
+                    <div class="info-panels">
+                        <div class="info-panel">
+                            <strong>図形タイプ:</strong><br>
+                            <span id="shapeType">多角形</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>対称軸数:</strong><br>
+                            <span id="axisCount">？</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>対称種類:</strong><br>
+                            <span id="symmetryType">分析中</span>
+                        </div>
+                        <div class="info-panel">
+                            <strong>発見状況:</strong><br>
+                            <span id="discoveryStatus">未発見</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newSymmetryChallenge()">新しい図形</button>
+            <button class="btn" onclick="checkSymmetryDiscovery()">発見チェック</button>
+            <button class="btn" onclick="showSymmetryGuide()">対称性ガイド</button>
+            <button class="btn" onclick="resetSymmetry()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentShape: 1,
+            totalShapes: 20,
+            discoveredCount: 0,
+            score: 0,
+            currentFigure: null,
+            discoveredAxes: [],
+            canvas: null,
+            ctx: null,
+            axisTypes: ['vertical', 'horizontal', 'diagonal1', 'diagonal2', 'center', 'rotational', 'multiple', 'none']
+        };
+
+        const symmetryFigures = [
+            { name: '正方形', type: 'square', axes: ['vertical', 'horizontal', 'diagonal1', 'diagonal2'], complexity: 'easy' },
+            { name: '正三角形', type: 'triangle', axes: ['vertical'], complexity: 'easy' },
+            { name: '円', type: 'circle', axes: ['multiple'], complexity: 'easy' },
+            { name: '長方形', type: 'rectangle', axes: ['vertical', 'horizontal'], complexity: 'normal' },
+            { name: '正六角形', type: 'hexagon', axes: ['vertical', 'horizontal', 'diagonal1'], complexity: 'normal' },
+            { name: 'ひし形', type: 'diamond', axes: ['vertical', 'horizontal'], complexity: 'normal' },
+            { name: '正五角形', type: 'pentagon', axes: ['vertical'], complexity: 'hard' },
+            { name: '星形', type: 'star', axes: ['multiple'], complexity: 'hard' },
+            { name: '楕円', type: 'ellipse', axes: ['vertical', 'horizontal'], complexity: 'normal' },
+            { name: '台形', type: 'trapezoid', axes: ['vertical'], complexity: 'normal' },
+            { name: 'ハート', type: 'heart', axes: ['vertical'], complexity: 'expert' },
+            { name: '不規則図形', type: 'irregular', axes: ['none'], complexity: 'expert' }
+        ];
+
+        function initializeGame() {
+            gameState.canvas = document.getElementById('symmetryCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resetGameState();
+            generateNewFigure();
+            updateDisplay();
+            drawSymmetryFigure();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentShape: 1,
+                totalShapes: 20,
+                discoveredCount: 0,
+                score: 0,
+                currentFigure: null,
+                discoveredAxes: [],
+                canvas: gameState.canvas,
+                ctx: gameState.ctx,
+                axisTypes: ['vertical', 'horizontal', 'diagonal1', 'diagonal2', 'center', 'rotational', 'multiple', 'none']
+            };
+        }
+
+        function generateNewFigure() {
+            if (gameState.currentShape > gameState.totalShapes) {
+                endGame();
+                return;
+            }
+            
+            const figureIndex = (gameState.currentShape - 1) % symmetryFigures.length;
+            gameState.currentFigure = symmetryFigures[figureIndex];
+            gameState.discoveredAxes = [];
+            
+            // ボタンの状態をリセット
+            document.querySelectorAll('.axis-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            updateFigureDisplay();
+            drawSymmetryFigure();
+        }
+
+        function findSymmetryAxis(axisType) {
+            // 既に発見済みかチェック
+            if (gameState.discoveredAxes.includes(axisType)) {
+                return;
+            }
+            
+            // ボタンの状態を更新
+            document.querySelectorAll('.axis-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 正解かチェック
+            const isCorrect = gameState.currentFigure.axes.includes(axisType);
+            
+            if (isCorrect) {
+                gameState.discoveredAxes.push(axisType);
+                gameState.score += 100;
+                
+                // 対称軸を描画
+                drawSymmetryAxis(axisType);
+                
+                // 全軸発見チェック
+                if (gameState.discoveredAxes.length >= gameState.currentFigure.axes.length) {
+                    setTimeout(() => {
+                        checkSymmetryDiscovery();
+                    }, 1000);
+                }
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+                // 間違いのフィードバック
+                showIncorrectFeedback();
+            }
+            
+            updateFigureDisplay();
+            updateDisplay();
+        }
+
+        function setDrawingTool(tool) {
+            // ツールボタンの状態を更新
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            switch(tool) {
+                case 'complete':
+                    completeSymmetricFigure();
+                    break;
+                case 'axis':
+                    showAllAxes();
+                    break;
+                case 'erase':
+                    clearDrawing();
+                    break;
+                case 'hint':
+                    showSymmetryHint();
+                    break;
+            }
+        }
+
+        function updateFigureDisplay() {
+            document.getElementById('shapeType').textContent = gameState.currentFigure.name;
+            document.getElementById('axisCount').textContent = gameState.currentFigure.axes.length;
+            
+            const symmetryTypes = {
+                'vertical': '線対称(縦)',
+                'horizontal': '線対称(横)',
+                'diagonal1': '線対称(斜め)',
+                'diagonal2': '線対称(斜め)',
+                'center': '点対称',
+                'rotational': '回転対称',
+                'multiple': '多重対称',
+                'none': '非対称'
+            };
+            
+            if (gameState.discoveredAxes.length > 0) {
+                const types = gameState.discoveredAxes.map(axis => symmetryTypes[axis]).join(', ');
+                document.getElementById('symmetryType').textContent = types;
+            } else {
+                document.getElementById('symmetryType').textContent = '分析中';
+            }
+            
+            const discoveryStatus = `${gameState.discoveredAxes.length}/${gameState.currentFigure.axes.length} 発見`;
+            document.getElementById('discoveryStatus').textContent = discoveryStatus;
+        }
+
+        function drawSymmetryFigure() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // 白背景
+            gameState.ctx.fillStyle = '#f8f9fa';
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            const centerX = gameState.canvas.width / 2;
+            const centerY = gameState.canvas.height / 2;
+            const size = 120;
+            
+            // グリッド表示
+            drawGrid(centerX, centerY);
+            
+            // 図形の描画
+            gameState.ctx.fillStyle = '#2196f3';
+            gameState.ctx.strokeStyle = '#1976d2';
+            gameState.ctx.lineWidth = 3;
+            
+            switch (gameState.currentFigure.type) {
+                case 'square':
+                    drawSquare(centerX, centerY, size);
+                    break;
+                case 'triangle':
+                    drawTriangle(centerX, centerY, size);
+                    break;
+                case 'circle':
+                    drawCircle(centerX, centerY, size);
+                    break;
+                case 'rectangle':
+                    drawRectangle(centerX, centerY, size);
+                    break;
+                case 'hexagon':
+                    drawHexagon(centerX, centerY, size);
+                    break;
+                case 'diamond':
+                    drawDiamond(centerX, centerY, size);
+                    break;
+                case 'pentagon':
+                    drawPentagon(centerX, centerY, size);
+                    break;
+                case 'star':
+                    drawStar(centerX, centerY, size);
+                    break;
+                case 'ellipse':
+                    drawEllipse(centerX, centerY, size);
+                    break;
+                case 'trapezoid':
+                    drawTrapezoid(centerX, centerY, size);
+                    break;
+                case 'heart':
+                    drawHeart(centerX, centerY, size);
+                    break;
+                case 'irregular':
+                    drawIrregular(centerX, centerY, size);
+                    break;
+            }
+        }
+
+        function drawGrid(centerX, centerY) {
+            gameState.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            gameState.ctx.lineWidth = 1;
+            
+            // 水平線
+            for (let i = -200; i <= 200; i += 20) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(centerX - 200, centerY + i);
+                gameState.ctx.lineTo(centerX + 200, centerY + i);
+                gameState.ctx.stroke();
+            }
+            
+            // 垂直線
+            for (let i = -200; i <= 200; i += 20) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(centerX + i, centerY - 200);
+                gameState.ctx.lineTo(centerX + i, centerY + 200);
+                gameState.ctx.stroke();
+            }
+        }
+
+        function drawSquare(x, y, size) {
+            gameState.ctx.fillRect(x - size/2, y - size/2, size, size);
+            gameState.ctx.strokeRect(x - size/2, y - size/2, size, size);
+        }
+
+        function drawTriangle(x, y, size) {
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(x, y - size/2);
+            gameState.ctx.lineTo(x - size/2, y + size/2);
+            gameState.ctx.lineTo(x + size/2, y + size/2);
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawCircle(x, y, size) {
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(x, y, size/2, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawRectangle(x, y, size) {
+            const width = size * 1.5;
+            const height = size;
+            gameState.ctx.fillRect(x - width/2, y - height/2, width, height);
+            gameState.ctx.strokeRect(x - width/2, y - height/2, width, height);
+        }
+
+        function drawHexagon(x, y, size) {
+            gameState.ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * 2 * Math.PI;
+                const pointX = x + Math.cos(angle) * size/2;
+                const pointY = y + Math.sin(angle) * size/2;
+                if (i === 0) {
+                    gameState.ctx.moveTo(pointX, pointY);
+                } else {
+                    gameState.ctx.lineTo(pointX, pointY);
+                }
+            }
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawDiamond(x, y, size) {
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(x, y - size/2);
+            gameState.ctx.lineTo(x + size/3, y);
+            gameState.ctx.lineTo(x, y + size/2);
+            gameState.ctx.lineTo(x - size/3, y);
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawPentagon(x, y, size) {
+            gameState.ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * 2 * Math.PI - Math.PI/2;
+                const pointX = x + Math.cos(angle) * size/2;
+                const pointY = y + Math.sin(angle) * size/2;
+                if (i === 0) {
+                    gameState.ctx.moveTo(pointX, pointY);
+                } else {
+                    gameState.ctx.lineTo(pointX, pointY);
+                }
+            }
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawStar(x, y, size) {
+            gameState.ctx.beginPath();
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * 2 * Math.PI - Math.PI/2;
+                const radius = (i % 2 === 0) ? size/2 : size/4;
+                const pointX = x + Math.cos(angle) * radius;
+                const pointY = y + Math.sin(angle) * radius;
+                if (i === 0) {
+                    gameState.ctx.moveTo(pointX, pointY);
+                } else {
+                    gameState.ctx.lineTo(pointX, pointY);
+                }
+            }
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawEllipse(x, y, size) {
+            gameState.ctx.beginPath();
+            gameState.ctx.ellipse(x, y, size/2, size/3, 0, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawTrapezoid(x, y, size) {
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(x - size/3, y - size/2);
+            gameState.ctx.lineTo(x + size/3, y - size/2);
+            gameState.ctx.lineTo(x + size/2, y + size/2);
+            gameState.ctx.lineTo(x - size/2, y + size/2);
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawHeart(x, y, size) {
+            gameState.ctx.beginPath();
+            // ハートの上部（左）
+            gameState.ctx.arc(x - size/4, y - size/4, size/4, 0, Math.PI, true);
+            // ハートの上部（右）
+            gameState.ctx.arc(x + size/4, y - size/4, size/4, 0, Math.PI, true);
+            // ハートの下部
+            gameState.ctx.lineTo(x, y + size/2);
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawIrregular(x, y, size) {
+            // 不規則な図形
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(x - size/2, y - size/3);
+            gameState.ctx.lineTo(x - size/4, y - size/2);
+            gameState.ctx.lineTo(x + size/3, y - size/4);
+            gameState.ctx.lineTo(x + size/2, y + size/4);
+            gameState.ctx.lineTo(x + size/4, y + size/2);
+            gameState.ctx.lineTo(x - size/3, y + size/3);
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawSymmetryAxis(axisType) {
+            const centerX = gameState.canvas.width / 2;
+            const centerY = gameState.canvas.height / 2;
+            
+            gameState.ctx.strokeStyle = '#f44336';
+            gameState.ctx.lineWidth = 2;
+            gameState.ctx.setLineDash([5, 5]);
+            
+            switch(axisType) {
+                case 'vertical':
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(centerX, centerY - 150);
+                    gameState.ctx.lineTo(centerX, centerY + 150);
+                    gameState.ctx.stroke();
+                    break;
+                case 'horizontal':
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(centerX - 150, centerY);
+                    gameState.ctx.lineTo(centerX + 150, centerY);
+                    gameState.ctx.stroke();
+                    break;
+                case 'diagonal1':
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(centerX - 150, centerY - 150);
+                    gameState.ctx.lineTo(centerX + 150, centerY + 150);
+                    gameState.ctx.stroke();
+                    break;
+                case 'diagonal2':
+                    gameState.ctx.beginPath();
+                    gameState.ctx.moveTo(centerX - 150, centerY + 150);
+                    gameState.ctx.lineTo(centerX + 150, centerY - 150);
+                    gameState.ctx.stroke();
+                    break;
+                case 'center':
+                    // 点対称の中心点
+                    gameState.ctx.fillStyle = '#f44336';
+                    gameState.ctx.beginPath();
+                    gameState.ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+                    gameState.ctx.fill();
+                    break;
+            }
+            
+            gameState.ctx.setLineDash([]);
+        }
+
+        function showAllAxes() {
+            // 全ての対称軸を表示
+            gameState.currentFigure.axes.forEach(axis => {
+                drawSymmetryAxis(axis);
+            });
+        }
+
+        function completeSymmetricFigure() {
+            // 図形の対称性を利用して完成させる（簡易版）
+            drawSymmetryFigure();
+            showAllAxes();
+        }
+
+        function clearDrawing() {
+            drawSymmetryFigure();
+        }
+
+        function showIncorrectFeedback() {
+            const canvas = gameState.canvas;
+            canvas.style.border = '2px solid #f44336';
+            setTimeout(() => {
+                canvas.style.border = '2px solid #fff';
+            }, 500);
+        }
+
+        function checkSymmetryDiscovery() {
+            const discoveryRate = (gameState.discoveredAxes.length / gameState.currentFigure.axes.length) * 100;
+            
+            let message = `⚖️ 対称性発見チェック\\n\\n`;
+            message += `図形: ${gameState.currentFigure.name}\\n`;
+            message += `発見軸: ${gameState.discoveredAxes.length}/${gameState.currentFigure.axes.length}\\n`;
+            message += `発見率: ${discoveryRate.toFixed(1)}%\\n\\n`;
+            
+            if (discoveryRate >= 85) {
+                message += '🏆 優秀な発見です！';
+                gameState.discoveredCount++;
+                gameState.score += 100;
+            } else if (discoveryRate >= 60) {
+                message += '👍 良い発見です！';
+                gameState.discoveredCount++;
+                gameState.score += 50;
+            } else {
+                message += '📚 もう少し観察してみましょう。';
+            }
+            
+            alert(message);
+            
+            gameState.currentShape++;
+            setTimeout(() => {
+                generateNewFigure();
+                updateDisplay();
+            }, 1000);
+        }
+
+        function showSymmetryGuide() {
+            const guides = [
+                '📐 図形を縦・横・斜めに分割して見てみましょう',
+                '⚖️ 左右、上下が同じ形かチェックしてください',
+                '🔄 図形を180度回転させても同じかも重要です',
+                '✨ 美しい図形には必ず対称性があります',
+                '🎯 複数の対称軸を持つ図形もあります'
+            ];
+            
+            const randomGuide = guides[Math.floor(Math.random() * guides.length)];
+            alert(`対称性のコツ:\\n${randomGuide}`);
+        }
+
+        function showSymmetryHint() {
+            const hint = gameState.currentFigure.axes[0];
+            const hints = {
+                'vertical': '縦に折りたたんでみてください',
+                'horizontal': '横に折りたたんでみてください',
+                'diagonal1': '左上から右下の斜めに折ってみてください',
+                'diagonal2': '右上から左下の斜めに折ってみてください',
+                'center': '図形の中心点で回転させてみてください',
+                'rotational': '図形を回転させてみてください',
+                'multiple': '複数の対称軸があります',
+                'none': 'この図形は対称ではありません'
+            };
+            
+            alert(`💡 ヒント: ${hints[hint] || 'よく観察してください'}`);
+        }
+
+        function resetSymmetry() {
+            if (confirm('現在の分析をリセットしますか？進行状況が失われます。')) {
+                gameState.discoveredAxes = [];
+                
+                // ボタンの状態をリセット
+                document.querySelectorAll('.axis-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                updateFigureDisplay();
+                drawSymmetryFigure();
+            }
+        }
+
+        function newSymmetryChallenge() {
+            if (confirm('新しい図形を表示しますか？現在の進行状況が失われます。')) {
+                generateNewFigure();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentShape').textContent = Math.min(gameState.currentShape, gameState.totalShapes);
+            document.getElementById('discoveredCount').textContent = gameState.discoveredCount;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const discoveryRate = gameState.currentShape > 1 ? 
+                ((gameState.discoveredCount / (gameState.currentShape - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('discoveryRate').textContent = `${discoveryRate}%`;
+            
+            const progress = ((gameState.currentShape - 1) / gameState.totalShapes) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // ゲーム終了チェック
+            if (gameState.currentShape > gameState.totalShapes) {
+                setTimeout(endGame, 1000);
+            }
+        }
+
+        function endGame() {
+            const discoveryRate = ((gameState.discoveredCount / gameState.totalShapes) * 100).toFixed(1);
+            const passed = discoveryRate >= 85;
+            
+            let message = `🎊 対称性ゲーム完了！\\n\\n`;
+            message += `発見図形: ${gameState.discoveredCount} / ${gameState.totalShapes}\\n`;
+            message += `発見率: ${discoveryRate}%\\n`;
+            message += `最終スコア: ${gameState.score}点\\n\\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\\n優秀な幾何学的美的感覚です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\\n85%以上の発見率を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

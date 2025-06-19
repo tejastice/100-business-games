@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色判別ラッシュ - ゲーム002</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .color-rush-game {
+            width: 800px;
+            max-height: 85vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .target-color-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        .target-color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: colorBoxPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes colorBoxPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .game-area {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .color-object {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: transform 0.1s ease;
+            animation: colorFloat 3s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-object:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-object.correct-click {
+            animation: correctPulse 0.5s ease-out;
+        }
+
+        .color-object.wrong-click {
+            animation: wrongShake 0.5s ease-out;
+        }
+
+        @keyframes colorFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-8px) rotate(2deg); }
+            66% { transform: translateY(-5px) rotate(-2deg); }
+        }
+
+        @keyframes correctPulse {
+            0% { 
+                transform: scale(1); 
+                background-color: inherit;
+            }
+            50% { 
+                transform: scale(1.3); 
+                background-color: #4CAF50 !important;
+                box-shadow: 0 0 25px #4CAF50;
+            }
+            100% { 
+                transform: scale(0); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0) scale(1); }
+            10% { transform: translateX(-8px) scale(1.05); }
+            20% { transform: translateX(8px) scale(1.05); }
+            30% { transform: translateX(-6px) scale(1.05); }
+            40% { transform: translateX(6px) scale(1.05); }
+            50% { transform: translateX(-4px) scale(1.05); }
+            60% { transform: translateX(4px) scale(1.05); }
+            70% { transform: translateX(-2px) scale(1.05); }
+            80% { transform: translateX(2px) scale(1.05); }
+            90% { transform: translateX(-1px) scale(1.05); }
+        }
+
+        .miss-indicator {
+            position: absolute;
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: missFloat 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        @keyframes missFloat {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(-50px) scale(1.2); 
+            }
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .start-button, .reset-button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+        }
+
+        .start-button:hover:not(:disabled) {
+            background: linear-gradient(45deg, #66BB6A, #4CAF50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .start-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .reset-button {
+            background: linear-gradient(45deg, #ff7043, #ff5722);
+            color: white;
+        }
+
+        .reset-button:hover {
+            background: linear-gradient(45deg, #ff5722, #ff7043);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+        }
+
+        .game-results {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+
+        .victory-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            animation: victoryAppear 0.5s ease-out;
+        }
+
+        @keyframes victoryAppear {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.5); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* スクロールバーのスタイリング */
+        .color-rush-game::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .color-rush-game::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .color-rush-game::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .color-rush-game::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-height: 800px) {
+            .color-rush-game {
+                max-height: 90vh;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .color-rush-game {
+                width: 95vw;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="color-rush-game">
+        <h1 class="game-title" style="color: white; text-align: center; margin-bottom: 20px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">🌈 色判別ラッシュ</h1>
+        <div class="game-header">
+            <div class="target-color-display">
+                目標色: <div class="target-color-box" id="targetColor"></div>
+                <span id="targetColorName">赤</span>
+            </div>
+            <div class="score-display">正解: <span id="correctCount">0</span></div>
+            <div class="miss-display">ミス: <span id="missCount">0</span>/3</div>
+            <div class="time-display">残り時間: <span id="timer">60</span>秒</div>
+        </div>
+        <div class="game-area" id="gameArea">
+            <!-- カラーオブジェクトが動的に生成される -->
+        </div>
+        <div class="game-controls">
+            <button id="startBtn" class="start-button">スタート</button>
+            <button id="resetBtn" class="reset-button">リセット</button>
+        </div>
+        <div class="game-results" id="results" style="display: none;">
+            <h1 class="game-title">🌈 色判別ラッシュ</h1>
+            <p class="game-description">複数色のオブジェクトが出現し、指定された色のもののみを素早くクリックする色彩認識ゲーム</p>
+            <h3>結果</h3>
+            <p>正解数: <span id="finalCorrect">0</span></p>
+            <p>ミス数: <span id="finalMiss">0</span></p>
+            <p>正答率: <span id="accuracy">0</span>%</p>
+        </div>
+        <div class="instructions" style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin: 20px; text-align: left; flex-shrink: 0;">
+            <h3>🎯 詳細ルール・遊び方</h3>
+            <p><strong>目的:</strong> 60秒間で指定された色のオブジェクトを正確にクリックし、高正答率を目指す</p>
+            <p><strong>ゲームの流れ:</strong></p>
+            <p>• スタートボタンでゲーム開始（60秒タイマースタート）</p>
+            <p>• 画面上部に目標色が表示される（赤、青、緑など8色）</p>
+            <p>• 画面内に異なる色の円形オブジェクトがランダム出現</p>
+            <p>• 目標色と同じ色のオブジェクトのみクリック</p>
+            <p>• 間違った色をクリックするとミスカウント</p>
+            <p><strong>得点システム:</strong></p>
+            <p>• 正解クリック: +1点（正解数加算）</p>
+            <p>• 不正解クリック: ミスカウント加算（最大3回まで）</p>
+            <p>• 10回正解するごとに目標色が変更</p>
+            <p><strong>ゲーム終了条件:</strong></p>
+            <p>• 60秒経過で自動終了</p>
+            <p>• ミスカウントが3回に達した場合即終了</p>
+            <p><strong>勝利条件:</strong> 50個以上正解かつミスカウント3回未満</p>
+            <p><strong>コツ:</strong> 目標色を常に意識し、焦らず正確に判断しよう！</p>
+        </div>
+    </div>
+
+    <script>
+        class ColorRushGame {
+            constructor() {
+                this.correctCount = 0;
+                this.missCount = 0;
+                this.timeLeft = 60;
+                this.gameActive = false;
+                this.currentTargetColor = null;
+                this.colorObjects = [];
+                this.gameTimer = null;
+                this.spawnTimer = null;
+                
+                // 8色の明確に区別可能な色セット
+                this.colors = [
+                    { name: '赤', hex: '#FF5722', hsl: 'hsl(14, 100%, 55%)' },
+                    { name: '青', hex: '#2196F3', hsl: 'hsl(207, 90%, 54%)' },
+                    { name: '緑', hex: '#4CAF50', hsl: 'hsl(122, 39%, 49%)' },
+                    { name: '黄', hex: '#FFEB3B', hsl: 'hsl(54, 100%, 62%)' },
+                    { name: '紫', hex: '#9C27B0', hsl: 'hsl(291, 64%, 42%)' },
+                    { name: 'オレンジ', hex: '#FF9800', hsl: 'hsl(36, 100%, 50%)' },
+                    { name: 'ピンク', hex: '#E91E63', hsl: 'hsl(340, 82%, 52%)' },
+                    { name: 'シアン', hex: '#00BCD4', hsl: 'hsl(187, 100%, 42%)' }
+                ];
+                
+                this.initElements();
+                this.bindEvents();
+                this.setNewTargetColor();
+            }
+
+            initElements() {
+                this.gameArea = document.getElementById('gameArea');
+                this.targetColorBox = document.getElementById('targetColor');
+                this.targetColorName = document.getElementById('targetColorName');
+                this.correctDisplay = document.getElementById('correctCount');
+                this.missDisplay = document.getElementById('missCount');
+                this.timerDisplay = document.getElementById('timer');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.results = document.getElementById('results');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                
+                // キーボードショートカット
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && !this.gameActive) {
+                        e.preventDefault();
+                        this.startGame();
+                    }
+                });
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.startBtn.disabled = true;
+                this.results.style.display = 'none';
+                
+                this.setNewTargetColor();
+                
+                // ゲームタイマー開始
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    this.timerDisplay.textContent = this.timeLeft;
+                    
+                    if (this.timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+                
+                // オブジェクト生成開始
+                this.spawnColorObject();
+                this.scheduleNextSpawn();
+            }
+
+            setNewTargetColor() {
+                this.currentTargetColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.targetColorBox.style.backgroundColor = this.currentTargetColor.hsl;
+                this.targetColorName.textContent = this.currentTargetColor.name;
+            }
+
+            spawnColorObject() {
+                if (!this.gameActive) return;
+                
+                const obj = document.createElement('div');
+                obj.className = 'color-object';
+                
+                // ランダムな色を選択（正解色の確率は30%）
+                let selectedColor;
+                if (Math.random() < 0.3) {
+                    selectedColor = this.currentTargetColor;
+                    obj.dataset.correct = 'true';
+                } else {
+                    // 正解色以外からランダム選択
+                    const wrongColors = this.colors.filter(c => c.name !== this.currentTargetColor.name);
+                    selectedColor = wrongColors[Math.floor(Math.random() * wrongColors.length)];
+                    obj.dataset.correct = 'false';
+                }
+                
+                obj.style.backgroundColor = selectedColor.hsl;
+                obj.dataset.colorName = selectedColor.name;
+                
+                // ランダム位置（重複回避ロジック）
+                let x, y, attempts = 0;
+                do {
+                    x = Math.random() * (this.gameArea.clientWidth - 50);
+                    y = Math.random() * (this.gameArea.clientHeight - 50);
+                    attempts++;
+                } while (this.isPositionOccupied(x, y) && attempts < 10);
+                
+                obj.style.left = x + 'px';
+                obj.style.top = y + 'px';
+                
+                // クリックイベント
+                obj.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.handleObjectClick(obj);
+                });
+                
+                this.gameArea.appendChild(obj);
+                this.colorObjects.push(obj);
+                
+                // 4秒後に自動消失
+                setTimeout(() => {
+                    if (obj.parentNode && this.gameActive) {
+                        this.removeObject(obj);
+                    }
+                }, 4000);
+            }
+
+            isPositionOccupied(x, y) {
+                return this.colorObjects.some(obj => {
+                    if (!obj.parentNode) return false;
+                    const objX = parseInt(obj.style.left);
+                    const objY = parseInt(obj.style.top);
+                    const distance = Math.sqrt((x - objX) ** 2 + (y - objY) ** 2);
+                    return distance < 70; // 70px以内は重複とみなす
+                });
+            }
+
+            handleObjectClick(obj) {
+                const isCorrect = obj.dataset.correct === 'true';
+                
+                if (isCorrect) {
+                    this.correctCount++;
+                    this.correctDisplay.textContent = this.correctCount;
+                    
+                    obj.classList.add('correct-click');
+                    setTimeout(() => this.removeObject(obj), 500);
+                    
+                    // 10個正解で目標色変更
+                    if (this.correctCount % 10 === 0) {
+                        this.setNewTargetColor();
+                        this.showColorChangeEffect();
+                    }
+                    
+                    this.playCorrectSound();
+                    
+                } else {
+                    this.missCount++;
+                    this.missDisplay.textContent = this.missCount;
+                    
+                    obj.classList.add('wrong-click');
+                    this.showMissIndicator(obj);
+                    
+                    this.playWrongSound();
+                    
+                    // 3回ミスでゲーム終了
+                    if (this.missCount >= 3) {
+                        setTimeout(() => this.endGame(), 500);
+                        return;
+                    }
+                    
+                    setTimeout(() => this.removeObject(obj), 500);
+                }
+            }
+
+            showMissIndicator(obj) {
+                const miss = document.createElement('div');
+                miss.className = 'miss-indicator';
+                miss.textContent = 'MISS!';
+                miss.style.left = obj.style.left;
+                miss.style.top = obj.style.top;
+                
+                this.gameArea.appendChild(miss);
+                setTimeout(() => {
+                    if (miss.parentNode) {
+                        miss.parentNode.removeChild(miss);
+                    }
+                }, 1000);
+            }
+
+            showColorChangeEffect() {
+                const effect = document.createElement('div');
+                effect.textContent = '色が変わりました！';
+                effect.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    color: white;
+                    font-size: 24px;
+                    font-weight: bold;
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+                    pointer-events: none;
+                    animation: colorChangeEffect 2s ease-out forwards;
+                    z-index: 50;
+                `;
+                
+                this.gameArea.appendChild(effect);
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.parentNode.removeChild(effect);
+                    }
+                }, 2000);
+            }
+
+            removeObject(obj) {
+                if (obj.parentNode) {
+                    obj.parentNode.removeChild(obj);
+                }
+                const index = this.colorObjects.indexOf(obj);
+                if (index > -1) {
+                    this.colorObjects.splice(index, 1);
+                }
+            }
+
+            scheduleNextSpawn() {
+                if (!this.gameActive) return;
+                
+                // 0.8秒〜2秒の間隔でランダム生成
+                const delay = 800 + Math.random() * 1200;
+                this.spawnTimer = setTimeout(() => {
+                    this.spawnColorObject();
+                    this.scheduleNextSpawn();
+                }, delay);
+            }
+
+            playCorrectSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // 正解音: 高めの音
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            playWrongSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // 不正解音: 低めのブザー音
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (e) {
+                    // サウンド再生エラーは無視
+                }
+            }
+
+            endGame() {
+                this.gameActive = false;
+                clearInterval(this.gameTimer);
+                clearTimeout(this.spawnTimer);
+                
+                // 残りオブジェクトを削除
+                this.colorObjects.forEach(obj => this.removeObject(obj));
+                
+                // 結果表示
+                const totalClicked = this.correctCount + this.missCount;
+                const accuracy = totalClicked > 0 
+                    ? Math.round((this.correctCount / totalClicked) * 100) 
+                    : 0;
+                    
+                document.getElementById('finalCorrect').textContent = this.correctCount;
+                document.getElementById('finalMiss').textContent = this.missCount;
+                document.getElementById('accuracy').textContent = accuracy;
+                this.results.style.display = 'block';
+                
+                this.startBtn.disabled = false;
+                
+                // 勝利判定（50個正解かつミス3回以下）
+                if (this.correctCount >= 50 && this.missCount < 3) {
+                    this.showVictoryMessage();
+                }
+            }
+
+            showVictoryMessage() {
+                const victory = document.createElement('div');
+                victory.className = 'victory-message';
+                victory.innerHTML = '<h2>🌈 クリア！ 🌈</h2><p>素晴らしい色判別能力です！</p>';
+                this.gameArea.appendChild(victory);
+                
+                setTimeout(() => {
+                    if (victory.parentNode) {
+                        victory.parentNode.removeChild(victory);
+                    }
+                }, 4000);
+            }
+
+            resetGame() {
+                this.correctCount = 0;
+                this.missCount = 0;
+                this.timeLeft = 60;
+                
+                this.correctDisplay.textContent = '0';
+                this.missDisplay.textContent = '0';
+                this.timerDisplay.textContent = '60';
+                this.results.style.display = 'none';
+                
+                this.colorObjects.forEach(obj => this.removeObject(obj));
+                
+                if (this.gameTimer) clearInterval(this.gameTimer);
+                if (this.spawnTimer) clearTimeout(this.spawnTimer);
+                
+                this.gameActive = false;
+                this.startBtn.disabled = false;
+                
+                // 勝利メッセージを削除
+                const victoryMsg = this.gameArea.querySelector('.victory-message');
+                if (victoryMsg) {
+                    victoryMsg.parentNode.removeChild(victoryMsg);
+                }
+                
+                // 初期目標色設定
+                this.setNewTargetColor();
+            }
+        }
+
+        function goBack() {
+            window.close();
+            window.history.back();
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 追加CSSを挿入
+            const additionalCSS = `
+            @keyframes colorChangeEffect {
+                0% { 
+                    opacity: 0; 
+                    transform: translate(-50%, -50%) scale(0.5); 
+                }
+                20% { 
+                    opacity: 1; 
+                    transform: translate(-50%, -50%) scale(1.2); 
+                }
+                80% { 
+                    opacity: 1; 
+                    transform: translate(-50%, -50%) scale(1); 
+                }
+                100% { 
+                    opacity: 0; 
+                    transform: translate(-50%, -50%) scale(0.8); 
+                }
+            }
+            `;
+            const style = document.createElement('style');
+            style.textContent = additionalCSS;
+            document.head.appendChild(style);
+            
+            new ColorRushGame();
+        });
+    </script>
+</body>
+</html>

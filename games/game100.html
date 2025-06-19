@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合スポーツ - ゲーム100</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #E91E63, #9C27B0, #673AB7, #3F51B5, #2196F3, #00BCD4, #4CAF50, #8BC34A, #CDDC39, #FFC107);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            animation: rainbow-shift 10s ease-in-out infinite;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            color: #333;
+            max-width: 900px;
+            width: 90%;
+            border: 3px solid #FFD700;
+        }
+
+        .game-title {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E, #FFC107, #4CAF50, #2196F3, #9C27B0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: title-glow 2s ease-in-out infinite alternate;
+        }
+
+        .business-skill {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.1em;
+            border: 2px solid #FFD700;
+        }
+
+        .decathlon-arena {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(45deg, #4CAF50, #2E7D32, #1B5E20);
+            border-radius: 20px;
+            position: relative;
+            margin: 20px 0;
+            border: 5px solid #FFD700;
+            overflow: hidden;
+        }
+
+        .sports-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 5px;
+            padding: 20px;
+        }
+
+        .sport-zone {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sport-zone:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .sport-zone.active {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            color: #333;
+            animation: active-sport 1s ease-in-out infinite;
+            border: 3px solid #FF6B35;
+        }
+
+        .sport-zone.completed {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            border: 3px solid #2E7D32;
+        }
+
+        .sport-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .sport-name {
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        .challenge-panel {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #2196F3;
+        }
+
+        .current-challenge {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2196F3;
+        }
+
+        .challenge-description {
+            font-size: 1em;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .performance-tracker {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .performance-item {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            border: 2px solid #AD1457;
+        }
+
+        .action-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 3px solid #E65100;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            border: 3px solid #1976D2;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .final-score-panel {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            color: #333;
+            padding: 25px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 3px solid #FF8F00;
+            display: none;
+        }
+
+        @keyframes rainbow-shift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+
+        @keyframes title-glow {
+            0% { text-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(255, 107, 53, 0.8), 0 0 30px rgba(33, 150, 243, 0.3); }
+        }
+
+        @keyframes active-sport {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes completion-celebration {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .completion-celebration {
+            animation: completion-celebration 0.8s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .sports-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
+            .action-controls { grid-template-columns: 1fr; }
+            .game-title { font-size: 2.2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🏆 総合スポーツ</h1>
+        
+        <div class="business-skill">
+            🎯 総合的ビジネススキル強化: 多様性・柔軟性・チャレンジ精神・統合力・リーダーシップ・全方位的能力開発
+        </div>
+
+        <div class="performance-tracker">
+            <div class="performance-item">
+                <div>挑戦種目</div>
+                <div id="completedSports">0/8</div>
+            </div>
+            <div class="performance-item">
+                <div>総合得点</div>
+                <div id="totalScore">0</div>
+            </div>
+            <div class="performance-item">
+                <div>平均評価</div>
+                <div id="averageRating">-</div>
+            </div>
+            <div class="performance-item">
+                <div>最高記録</div>
+                <div id="bestPerformance">-</div>
+            </div>
+            <div class="performance-item">
+                <div>スポーツ級</div>
+                <div id="sportsLevel">初心者</div>
+            </div>
+        </div>
+
+        <div class="challenge-panel">
+            <div class="current-challenge" id="currentChallenge">🎯 総合スポーツにようこそ！様々なスポーツに挑戦して万能アスリートを目指しましょう</div>
+            <div class="challenge-description" id="challengeDescription">各スポーツで異なるスキルが要求されます。幅広い能力と適応力で勝負です。</div>
+        </div>
+
+        <div class="decathlon-arena">
+            <div class="sports-grid">
+                <div class="sport-zone" data-sport="running" data-skill="持久力">
+                    <div class="sport-icon">🏃‍♂️</div>
+                    <div class="sport-name">ランニング</div>
+                </div>
+                <div class="sport-zone" data-sport="ball" data-skill="球技">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">球技</div>
+                </div>
+                <div class="sport-zone" data-sport="swimming" data-skill="水泳">
+                    <div class="sport-icon">🏊‍♂️</div>
+                    <div class="sport-name">水泳</div>
+                </div>
+                <div class="sport-zone" data-sport="gymnastics" data-skill="体操">
+                    <div class="sport-icon">🤸‍♂️</div>
+                    <div class="sport-name">体操</div>
+                </div>
+                <div class="sport-zone" data-sport="strength" data-skill="筋力">
+                    <div class="sport-icon">🏋️‍♂️</div>
+                    <div class="sport-name">筋力</div>
+                </div>
+                <div class="sport-zone" data-sport="flexibility" data-skill="柔軟性">
+                    <div class="sport-icon">🧘‍♂️</div>
+                    <div class="sport-name">柔軟性</div>
+                </div>
+                <div class="sport-zone" data-sport="coordination" data-skill="協調性">
+                    <div class="sport-icon">🤹‍♂️</div>
+                    <div class="sport-name">協調性</div>
+                </div>
+                <div class="sport-zone" data-sport="endurance" data-skill="総合力">
+                    <div class="sport-icon">🎯</div>
+                    <div class="sport-name">総合力</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-controls">
+            <button class="action-btn" id="performBtn" disabled>🚀 パフォーマンス実行</button>
+            <button class="action-btn" id="adaptBtn" disabled>🔄 方法変更</button>
+            <button class="action-btn" id="excellBtn" disabled>⭐ 限界挑戦</button>
+        </div>
+
+        <div class="final-score-panel" id="finalScorePanel">
+            <h2>🏆 総合スポーツ完了！</h2>
+            <div id="finalResults"></div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="startBtn">🏁 スポーツ開始</button>
+            <button class="control-btn" id="resetBtn">🔄 リセット</button>
+        </div>
+
+        <div style="margin-top: 30px; padding: 25px; background: rgba(255, 193, 7, 0.1); border-radius: 20px; border: 3px solid #FFC107;">
+            <h3>🌟 総合的ビジネス応用</h3>
+            <p><strong>万能型人材育成:</strong> 様々な分野への適応力・幅広いスキルの習得・総合的判断力・変化への対応力・チームワークとリーダーシップ・バランスの取れた実行力を総合的に養成し、オールラウンドなビジネスパーソンとしての能力を開発します。</p>
+        </div>
+    </div>
+
+    <script>
+        class GeneralSports {
+            constructor() {
+                this.sports = [
+                    { name: 'running', skill: '持久力', icon: '🏃‍♂️', completed: false, score: 0 },
+                    { name: 'ball', skill: '球技', icon: '⚽', completed: false, score: 0 },
+                    { name: 'swimming', skill: '水泳', icon: '🏊‍♂️', completed: false, score: 0 },
+                    { name: 'gymnastics', skill: '体操', icon: '🤸‍♂️', completed: false, score: 0 },
+                    { name: 'strength', skill: '筋力', icon: '🏋️‍♂️', completed: false, score: 0 },
+                    { name: 'flexibility', skill: '柔軟性', icon: '🧘‍♂️', completed: false, score: 0 },
+                    { name: 'coordination', skill: '協調性', icon: '🤹‍♂️', completed: false, score: 0 },
+                    { name: 'endurance', skill: '総合力', icon: '🎯', completed: false, score: 0 }
+                ];
+                
+                this.currentSport = null;
+                this.completedCount = 0;
+                this.totalScore = 0;
+                this.gameActive = false;
+                this.bestPerformance = 0;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.completedSportsEl = document.getElementById('completedSports');
+                this.totalScoreEl = document.getElementById('totalScore');
+                this.averageRatingEl = document.getElementById('averageRating');
+                this.bestPerformanceEl = document.getElementById('bestPerformance');
+                this.sportsLevelEl = document.getElementById('sportsLevel');
+                this.currentChallengeEl = document.getElementById('currentChallenge');
+                this.challengeDescriptionEl = document.getElementById('challengeDescription');
+                this.finalScorePanelEl = document.getElementById('finalScorePanel');
+                this.finalResultsEl = document.getElementById('finalResults');
+                
+                this.sportZones = document.querySelectorAll('.sport-zone');
+                this.performBtn = document.getElementById('performBtn');
+                this.adaptBtn = document.getElementById('adaptBtn');
+                this.excellBtn = document.getElementById('excellBtn');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startSports());
+                this.resetBtn.addEventListener('click', () => this.resetSports());
+                this.performBtn.addEventListener('click', () => this.performAction('standard'));
+                this.adaptBtn.addEventListener('click', () => this.performAction('adaptive'));
+                this.excellBtn.addEventListener('click', () => this.performAction('excellence'));
+
+                this.sportZones.forEach(zone => {
+                    zone.addEventListener('click', (e) => this.selectSport(e.target.closest('.sport-zone')));
+                });
+            }
+
+            startSports() {
+                this.gameActive = true;
+                this.enableSportSelection();
+                this.startBtn.textContent = '🏃‍♂️ スポーツ進行中';
+                this.startBtn.disabled = true;
+                this.updateChallenge('種目を選択してチャレンジを開始してください', '各種目で最高のパフォーマンスを発揮しましょう！');
+            }
+
+            selectSport(sportZone) {
+                if (!this.gameActive) return;
+                
+                const sportName = sportZone.dataset.sport;
+                const sport = this.sports.find(s => s.name === sportName);
+                
+                if (sport.completed) {
+                    alert('この種目は既に完了しています！');
+                    return;
+                }
+                
+                this.clearSportSelection();
+                sportZone.classList.add('active');
+                this.currentSport = sport;
+                this.enableActionButtons();
+                this.updateChallenge(
+                    `${sport.icon} ${this.getSportDisplayName(sport.name)} - ${sport.skill}チャレンジ`,
+                    this.getSportDescription(sport.name)
+                );
+            }
+
+            clearSportSelection() {
+                this.sportZones.forEach(zone => {
+                    zone.classList.remove('active');
+                });
+                this.disableActionButtons();
+            }
+
+            performAction(actionType) {
+                if (!this.gameActive || !this.currentSport) return;
+
+                const performance = this.calculatePerformance(actionType);
+                this.currentSport.score = performance.score;
+                this.currentSport.completed = true;
+                this.completedCount++;
+                this.totalScore += performance.score;
+                this.bestPerformance = Math.max(this.bestPerformance, performance.score);
+
+                this.showPerformanceResult(performance);
+                this.markSportCompleted();
+                this.clearSportSelection();
+                this.currentSport = null;
+
+                if (this.completedCount >= 8) {
+                    setTimeout(() => this.completeSports(), 2000);
+                } else {
+                    this.updateChallenge(
+                        `${performance.rating}！次の種目を選択してください`,
+                        `残り${8 - this.completedCount}種目で総合スポーツ完了です`
+                    );
+                }
+
+                this.updateDisplay();
+            }
+
+            calculatePerformance(actionType) {
+                const baseScore = 60 + Math.random() * 40; // 60-100の基本スコア
+                
+                const multipliers = {
+                    'standard': 1.0,
+                    'adaptive': 1.1,
+                    'excellence': 1.3
+                };
+                
+                const risks = {
+                    'standard': 0.9,
+                    'adaptive': 0.7,
+                    'excellence': 0.6
+                };
+                
+                const multiplier = multipliers[actionType];
+                const riskThreshold = risks[actionType];
+                const success = Math.random() > (1 - riskThreshold);
+                
+                let finalScore = success ? baseScore * multiplier : baseScore * 0.6;
+                finalScore = Math.round(Math.max(30, Math.min(130, finalScore)));
+                
+                return {
+                    score: finalScore,
+                    rating: this.getPerformanceRating(finalScore),
+                    actionType: actionType,
+                    success: success
+                };
+            }
+
+            getPerformanceRating(score) {
+                if (score >= 120) return 'オリンピック級';
+                if (score >= 100) return 'プロ級';
+                if (score >= 85) return 'エキスパート';
+                if (score >= 70) return '上級者';
+                if (score >= 55) return '中級者';
+                return '初心者';
+            }
+
+            getSportDisplayName(sportName) {
+                const names = {
+                    'running': 'ランニング',
+                    'ball': '球技',
+                    'swimming': '水泳',
+                    'gymnastics': '体操',
+                    'strength': '筋力トレーニング',
+                    'flexibility': '柔軟性トレーニング',
+                    'coordination': '協調性トレーニング',
+                    'endurance': '総合力テスト'
+                };
+                return names[sportName] || sportName;
+            }
+
+            getSportDescription(sportName) {
+                const descriptions = {
+                    'running': '持久力と安定したペースで長距離を走破しましょう',
+                    'ball': '様々な球技の基本技術を習得しましょう',
+                    'swimming': '流れるようなフォームで水中を進みましょう',
+                    'gymnastics': '柔軟性とバランス感覚で美しい動きを表現しましょう',
+                    'strength': '筋力とパワーで重いものを持ち上げましょう',
+                    'flexibility': '柔軟性を活かしてしなやかな動きを身につけましょう',
+                    'coordination': 'チームワークと協調性で連携を図りましょう',
+                    'endurance': 'これまでの成果を総合して最高のパフォーマンスを発揮しましょう'
+                };
+                return descriptions[sportName] || '最高のパフォーマンスを発揮しましょう';
+            }
+
+            showPerformanceResult(performance) {
+                const actionNames = {
+                    'standard': '標準実行',
+                    'adaptive': '適応戦略',
+                    'excellence': '卓越挑戦'
+                };
+                
+                alert(`${this.currentSport.icon} パフォーマンス結果\n\n実行方法: ${actionNames[performance.actionType]}\nスコア: ${performance.score}点\n評価: ${performance.rating}\n\n${performance.success ? '成功！' : '課題が残りました'}`);
+            }
+
+            markSportCompleted() {
+                this.sportZones.forEach(zone => {
+                    if (zone.dataset.sport === this.currentSport.name) {
+                        zone.classList.remove('active');
+                        zone.classList.add('completed');
+                        zone.classList.add('completion-celebration');
+                        setTimeout(() => {
+                            zone.classList.remove('completion-celebration');
+                        }, 800);
+                    }
+                });
+            }
+
+            completeSports() {
+                this.gameActive = false;
+                this.clearSportSelection();
+                this.updateChallenge('🏆 総合スポーツ完了！', '全種目制覇おめでとうございます！');
+                this.showFinalResults();
+            }
+
+            showFinalResults() {
+                const averageScore = this.totalScore / 8;
+                const level = this.getSportsLevel(averageScore);
+                const medal = this.getMedal(averageScore);
+                
+                this.finalResultsEl.innerHTML = `
+                    <div style="margin: 10px 0;">総合得点: ${this.totalScore}点</div>
+                    <div style="margin: 10px 0;">平均スコア: ${averageScore.toFixed(1)}点</div>
+                    <div style="margin: 10px 0;">最高記録: ${this.bestPerformance}点</div>
+                    <div style="margin: 10px 0;">スポーツ級: ${level}</div>
+                    <div style="margin: 15px 0; font-size: 2em;">${medal}</div>
+                    <div style="margin: 10px 0;">🌟 あなたは幅広いスポーツ分野で優秀な成果を収めました！</div>
+                `;
+                
+                this.finalScorePanelEl.style.display = 'block';
+                
+                setTimeout(() => {
+                    this.startBtn.textContent = '🏁 スポーツ開始';
+                    this.startBtn.disabled = false;
+                }, 2000);
+            }
+
+            getSportsLevel(averageScore) {
+                if (averageScore >= 110) return 'オールラウンドチャンピオン';
+                if (averageScore >= 95) return 'マルチスポーツアスリート';
+                if (averageScore >= 80) return 'スポーツエキスパート';
+                if (averageScore >= 70) return 'アクティブアスリート';
+                if (averageScore >= 60) return 'スポーツ愛好家';
+                return 'チャレンジャー';
+            }
+
+            getMedal(averageScore) {
+                if (averageScore >= 100) return '🥇 金メダル';
+                if (averageScore >= 85) return '🥈 銀メダル';
+                if (averageScore >= 70) return '🥉 銅メダル';
+                return '🎖️ 参加賞';
+            }
+
+            enableActionButtons() {
+                this.performBtn.disabled = false;
+                this.adaptBtn.disabled = false;
+                this.excellBtn.disabled = false;
+            }
+
+            disableActionButtons() {
+                this.performBtn.disabled = true;
+                this.adaptBtn.disabled = true;
+                this.excellBtn.disabled = true;
+            }
+
+            enableSportSelection() {
+                this.sportZones.forEach(zone => {
+                    zone.style.pointerEvents = 'auto';
+                });
+            }
+
+            disableSportSelection() {
+                this.sportZones.forEach(zone => {
+                    zone.style.pointerEvents = 'none';
+                });
+            }
+
+            updateChallenge(title, description) {
+                this.currentChallengeEl.textContent = title;
+                this.challengeDescriptionEl.textContent = description;
+            }
+
+            resetSports() {
+                this.gameActive = false;
+                this.currentSport = null;
+                this.completedCount = 0;
+                this.totalScore = 0;
+                this.bestPerformance = 0;
+                
+                this.sports.forEach(sport => {
+                    sport.completed = false;
+                    sport.score = 0;
+                });
+                
+                this.sportZones.forEach(zone => {
+                    zone.classList.remove('active', 'completed', 'completion-celebration');
+                });
+                
+                this.clearSportSelection();
+                this.disableSportSelection();
+                this.finalScorePanelEl.style.display = 'none';
+                this.updateDisplay();
+                this.updateChallenge('🎯 総合スポーツにようこそ！', '様々なスポーツに挑戦して万能アスリートを目指しましょう');
+                
+                this.startBtn.textContent = '🏁 スポーツ開始';
+                this.startBtn.disabled = false;
+            }
+
+            updateDisplay() {
+                this.completedSportsEl.textContent = `${this.completedCount}/8`;
+                this.totalScoreEl.textContent = this.totalScore;
+                
+                const averageScore = this.completedCount > 0 ? (this.totalScore / this.completedCount).toFixed(1) : '-';
+                this.averageRatingEl.textContent = averageScore;
+                
+                this.bestPerformanceEl.textContent = this.bestPerformance || '-';
+                
+                const currentLevel = this.completedCount > 0 ? 
+                    this.getSportsLevel(this.totalScore / this.completedCount) : '初心者';
+                this.sportsLevelEl.textContent = currentLevel;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new GeneralSports();
+        });
+    </script>
+</body>
+</html>

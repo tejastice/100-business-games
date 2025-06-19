@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>折り紙パズル - ゲーム067</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .origami-workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .current-work {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .current-work h4 {
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .work-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .step-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .step-controls h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .step-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .step-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .step-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .step-btn.completed {
+            background: rgba(76, 175, 80, 0.7);
+            border-color: #4caf50;
+        }
+
+        .step-btn.current {
+            background: rgba(255, 193, 7, 0.7);
+            border-color: #ffc107;
+        }
+
+        .completion-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .instructions h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .logic-grid {
+                grid-template-columns: repeat(4, 50px);
+            }
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">📜 折り紙パズル</h1>
+        <p class="game-description">紙の折り方理解と手順記憶による精密作業技能ゲーム</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">作品</div>
+                <div class="stat-value" id="currentWork">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">完成数</div>
+                <div class="stat-value" id="completedWorks">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">完成率</div>
+                <div class="stat-value" id="completionRate">0%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 詳細ルール・遊び方</h4>
+            <ul>
+                <li><strong>目的:</strong> 15種類の折り紙作品を正確な手順で折り、完成形状を達成する</li>
+                <li><strong>ゲームの流れ:</strong>
+                    <ul>
+                        <li>折り紙作品の目標形状が提示される</li>
+                        <li>折り手順を順序よく実行し、正確な折り線を作る</li>
+                        <li>手順の正確性と完成度を評価される</li>
+                    </ul>
+                </li>
+                <li><strong>折り紙作品:</strong> 鶴、かぶと、花、星、動物など多種多様な作品</li>
+                <li><strong>勝利条件:</strong> 15作品中、完成玅90%以上（14作品以上完成）でクリア</li>
+                <li><strong>評価システム:</strong> 正確な折り: +100点、部分完成: +50点、折りミス: -25点</li>
+                <li><strong>プレイのコツ:</strong> 折り線の精度と手順の正確性を意識し、細かい作業に集中する</li>
+            </ul>
+        </div>
+
+        <div class="game-area">
+            <div class="origami-workspace" id="origamiWorkspace">
+                <div class="current-work">
+                    <h4>📜 現在の作品</h4>
+                    <div class="work-info" id="workInfo">
+                        <!-- 作品情報がここに表示される -->
+                    </div>
+                    <canvas id="origamiCanvas" width="400" height="300" style="border: 2px solid #fff; border-radius: 10px; background: rgba(255,255,255,0.9); margin: 15px 0;"></canvas>
+                </div>
+                
+                <div class="step-controls">
+                    <h4>🔄 折り手順</h4>
+                    <div class="step-buttons" id="stepButtons">
+                        <!-- 手順ボタンがここに表示される -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newOrigamiWork()">新しい作品</button>
+            <button class="btn" onclick="checkCompletion()">完成チェック</button>
+            <button class="btn" onclick="showOrigamiGuide()">折り方ガイド</button>
+            <button class="btn" onclick="resetOrigami()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentWork: 1,
+            totalWorks: 15,
+            completedWorks: 0,
+            score: 0,
+            currentOrigami: null,
+            currentStep: 0,
+            foldingSteps: [],
+            canvas: null,
+            ctx: null
+        };
+
+        const origamiWorks = [
+            { name: '鶴', steps: ['四角折り', '三角折り', '羽折り', '首折り', '尾折り'], difficulty: 'normal', color: '#e91e63' },
+            { name: 'かぶと', steps: ['三角折り', '角折り', 'ひさし折り', '完成'], difficulty: 'easy', color: '#3f51b5' },
+            { name: '花', steps: ['四角折り', '花びら1', '花びら2', '花びら3', '花びら4'], difficulty: 'normal', color: '#e91e63' },
+            { name: '星', steps: ['五角折り', '星角1', '星角2', '星角3', '星角4', '星角5'], difficulty: 'hard', color: '#ff9800' },
+            { name: '蝶', steps: ['三角折り', '羽準備', '左羽', '右羽', '胴体'], difficulty: 'normal', color: '#9c27b0' },
+            { name: 'バラ', steps: ['基本折り', '花びら準備', '外側花びら', '内側花びら', '花完成'], difficulty: 'expert', color: '#f44336' },
+            { name: '犬', steps: ['三角折り', '耳折り1', '耳折り2', '顔形成', '完成'], difficulty: 'easy', color: '#795548' },
+            { name: '猫', steps: ['四角折り', '耳折り', '顔形成', 'ひげ折り', '完成'], difficulty: 'normal', color: '#607d8b' },
+            { name: '魚', steps: ['三角折り', '胴体折り', '尾ひれ', '背びれ', '完成'], difficulty: 'normal', color: '#00bcd4' },
+            { name: '風車', steps: ['四角折り', '羽根1', '羽根2', '羽根3', '羽根4'], difficulty: 'easy', color: '#4caf50' }
+        ];
+
+        function initializeGame() {
+            gameState.canvas = document.getElementById('origamiCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            resetGameState();
+            generateNewWork();
+            updateDisplay();
+        }
+
+        function resetGameState() {
+            gameState = {
+                currentWork: 1,
+                totalWorks: 15,
+                completedWorks: 0,
+                score: 0,
+                currentOrigami: null,
+                currentStep: 0,
+                foldingSteps: [],
+                canvas: gameState.canvas,
+                ctx: gameState.ctx
+            };
+        }
+
+        function generateNewWork() {
+            if (gameState.currentWork > gameState.totalWorks) {
+                endGame();
+                return;
+            }
+
+            const workIndex = (gameState.currentWork - 1) % origamiWorks.length;
+            gameState.currentOrigami = origamiWorks[workIndex];
+            gameState.currentStep = 0;
+            gameState.foldingSteps = [];
+            
+            displayWork();
+            drawOrigami();
+            setupStepButtons();
+            updateDisplay();
+        }
+
+        function displayWork() {
+            const workInfo = document.getElementById('workInfo');
+            const origami = gameState.currentOrigami;
+            
+            workInfo.innerHTML = `
+                <div class="info-item">
+                    <strong>作品名:</strong><br>${origami.name}
+                </div>
+                <div class="info-item">
+                    <strong>手順数:</strong><br>${origami.steps.length}ステップ
+                </div>
+                <div class="info-item">
+                    <strong>難易度:</strong><br>${origami.difficulty}
+                </div>
+                <div class="info-item">
+                    <strong>進行状況:</strong><br>${gameState.currentStep}/${origami.steps.length}
+                </div>
+            `;
+        }
+
+        function setupStepButtons() {
+            const stepButtons = document.getElementById('stepButtons');
+            const origami = gameState.currentOrigami;
+            
+            stepButtons.innerHTML = '';
+            
+            origami.steps.forEach((step, index) => {
+                const button = document.createElement('div');
+                button.className = 'step-btn';
+                
+                if (index < gameState.currentStep) {
+                    button.classList.add('completed');
+                } else if (index === gameState.currentStep) {
+                    button.classList.add('current');
+                }
+                
+                button.innerHTML = `
+                    <div>${index + 1}. ${step}</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px;">
+                        ${index < gameState.currentStep ? '✓ 完了' : 
+                          index === gameState.currentStep ? '→ 実行中' : '待機中'}
+                    </div>
+                `;
+                
+                if (index === gameState.currentStep) {
+                    button.onclick = () => executeStep(index);
+                }
+                
+                stepButtons.appendChild(button);
+            });
+        }
+
+        function executeStep(stepIndex) {
+            if (stepIndex !== gameState.currentStep) return;
+            
+            const origami = gameState.currentOrigami;
+            const step = origami.steps[stepIndex];
+            
+            // 折り手順の実行（簡易版）
+            const foldAccuracy = Math.random() * 0.4 + 0.6; // 60-100%の精度
+            gameState.foldingSteps.push({
+                step: step,
+                accuracy: foldAccuracy,
+                index: stepIndex
+            });
+            
+            gameState.currentStep++;
+            
+            // スコア計算
+            if (foldAccuracy >= 0.9) {
+                gameState.score += 100;
+            } else if (foldAccuracy >= 0.7) {
+                gameState.score += 50;
+            } else {
+                gameState.score = Math.max(0, gameState.score - 25);
+            }
+            
+            drawOrigami();
+            setupStepButtons();
+            displayWork();
+            updateDisplay();
+            
+            // 作品完成チェック
+            if (gameState.currentStep >= origami.steps.length) {
+                setTimeout(() => {
+                    checkCompletion();
+                }, 1000);
+            }
+        }
+
+        function drawOrigami() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            const origami = gameState.currentOrigami;
+            if (!origami) return;
+            
+            // 背景
+            gameState.ctx.fillStyle = '#f8f9fa';
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+            
+            // 紙の基本形状
+            const centerX = gameState.canvas.width / 2;
+            const centerY = gameState.canvas.height / 2;
+            const progress = gameState.currentStep / origami.steps.length;
+            
+            // 折り紙の進行状況に応じた描画
+            gameState.ctx.fillStyle = origami.color;
+            gameState.ctx.strokeStyle = '#333';
+            gameState.ctx.lineWidth = 2;
+            
+            if (origami.name === '鶴') {
+                drawCrane(centerX, centerY, progress);
+            } else if (origami.name === 'かぶと') {
+                drawHelmet(centerX, centerY, progress);
+            } else if (origami.name === '花') {
+                drawFlower(centerX, centerY, progress);
+            } else {
+                drawGenericOrigami(centerX, centerY, progress);
+            }
+            
+            // 折り線の表示
+            gameState.foldingSteps.forEach((fold, index) => {
+                gameState.ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + fold.accuracy * 0.4})`;
+                gameState.ctx.lineWidth = 1;
+                gameState.ctx.setLineDash([5, 5]);
+                
+                // 簡易的な折り線表示
+                const x = centerX + (index - gameState.foldingSteps.length/2) * 20;
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x, centerY - 50);
+                gameState.ctx.lineTo(x, centerY + 50);
+                gameState.ctx.stroke();
+                gameState.ctx.setLineDash([]);
+            });
+            
+            // 完成度表示
+            gameState.ctx.fillStyle = '#333';
+            gameState.ctx.font = '14px Arial';
+            gameState.ctx.textAlign = 'center';
+            gameState.ctx.fillText(`完成度: ${(progress * 100).toFixed(1)}%`, centerX, 280);
+        }
+
+        function drawCrane(x, y, progress) {
+            const size = 80 + progress * 40;
+            
+            // 鶴の基本形状
+            if (progress > 0.2) {
+                // 胴体
+                gameState.ctx.beginPath();
+                gameState.ctx.ellipse(x, y, size * 0.6, size * 0.4, 0, 0, 2 * Math.PI);
+                gameState.ctx.fill();
+                gameState.ctx.stroke();
+            }
+            
+            if (progress > 0.5) {
+                // 翼
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x - size * 0.8, y);
+                gameState.ctx.lineTo(x - size * 0.3, y - size * 0.3);
+                gameState.ctx.lineTo(x + size * 0.3, y - size * 0.3);
+                gameState.ctx.lineTo(x + size * 0.8, y);
+                gameState.ctx.fill();
+                gameState.ctx.stroke();
+            }
+            
+            if (progress > 0.8) {
+                // 首と頭
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x, y - size * 0.4);
+                gameState.ctx.lineTo(x - size * 0.2, y - size * 0.8);
+                gameState.ctx.stroke();
+                
+                // 尾
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x, y + size * 0.4);
+                gameState.ctx.lineTo(x + size * 0.3, y + size * 0.7);
+                gameState.ctx.stroke();
+            }
+        }
+
+        function drawHelmet(x, y, progress) {
+            const size = 60 + progress * 30;
+            
+            if (progress > 0.3) {
+                // かぶとの基本形状
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x - size, y + size * 0.5);
+                gameState.ctx.lineTo(x, y - size);
+                gameState.ctx.lineTo(x + size, y + size * 0.5);
+                gameState.ctx.closePath();
+                gameState.ctx.fill();
+                gameState.ctx.stroke();
+            }
+            
+            if (progress > 0.7) {
+                // ひさし
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x - size * 0.8, y + size * 0.3);
+                gameState.ctx.lineTo(x + size * 0.8, y + size * 0.3);
+                gameState.ctx.lineTo(x + size * 0.6, y + size * 0.6);
+                gameState.ctx.lineTo(x - size * 0.6, y + size * 0.6);
+                gameState.ctx.closePath();
+                gameState.ctx.fill();
+                gameState.ctx.stroke();
+            }
+        }
+
+        function drawFlower(x, y, progress) {
+            const size = 50 + progress * 25;
+            const petals = Math.floor(progress * 5) + 1;
+            
+            for (let i = 0; i < petals; i++) {
+                const angle = (i / 5) * 2 * Math.PI;
+                const petalX = x + Math.cos(angle) * size * 0.7;
+                const petalY = y + Math.sin(angle) * size * 0.7;
+                
+                gameState.ctx.beginPath();
+                gameState.ctx.ellipse(petalX, petalY, size * 0.3, size * 0.5, angle, 0, 2 * Math.PI);
+                gameState.ctx.fill();
+                gameState.ctx.stroke();
+            }
+            
+            // 中心
+            gameState.ctx.fillStyle = '#ffc107';
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(x, y, size * 0.2, 0, 2 * Math.PI);
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function drawGenericOrigami(x, y, progress) {
+            const size = 60 + progress * 40;
+            
+            // 基本的な多角形
+            const sides = 3 + Math.floor(progress * 5);
+            gameState.ctx.beginPath();
+            for (let i = 0; i < sides; i++) {
+                const angle = (i / sides) * 2 * Math.PI;
+                const pointX = x + Math.cos(angle) * size;
+                const pointY = y + Math.sin(angle) * size;
+                
+                if (i === 0) {
+                    gameState.ctx.moveTo(pointX, pointY);
+                } else {
+                    gameState.ctx.lineTo(pointX, pointY);
+                }
+            }
+            gameState.ctx.closePath();
+            gameState.ctx.fill();
+            gameState.ctx.stroke();
+        }
+
+        function checkCompletion() {
+            const origami = gameState.currentOrigami;
+            const totalAccuracy = gameState.foldingSteps.reduce((sum, step) => sum + step.accuracy, 0) / gameState.foldingSteps.length;
+            
+            let message = `📜 ${origami.name}の制作完了！\n\n`;
+            message += `手順精度: ${(totalAccuracy * 100).toFixed(1)}%\n`;
+            message += `完成ステップ: ${gameState.currentStep}/${origami.steps.length}\n\n`;
+            
+            if (totalAccuracy >= 0.9) {
+                message += '🏆 完璧な折り紙です！';
+                gameState.completedWorks++;
+                gameState.score += 200;
+            } else if (totalAccuracy >= 0.7) {
+                message += '👍 良い出来です！';
+                gameState.completedWorks++;
+                gameState.score += 100;
+            } else {
+                message += '📚 もう少し精密に折りましょう。';
+            }
+            
+            alert(message);
+            
+            gameState.currentWork++;
+            setTimeout(() => {
+                generateNewWork();
+            }, 1000);
+        }
+
+        function showOrigamiGuide() {
+            const guides = [
+                '📜 折り線は正確に作りましょう',
+                '✋ 指でしっかりと押さえて折りましょう',
+                '📐 角を合わせて丁寧に折りましょう',
+                '🔄 手順を順番通りに進めましょう',
+                '🎯 最終形状を意識して折りましょう'
+            ];
+            
+            const randomGuide = guides[Math.floor(Math.random() * guides.length)];
+            alert(`折り紙のコツ:\n${randomGuide}`);
+        }
+
+        function resetOrigami() {
+            if (confirm('現在の作品をリセットしますか？進行状況が失われます。')) {
+                gameState.currentStep = 0;
+                gameState.foldingSteps = [];
+                
+                displayWork();
+                drawOrigami();
+                setupStepButtons();
+                updateDisplay();
+            }
+        }
+
+        function newOrigamiWork() {
+            if (confirm('新しい作品を始めますか？現在の進行状況が失われます。')) {
+                generateNewWork();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentWork').textContent = Math.min(gameState.currentWork, gameState.totalWorks);
+            document.getElementById('completedWorks').textContent = gameState.completedWorks;
+            document.getElementById('score').textContent = gameState.score;
+            
+            const completionRate = gameState.currentWork > 1 ? 
+                ((gameState.completedWorks / (gameState.currentWork - 1)) * 100).toFixed(1) : 0;
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+            
+            const progress = ((gameState.currentWork - 1) / gameState.totalWorks) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // ゲーム終了チェック
+            if (gameState.currentWork > gameState.totalWorks) {
+                setTimeout(endGame, 1000);
+            }
+        }
+
+        function endGame() {
+            const completionRate = ((gameState.completedWorks / gameState.totalWorks) * 100).toFixed(1);
+            const passed = completionRate >= 90;
+            
+            let message = `🎊 折り紙パズルゲーム完了！\n\n`;
+            message += `完成作品: ${gameState.completedWorks} / ${gameState.totalWorks}\n`;
+            message += `完成率: ${completionRate}%\n`;
+            message += `最終スコア: ${gameState.score}点\n\n`;
+            
+            if (passed) {
+                message += `🏆 クリア達成！\n優秀な精密作業能力です！`;
+            } else {
+                message += `📚 もう少し頑張りましょう。\n90%以上の完成率を目指してください。`;
+            }
+            
+            alert(message);
+            
+            if (confirm('もう一度プレイしますか？')) {
+                initializeGame();
+            }
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ゲーム初期化
+        initializeGame();
+    </script>
+</body>
+</html>

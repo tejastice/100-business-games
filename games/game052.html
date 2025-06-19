@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方程式解法 - ゲーム052</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .equation-solver {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .problem-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .equation-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffc107;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Courier New', monospace;
+        }
+
+        .equation-type {
+            font-size: 1.2rem;
+            color: #4caf50;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .solution-steps {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .steps-container {
+            margin: 15px 0;
+        }
+
+        .step-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+        }
+
+        .answer-input {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .answer-input label {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        #solutionInput {
+            width: 150px;
+            height: 50px;
+            font-size: 1.5rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #solutionInput:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .solve-btn {
+            background: #4caf50;
+            border: 2px solid #4caf50;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .solve-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .verification-area {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .verification-area.error {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+
+        #verificationText {
+            font-size: 1.2rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+
+        .result-feedback.correct {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        .result-feedback.incorrect {
+            background: rgba(244, 67, 54, 0.9);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .logic-grid {
+                grid-template-columns: repeat(4, 50px);
+            }
+            .grid-cell {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← メニューに戻る</button>
+
+    <div class="game-container">
+        <h1 class="game-title">🧩 方程式解法</h1>
+        <p class="game-description">方程式を解く数学ゲーム - 代数方程式の解法と数学的推理による論理的問題解決</p>
+
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-label">レベル</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">スコア</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">正解数</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>🎯 ゲームルール</h4>
+            <p>・20の一次・二次方程式を解こう</p>
+            <p>・段階的解法プロセスで思考過程を理解</p>
+            <p>・解の検証を実行して正確性を確認</p>
+            <p>・解法率90%以上でクリア達成</p>
+        </div>
+
+        <div class="game-area">
+            <div class="equation-solver" id="equationSolver">
+                <div class="problem-display">
+                    <h4>🎯 問題 <span id="questionNumber">1</span>/20</h4>
+                    <div class="equation-display" id="equationDisplay">2x + 3 = 7</div>
+                    <div class="equation-type" id="equationType">一次方程式</div>
+                </div>
+                
+                <div class="solution-steps" id="solutionSteps">
+                    <h4>🔍 解法ステップ</h4>
+                    <div class="steps-container" id="stepsContainer"></div>
+                </div>
+                
+                <div class="answer-input">
+                    <label for="solutionInput">x = </label>
+                    <input type="number" id="solutionInput" placeholder="解を入力" step="0.1">
+                    <button class="solve-btn" onclick="submitSolution()">解答</button>
+                </div>
+                
+                <div class="verification-area" id="verificationArea" style="display: none;">
+                    <h4>🔍 検証</h4>
+                    <div id="verificationText"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="generateEquation()">新しい問題</button>
+            <button class="btn" onclick="showSteps()">解法手順</button>
+            <button class="btn" onclick="verifyAnswer()">検証実行</button>
+            <button class="btn" onclick="resetSolver()">リセット</button>
+        </div>
+    </div>
+
+    <div class="result-feedback" id="resultFeedback">正解！</div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            score: 0,
+            correct: 0,
+            totalQuestions: 0,
+            currentQuestion: 1,
+            currentEquation: '',
+            currentSolution: 0,
+            equationType: 'linear',
+            coefficients: {},
+            solutionSteps: []
+        };
+
+        function initializeGame() {
+            generateEquation();
+            updateDisplay();
+            setupEventListeners();
+        }
+
+        function generateEquation() {
+            gameState.totalQuestions++;
+            
+            // Decide equation type (70% linear, 30% quadratic)
+            const isQuadratic = Math.random() < 0.3;
+            
+            if(isQuadratic) {
+                generateQuadraticEquation();
+            } else {
+                generateLinearEquation();
+            }
+            
+            document.getElementById('questionNumber').textContent = gameState.currentQuestion;
+            document.getElementById('solutionInput').value = '';
+            document.getElementById('verificationArea').style.display = 'none';
+            clearSteps();
+        }
+
+        function generateLinearEquation() {
+            gameState.equationType = 'linear';
+            
+            // Generate ax + b = c where x is an integer
+            const solution = Math.floor(Math.random() * 20) - 10; // -10 to 9
+            const a = Math.floor(Math.random() * 10) + 1; // 1 to 10
+            const b = Math.floor(Math.random() * 20) - 10; // -10 to 9
+            const c = a * solution + b;
+            
+            gameState.currentSolution = solution;
+            gameState.coefficients = { a, b, c };
+            
+            const bStr = b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`;
+            gameState.currentEquation = `${a}x ${bStr} = ${c}`;
+            
+            document.getElementById('equationDisplay').textContent = gameState.currentEquation;
+            document.getElementById('equationType').textContent = '一次方程式';
+            
+            generateLinearSteps();
+        }
+
+        function generateQuadraticEquation() {
+            gameState.equationType = 'quadratic';
+            
+            // Generate simple quadratic that factors nicely
+            const root1 = Math.floor(Math.random() * 10) - 5; // -5 to 4
+            const root2 = Math.floor(Math.random() * 10) - 5; // -5 to 4
+            
+            // x² - (root1 + root2)x + (root1 * root2) = 0
+            const b = -(root1 + root2);
+            const c = root1 * root2;
+            
+            gameState.currentSolution = root1; // Accept either root
+            gameState.coefficients = { a: 1, b, c, root1, root2 };
+            
+            const bStr = b >= 0 ? `+ ${b}x` : `- ${Math.abs(b)}x`;
+            const cStr = c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`;
+            gameState.currentEquation = `x² ${bStr} ${cStr} = 0`;
+            
+            document.getElementById('equationDisplay').textContent = gameState.currentEquation;
+            document.getElementById('equationType').textContent = '二次方程式';
+            
+            generateQuadraticSteps();
+        }
+
+        function generateLinearSteps() {
+            const { a, b, c } = gameState.coefficients;
+            gameState.solutionSteps = [];
+            
+            gameState.solutionSteps.push(`1. ${gameState.currentEquation} (与えられた方程式)`);
+            
+            if(b !== 0) {
+                const bStr = b >= 0 ? `${b}` : `(${b})`;
+                const newC = c - b;
+                gameState.solutionSteps.push(`2. ${a}x = ${c} - ${bStr} = ${newC} (両辺から${bStr}を引く)`);
+            } else {
+                gameState.solutionSteps.push(`2. ${a}x = ${c} (すでに整理されている)`);
+            }
+            
+            const finalC = c - b;
+            gameState.solutionSteps.push(`3. x = ${finalC}/${a} = ${gameState.currentSolution} (両辺を${a}で割る)`);
+        }
+
+        function generateQuadraticSteps() {
+            const { a, b, c, root1, root2 } = gameState.coefficients;
+            gameState.solutionSteps = [];
+            
+            gameState.solutionSteps.push(`1. ${gameState.currentEquation} (与えられた方程式)`);
+            gameState.solutionSteps.push(`2. 因数分解を試みる`);
+            
+            const factor1 = root1 >= 0 ? `(x - ${root1})` : `(x + ${Math.abs(root1)})`;
+            const factor2 = root2 >= 0 ? `(x - ${root2})` : `(x + ${Math.abs(root2)})`;
+            gameState.solutionSteps.push(`3. ${factor1}${factor2} = 0`);
+            
+            gameState.solutionSteps.push(`4. x = ${root1} または x = ${root2} (因数分解の解)`);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('solutionInput').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    submitSolution();
+                }
+            });
+        }
+
+        function clearSteps() {
+            document.getElementById('stepsContainer').innerHTML = '';
+        }
+
+        function showSteps() {
+            const container = document.getElementById('stepsContainer');
+            container.innerHTML = '';
+            
+            gameState.solutionSteps.forEach(step => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step-item';
+                stepDiv.textContent = step;
+                container.appendChild(stepDiv);
+            });
+        }
+
+        function submitSolution() {
+            const userAnswer = parseFloat(document.getElementById('solutionInput').value);
+            
+            if(isNaN(userAnswer)) {
+                alert('数値を入力してください');
+                return;
+            }
+            
+            let isCorrect = false;
+            
+            if(gameState.equationType === 'linear') {
+                isCorrect = Math.abs(userAnswer - gameState.currentSolution) < 0.01;
+            } else {
+                // For quadratic, accept either root
+                const { root1, root2 } = gameState.coefficients;
+                isCorrect = Math.abs(userAnswer - root1) < 0.01 || Math.abs(userAnswer - root2) < 0.01;
+            }
+            
+            if(isCorrect) {
+                gameState.correct++;
+                gameState.score += 100 * gameState.level;
+                showFeedback('正解！', true);
+                
+                if(gameState.correct % 5 === 0) {
+                    gameState.level++;
+                    alert(`レベルアップ！ レベル${gameState.level}になりました！`);
+                }
+                
+                setTimeout(() => {
+                    if(gameState.currentQuestion >= 20) {
+                        endChallenge();
+                    } else {
+                        gameState.currentQuestion++;
+                        generateEquation();
+                    }
+                }, 1500);
+            } else {
+                const correctAnswers = gameState.equationType === 'linear' ? 
+                    `${gameState.currentSolution}` : 
+                    `${gameState.coefficients.root1} または ${gameState.coefficients.root2}`;
+                showFeedback(`不正解。正解は ${correctAnswers}`, false);
+            }
+            
+            updateDisplay();
+        }
+
+        function verifyAnswer() {
+            const userAnswer = parseFloat(document.getElementById('solutionInput').value);
+            
+            if(isNaN(userAnswer)) {
+                alert('まず解を入力してください');
+                return;
+            }
+            
+            const verificationArea = document.getElementById('verificationArea');
+            const verificationText = document.getElementById('verificationText');
+            
+            if(gameState.equationType === 'linear') {
+                const { a, b, c } = gameState.coefficients;
+                const leftSide = a * userAnswer + b;
+                const rightSide = c;
+                
+                verificationText.textContent = `${a} × ${userAnswer} + ${b} = ${leftSide}\n右辺: ${rightSide}\n${leftSide === rightSide ? '✓ 検証成功' : '✗ 検証失敗'}`;
+                verificationArea.className = leftSide === rightSide ? 'verification-area' : 'verification-area error';
+            } else {
+                const { a, b, c } = gameState.coefficients;
+                const result = userAnswer * userAnswer + b * userAnswer + c;
+                
+                verificationText.textContent = `${userAnswer}² + ${b} × ${userAnswer} + ${c} = ${result}\n${Math.abs(result) < 0.01 ? '✓ 検証成功' : '✗ 検証失敗'}`;
+                verificationArea.className = Math.abs(result) < 0.01 ? 'verification-area' : 'verification-area error';
+            }
+            
+            verificationArea.style.display = 'block';
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('resultFeedback');
+            feedback.textContent = message;
+            feedback.className = `result-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 1500);
+        }
+
+        function endChallenge() {
+            const accuracy = (gameState.correct / gameState.totalQuestions) * 100;
+            const isSuccess = accuracy >= 90;
+            
+            if(isSuccess) {
+                alert(`🎉 チャレンジ成功！\n解法率: ${accuracy.toFixed(1)}%\n正解数: ${gameState.correct}/${gameState.totalQuestions}\nスコア: ${gameState.score}点`);
+            } else {
+                alert(`チャレンジ終了\n解法率: ${accuracy.toFixed(1)}% (目標: 90%)\n正解数: ${gameState.correct}/${gameState.totalQuestions}`);
+            }
+        }
+
+        function resetSolver() {
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.totalQuestions = 0;
+            gameState.currentQuestion = 1;
+            generateEquation();
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('correct').textContent = `${gameState.correct}/${gameState.totalQuestions}`;
+        }
+
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html>
