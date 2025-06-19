@@ -255,395 +255,389 @@
 
         <div class="stats">
             <div class="stat-item">
-                <div>距離</div>
-                <div id="distance">0km</div>
+                <div>現在の型</div>
+                <div id="currentKata">基本型</div>
             </div>
             <div class="stat-item">
-                <div>エネルギー</div>
-                <div id="energy">100%</div>
+                <div>習得度</div>
+                <div id="masteryLevel">0%</div>
             </div>
             <div class="stat-item">
-                <div>現在ペース</div>
-                <div id="currentPace">5.0分/km</div>
+                <div>精神統一</div>
+                <div id="concentration">普通</div>
             </div>
             <div class="stat-item">
-                <div>完走時間</div>
-                <div id="finishTime">---</div>
+                <div>完成した型</div>
+                <div id="completedKatas">0/8</div>
             </div>
         </div>
 
         <div class="energy-panel">
             <div class="energy-meter">
-                <h4>⚡ エネルギー残量</h4>
+                <h4>🧘‍♂️ 精神集中度</h4>
                 <div class="meter-bar">
-                    <div class="meter-fill energy-fill" id="energyFill" style="width: 100%;"></div>
+                    <div class="meter-fill energy-fill" id="concentrationFill" style="width: 100%;"></div>
                 </div>
-                <div>残量: <span id="energyLevel">100%</span></div>
+                <div>集中度: <span id="concentrationLevel">100%</span></div>
             </div>
             <div class="energy-meter">
-                <h4>🏃‍♂️ ペース指標</h4>
+                <h4>🥋 技の精度</h4>
                 <div class="meter-bar">
-                    <div class="meter-fill pace-fill" id="paceFill" style="width: 50%;"></div>
+                    <div class="meter-fill pace-fill" id="techniqueFill" style="width: 50%;"></div>
                 </div>
-                <div>ペース: <span id="paceLevel">普通</span></div>
+                <div>精度: <span id="techniqueLevel">普通</span></div>
             </div>
         </div>
 
         <div class="race-track">
             <div class="distance-markers">
-                <span>スタート</span>
-                <span>10km</span>
-                <span>21km</span>
-                <span>30km</span>
-                <span>ゴール</span>
+                <span>準備</span>
+                <span>基本型</span>
+                <span>応用型</span>
+                <span>奥義</span>
+                <span>完成</span>
             </div>
-            <div class="runner-icon" id="runner">🏃‍♂️</div>
+            <div class="runner-icon" id="martialArtist">🥋</div>
         </div>
 
         <div class="pace-controls">
-            <button class="pace-btn" id="slowPace" disabled>🐌 ゆっくり<br>(6.0分/km)</button>
-            <button class="pace-btn" id="normalPace" disabled>🏃‍♂️ 普通<br>(5.0分/km)</button>
-            <button class="pace-btn" id="fastPace" disabled>⚡ 速め<br>(4.0分/km)</button>
-            <button class="pace-btn" id="sprintPace" disabled>🚀 全力<br>(3.5分/km)</button>
+            <button class="pace-btn" id="basicKata" disabled>🔰 基本型<br>(入門)</button>
+            <button class="pace-btn" id="intermediateKata" disabled>🥋 中級型<br>(修練)</button>
+            <button class="pace-btn" id="advancedKata" disabled>⚡ 上級型<br>(熟練)</button>
+            <button class="pace-btn" id="masterKata" disabled>🌟 奥義<br>(達人)</button>
         </div>
 
         <div class="weather-conditions">
-            <h4>🌤️ レース状況</h4>
+            <h4>🏯 道場環境</h4>
             <div class="conditions-grid">
                 <div class="condition-item">
-                    <div>天候</div>
-                    <div id="weather">晴れ</div>
+                    <div>道場</div>
+                    <div id="dojo">静寂</div>
                 </div>
                 <div class="condition-item">
-                    <div>気温</div>
-                    <div id="temperature">20°C</div>
+                    <div>時間帯</div>
+                    <div id="timeOfDay">朝稽古</div>
                 </div>
                 <div class="condition-item">
-                    <div>風向</div>
-                    <div id="wind">無風</div>
+                    <div>呼吸</div>
+                    <div id="breathing">安定</div>
                 </div>
                 <div class="condition-item">
-                    <div>コース</div>
-                    <div id="course">平坦</div>
+                    <div>心境</div>
+                    <div id="mindState">平静</div>
                 </div>
             </div>
         </div>
 
         <div class="controls">
-            <button class="control-btn" id="startBtn">レース開始</button>
+            <button class="control-btn" id="startBtn">型練習開始</button>
             <button class="control-btn" id="resetBtn">リセット</button>
-            <button class="control-btn" id="strategyBtn">戦略変更</button>
+            <button class="control-btn" id="meditationBtn">瞑想</button>
         </div>
 
         <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 10px;">
             <h3>🏆 ビジネス応用</h3>
-            <p>持久力とペース配分・目標達成のための戦略的計画・困難な状況での忍耐力・一定のパフォーマンス維持能力を向上させます</p>
+            <p>武道精神による精神修養・継続的な自己改善・礼儀作法とマナー・集中力と精神統一・困難に立ち向かう心の強さを向上させます</p>
         </div>
     </div>
 
     <script>
-        class MarathonPacing {
+        class MartialArtsKata {
             constructor() {
-                this.distance = 0; // km
-                this.totalDistance = 42.195; // フルマラソン
-                this.energy = 100;
-                this.currentPace = 5.0; // 分/km
+                this.currentKataIndex = 0;
+                this.concentration = 100;
+                this.masteryLevel = 0;
+                this.completedKatas = 0;
                 this.gameActive = false;
-                this.startTime = null;
-                this.updateInterval = null;
-                this.paceMultiplier = 1.0;
-                this.weatherEffect = 1.0;
-                this.targetTime = 4 * 60; // 4時間目標（分）
+                this.techniqueAccuracy = 50;
+                this.totalKatas = 8;
+                this.kataProgress = 0;
+                this.meditationMode = false;
                 
-                this.paceSettings = {
-                    slow: { pace: 6.0, energy: -0.5, label: 'ゆっくり' },
-                    normal: { pace: 5.0, energy: -1.0, label: '普通' },
-                    fast: { pace: 4.0, energy: -2.0, label: '速め' },
-                    sprint: { pace: 3.5, energy: -4.0, label: '全力' }
-                };
+                this.katas = [
+                    { name: '基本立ち', level: '入門', difficulty: 1, techniques: ['前屈立ち', '後屈立ち', '騎馬立ち'] },
+                    { name: '型一', level: '入門', difficulty: 2, techniques: ['上段受け', '中段突き', '下段払い'] },
+                    { name: '型二', level: '初級', difficulty: 3, techniques: ['内受け', '外受け', '手刀受け'] },
+                    { name: '型三', level: '中級', difficulty: 4, techniques: ['前蹴り', '回し蹴り', '横蹴り'] },
+                    { name: '型四', level: '中級', difficulty: 5, techniques: ['連続突き', '組み合わせ', '流れ'] },
+                    { name: '型五', level: '上級', difficulty: 6, techniques: ['跳び蹴り', '回転技', '高度技'] },
+                    { name: '型六', level: '上級', difficulty: 7, techniques: ['複合技', '連携技', '応用技'] },
+                    { name: '奥義', level: '達人', difficulty: 8, techniques: ['秘伝技', '極意', '完成形'] }
+                ];
                 
                 this.initializeElements();
                 this.bindEvents();
                 this.updateDisplay();
-                this.updateKataInfo();
+                this.generateDojoEnvironment();
             }
 
             initializeElements() {
-                this.distanceEl = document.getElementById('distance');
-                this.energyEl = document.getElementById('energy');
-                this.currentPaceEl = document.getElementById('currentPace');
-                this.finishTimeEl = document.getElementById('finishTime');
-                this.energyFillEl = document.getElementById('energyFill');
-                this.energyLevelEl = document.getElementById('energyLevel');
-                this.paceFillEl = document.getElementById('paceFill');
-                this.paceLevelEl = document.getElementById('paceLevel');
-                this.runnerEl = document.getElementById('runner');
+                this.currentKataEl = document.getElementById('currentKata');
+                this.masteryLevelEl = document.getElementById('masteryLevel');
+                this.concentrationEl = document.getElementById('concentration');
+                this.completedKatasEl = document.getElementById('completedKatas');
+                this.concentrationFillEl = document.getElementById('concentrationFill');
+                this.concentrationLevelEl = document.getElementById('concentrationLevel');
+                this.techniqueFillEl = document.getElementById('techniqueFill');
+                this.techniqueLevelEl = document.getElementById('techniqueLevel');
+                this.martialArtistEl = document.getElementById('martialArtist');
                 
-                this.weatherEl = document.getElementById('weather');
-                this.temperatureEl = document.getElementById('temperature');
-                this.windEl = document.getElementById('wind');
-                this.courseEl = document.getElementById('course');
+                this.dojoEl = document.getElementById('dojo');
+                this.timeOfDayEl = document.getElementById('timeOfDay');
+                this.breathingEl = document.getElementById('breathing');
+                this.mindStateEl = document.getElementById('mindState');
                 
-                this.slowPaceBtn = document.getElementById('slowPace');
-                this.normalPaceBtn = document.getElementById('normalPace');
-                this.fastPaceBtn = document.getElementById('fastPace');
-                this.sprintPaceBtn = document.getElementById('sprintPace');
+                this.basicKataBtn = document.getElementById('basicKata');
+                this.intermediateKataBtn = document.getElementById('intermediateKata');
+                this.advancedKataBtn = document.getElementById('advancedKata');
+                this.masterKataBtn = document.getElementById('masterKata');
                 
                 this.startBtn = document.getElementById('startBtn');
                 this.resetBtn = document.getElementById('resetBtn');
-                this.strategyBtn = document.getElementById('strategyBtn');
+                this.meditationBtn = document.getElementById('meditationBtn');
             }
 
             bindEvents() {
-                this.startBtn.addEventListener('click', () => this.startRace());
-                this.resetBtn.addEventListener('click', () => this.resetRace());
-                this.strategyBtn.addEventListener('click', () => this.changeStrategy());
+                this.startBtn.addEventListener('click', () => this.startKataPractice());
+                this.resetBtn.addEventListener('click', () => this.resetPractice());
+                this.meditationBtn.addEventListener('click', () => this.startMeditation());
                 
-                this.slowPaceBtn.addEventListener('click', () => this.setPace('slow'));
-                this.normalPaceBtn.addEventListener('click', () => this.setPace('normal'));
-                this.fastPaceBtn.addEventListener('click', () => this.setPace('fast'));
-                this.sprintPaceBtn.addEventListener('click', () => this.setPace('sprint'));
+                this.basicKataBtn.addEventListener('click', () => this.selectKataLevel('basic'));
+                this.intermediateKataBtn.addEventListener('click', () => this.selectKataLevel('intermediate'));
+                this.advancedKataBtn.addEventListener('click', () => this.selectKataLevel('advanced'));
+                this.masterKataBtn.addEventListener('click', () => this.selectKataLevel('master'));
             }
 
-            startRace() {
+            startKataPractice() {
                 this.gameActive = true;
-                this.startTime = Date.now();
-                this.enablePaceControls();
-                this.setPace('normal'); // デフォルトペース
-                this.startRaceLoop();
-                this.startBtn.textContent = 'レース中...';
+                this.enableKataControls();
+                this.selectKataLevel('basic'); // デフォルト基本型
+                this.startKataLoop();
+                this.startBtn.textContent = '型練習中...';
                 this.startBtn.disabled = true;
-                this.strategyBtn.disabled = false;
+                this.meditationBtn.disabled = false;
             }
 
-            startRaceLoop() {
+            startKataLoop() {
                 this.updateInterval = setInterval(() => {
-                    if (this.gameActive) {
-                        this.updateRace();
+                    if (this.gameActive && !this.meditationMode) {
+                        this.updateKata();
                     }
-                }, 500);
+                }, 1000);
             }
 
-            updateRace() {
-                // 距離の進行
-                const kmPerUpdate = (1 / this.currentPace) * (0.5 / 60); // 0.5秒間の距離
-                this.distance += kmPerUpdate * this.paceMultiplier * this.weatherEffect;
+            updateKata() {
+                // 型の進行
+                const currentKata = this.katas[this.currentKataIndex];
+                this.kataProgress += (100 / currentKata.difficulty) / 10; // 難易度に応じた進行速度
                 
-                // エネルギーの消費
-                this.updateEnergy();
+                // 集中度の変化
+                this.updateConcentration();
                 
-                // ランナー位置の更新
-                this.updateRunnerPosition();
+                // 武道家位置の更新
+                this.updateMartialArtistPosition();
                 
-                // ゴール判定
-                if (this.distance >= this.totalDistance) {
-                    this.finishRace();
+                // 型完成判定
+                if (this.kataProgress >= 100) {
+                    this.completeKata();
                 }
                 
                 this.updateDisplay();
             }
 
-            updateEnergy() {
-                const currentSettings = this.getCurrentPaceSettings();
-                const energyDrain = currentSettings.energy * this.weatherEffect;
+            updateConcentration() {
+                const currentKata = this.katas[this.currentKataIndex];
+                const concentrationDrain = currentKata.difficulty * 0.5;
                 
-                this.energy = Math.max(0, this.energy + energyDrain);
+                this.concentration = Math.max(0, this.concentration - concentrationDrain + (this.meditationMode ? 2 : 0));
                 
-                // エネルギー不足時の自動ペース調整
-                if (this.energy < 20 && this.currentPace < 5.5) {
-                    this.setPace('slow');
+                // 集中度による技の精度調整
+                this.techniqueAccuracy = Math.min(100, 30 + (this.concentration * 0.7));
+            }
+
+            updateMartialArtistPosition() {
+                const percentage = Math.min(90, (this.kataProgress / 100) * 90);
+                this.martialArtistEl.style.left = (2 + percentage) + '%';
+            }
+
+            completeKata() {
+                const currentKata = this.katas[this.currentKataIndex];
+                this.completedKatas++;
+                this.masteryLevel = (this.completedKatas / this.totalKatas) * 100;
+                
+                // 次の型に進む
+                if (this.currentKataIndex < this.totalKatas - 1) {
+                    this.currentKataIndex++;
+                    this.kataProgress = 0;
+                    alert(`🥋 ${currentKata.name} 完成！\n\n次の型: ${this.katas[this.currentKataIndex].name}\nレベル: ${this.katas[this.currentKataIndex].level}`);
+                } else {
+                    this.finishAllKatas();
                 }
             }
 
-            updateRunnerPosition() {
-                const percentage = Math.min(90, (this.distance / this.totalDistance) * 90);
-                this.runnerEl.style.left = (2 + percentage) + '%';
-            }
-
-            getCurrentPaceSettings() {
-                for (const [key, settings] of Object.entries(this.paceSettings)) {
-                    if (Math.abs(settings.pace - this.currentPace) < 0.1) {
-                        return settings;
-                    }
-                }
-                return this.paceSettings.normal;
-            }
-
-            setPace(paceType) {
-                const settings = this.paceSettings[paceType];
-                if (!settings) return;
+            selectKataLevel(level) {
+                const levelMap = {
+                    'basic': [0, 1],     // 基本立ち、型一
+                    'intermediate': [2, 3, 4], // 型二、型三、型四
+                    'advanced': [5, 6],  // 型五、型六
+                    'master': [7]        // 奥義
+                };
                 
-                this.currentPace = settings.pace;
-                this.clearPaceSelection();
+                const availableKatas = levelMap[level];
+                if (!availableKatas || !availableKatas.includes(this.currentKataIndex)) {
+                    this.currentKataIndex = availableKatas[0];
+                    this.kataProgress = 0;
+                }
+                
+                this.clearKataSelection();
                 
                 // ボタンのハイライト
                 const buttons = {
-                    'slow': this.slowPaceBtn,
-                    'normal': this.normalPaceBtn,
-                    'fast': this.fastPaceBtn,
-                    'sprint': this.sprintPaceBtn
+                    'basic': this.basicKataBtn,
+                    'intermediate': this.intermediateKataBtn,
+                    'advanced': this.advancedKataBtn,
+                    'master': this.masterKataBtn
                 };
                 
-                buttons[paceType].classList.add('active');
-                this.updatePaceDisplay();
+                buttons[level].classList.add('active');
+                this.updateTechniqueDisplay();
             }
 
-            clearPaceSelection() {
-                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+            clearKataSelection() {
+                [this.basicKataBtn, this.intermediateKataBtn, this.advancedKataBtn, this.masterKataBtn]
                     .forEach(btn => btn.classList.remove('active'));
             }
 
-            updatePaceDisplay() {
-                const pacePercentage = ((6.0 - this.currentPace) / 2.5) * 100;
-                this.paceFillEl.style.width = Math.max(0, Math.min(100, pacePercentage)) + '%';
+            updateTechniqueDisplay() {
+                const techniquePercentage = this.techniqueAccuracy;
+                this.techniqueFillEl.style.width = Math.max(0, Math.min(100, techniquePercentage)) + '%';
                 
-                let paceLabel = '普通';
-                if (this.currentPace >= 5.5) paceLabel = 'ゆっくり';
-                else if (this.currentPace <= 3.8) paceLabel = '全力';
-                else if (this.currentPace <= 4.5) paceLabel = '速め';
+                let techniqueLabel = '普通';
+                if (this.techniqueAccuracy >= 85) techniqueLabel = '優秀';
+                else if (this.techniqueAccuracy >= 70) techniqueLabel = '良好';
+                else if (this.techniqueAccuracy <= 40) techniqueLabel = '要練習';
                 
-                this.paceLevelEl.textContent = paceLabel;
+                this.techniqueLevelEl.textContent = techniqueLabel;
             }
 
-            enablePaceControls() {
-                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+            enableKataControls() {
+                [this.basicKataBtn, this.intermediateKataBtn, this.advancedKataBtn, this.masterKataBtn]
                     .forEach(btn => btn.disabled = false);
             }
 
-            disablePaceControls() {
-                [this.slowPaceBtn, this.normalPaceBtn, this.fastPaceBtn, this.sprintPaceBtn]
+            disableKataControls() {
+                [this.basicKataBtn, this.intermediateKataBtn, this.advancedKataBtn, this.masterKataBtn]
                     .forEach(btn => btn.disabled = true);
-                this.clearPaceSelection();
+                this.clearKataSelection();
             }
 
-            finishRace() {
+            finishAllKatas() {
                 this.gameActive = false;
                 clearInterval(this.updateInterval);
-                this.disablePaceControls();
+                this.disableKataControls();
                 
-                const finishTime = (Date.now() - this.startTime) / 1000 / 60; // 分
-                this.runnerEl.classList.add('finish-celebration');
+                this.martialArtistEl.classList.add('finish-celebration');
                 
-                const performance = this.evaluatePerformance(finishTime);
+                const performance = this.evaluateKataPerformance();
                 
                 setTimeout(() => {
-                    alert(`🏆 フルマラソン完走!\n\n完走時間: ${this.formatTime(finishTime)}\n評価: ${performance.rating}\n\n${performance.comment}`);
+                    alert(`🏆 全ての型を習得！\n\n習得度: ${this.masteryLevel.toFixed(1)}%\n評価: ${performance.rating}\n\n${performance.comment}`);
                 }, 1000);
                 
-                this.finishTimeEl.textContent = this.formatTime(finishTime);
-                this.startBtn.textContent = 'レース開始';
+                this.startBtn.textContent = '型練習開始';
                 this.startBtn.disabled = false;
-                this.strategyBtn.disabled = true;
+                this.meditationBtn.disabled = true;
             }
 
-            changeStrategy() {
-                // ペース戦略のアドバイス
-                const suggestions = this.getStrategySuggestions();
-                alert(`🏃‍♂️ ペース戦略アドバイス\n\n${suggestions.join('\n\n')}`);
-            }
-
-            getStrategySuggestions() {
-                const suggestions = [];
-                
-                if (this.distance < 10) {
-                    suggestions.push('序盤: 無理をせず、体を温めながら走りましょう');
-                } else if (this.distance < 30) {
-                    suggestions.push('中盤: 一定のペースを保ち、エネルギーを温存しましょう');
+            startMeditation() {
+                this.meditationMode = !this.meditationMode;
+                if (this.meditationMode) {
+                    this.meditationBtn.textContent = '瞑想中...';
+                    this.meditationBtn.style.background = 'linear-gradient(45deg, #4CAF50, #66BB6A)';
                 } else {
-                    suggestions.push('終盤: 残りエネルギーを考慮してラストスパートを!');
+                    this.meditationBtn.textContent = '瞑想';
+                    this.meditationBtn.style.background = 'linear-gradient(45deg, #FF9800, #FFC107)';
                 }
-                
-                if (this.energy < 30) {
-                    suggestions.push('⚠️ エネルギー不足: ペースを落として回復を図りましょう');
-                } else if (this.energy > 70 && this.distance > 20) {
-                    suggestions.push('💪 エネルギー十分: ペースアップを検討してみましょう');
-                }
-                
-                if (this.currentPace < 4.0 && this.energy < 50) {
-                    suggestions.push('🎯 ペース調整: 速すぎるペースはエネルギー切れの原因です');
-                }
-                
-                return suggestions;
             }
 
-            formatTime(minutes) {
-                const hours = Math.floor(minutes / 60);
-                const mins = Math.floor(minutes % 60);
-                const secs = Math.floor((minutes % 1) * 60);
-                return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-
-            evaluatePerformance(finishTime) {
-                const targetTime = this.targetTime;
-                const energyRemaining = this.energy;
+            evaluateKataPerformance() {
+                const avgTechnique = this.techniqueAccuracy;
+                const concentrationLevel = this.concentration;
                 
-                if (finishTime <= targetTime * 0.85) {
-                    return { rating: 'エリートランナー', comment: 'サブ3.5の素晴らしい記録です！' };
-                } else if (finishTime <= targetTime) {
-                    return { rating: '上級ランナー', comment: '目標時間達成！素晴らしい走りでした！' };
-                } else if (finishTime <= targetTime * 1.15) {
-                    return { rating: '中級ランナー', comment: '安定した走りで完走できました' };
-                } else if (finishTime <= targetTime * 1.3) {
-                    return { rating: '初級ランナー', comment: '完走おめでとう！次回はもっと良いタイムを！' };
+                if (this.masteryLevel >= 95 && avgTechnique >= 90) {
+                    return { rating: '武道の達人', comment: '完璧な型の習得！武道の真髄を体得されました！' };
+                } else if (this.masteryLevel >= 85 && avgTechnique >= 80) {
+                    return { rating: '上級武道家', comment: '素晴らしい技術！更なる高みを目指しましょう' };
+                } else if (this.masteryLevel >= 70 && avgTechnique >= 65) {
+                    return { rating: '中級武道家', comment: '安定した技術を身につけました' };
+                } else if (this.masteryLevel >= 50) {
+                    return { rating: '初級武道家', comment: '基本はできています。継続が大切です' };
                 } else {
-                    return { rating: 'チャレンジャー', comment: '完走が何より大切です。次回に向けて練習しましょう' };
+                    return { rating: '入門者', comment: '武道の道は長い。精進を続けましょう' };
                 }
             }
 
-            resetRace() {
+            generateDojoEnvironment() {
+                const dojos = ['静寂', '厳粛', '神聖', '清浄'];
+                const times = ['朝稽古', '昼練習', '夕稽古', '深夜練習'];
+                const breathings = ['安定', '深呼吸', '調和', '統一'];
+                const mindStates = ['平静', '集中', '無心', '悟り'];
+                
+                this.dojoEl.textContent = dojos[Math.floor(Math.random() * dojos.length)];
+                this.timeOfDayEl.textContent = times[Math.floor(Math.random() * times.length)];
+                this.breathingEl.textContent = breathings[Math.floor(Math.random() * breathings.length)];
+                this.mindStateEl.textContent = mindStates[Math.floor(Math.random() * mindStates.length)];
+            }
+
+            resetPractice() {
                 this.gameActive = false;
                 if (this.updateInterval) {
                     clearInterval(this.updateInterval);
                 }
                 
-                this.distance = 0;
-                this.energy = 100;
-                this.currentPace = 5.0;
-                this.startTime = null;
-                this.paceMultiplier = 1.0;
-                this.weatherEffect = 1.0;
+                this.currentKataIndex = 0;
+                this.concentration = 100;
+                this.masteryLevel = 0;
+                this.completedKatas = 0;
+                this.techniqueAccuracy = 50;
+                this.kataProgress = 0;
+                this.meditationMode = false;
                 
-                this.runnerEl.style.left = '2%';
-                this.runnerEl.classList.remove('finish-celebration');
-                this.disablePaceControls();
-                this.generateWeatherConditions();
+                this.martialArtistEl.style.left = '2%';
+                this.martialArtistEl.classList.remove('finish-celebration');
+                this.disableKataControls();
+                this.generateDojoEnvironment();
                 this.updateDisplay();
                 
-                this.startBtn.textContent = 'レース開始';
+                this.startBtn.textContent = '型練習開始';
                 this.startBtn.disabled = false;
-                this.strategyBtn.disabled = true;
-                this.finishTimeEl.textContent = '---';
-            }
-
-            generateWeatherConditions() {
-                const weathers = ['晴れ', '曇り', '小雨', '強風'];
-                const temperatures = ['15°C', '20°C', '25°C', '30°C'];
-                const winds = ['無風', '追い風', '向かい風', '横風'];
-                const courses = ['平坦', '起伏あり', '上り坂', '下り坂'];
-                
-                this.weatherEl.textContent = weathers[Math.floor(Math.random() * weathers.length)];
-                this.temperatureEl.textContent = temperatures[Math.floor(Math.random() * temperatures.length)];
-                this.windEl.textContent = winds[Math.floor(Math.random() * winds.length)];
-                this.courseEl.textContent = courses[Math.floor(Math.random() * courses.length)];
-                
-                // 天候効果を設定
-                this.weatherEffect = 0.8 + Math.random() * 0.4; // 0.8-1.2の範囲
+                this.meditationBtn.disabled = true;
+                this.meditationBtn.textContent = '瞑想';
+                this.meditationBtn.style.background = 'linear-gradient(45deg, #FF9800, #FFC107)';
             }
 
             updateDisplay() {
-                this.distanceEl.textContent = this.distance.toFixed(1) + 'km';
-                this.energyEl.textContent = Math.round(this.energy) + '%';
-                this.currentPaceEl.textContent = this.currentPace.toFixed(1) + '分/km';
+                const currentKata = this.katas[this.currentKataIndex];
+                this.currentKataEl.textContent = currentKata.name;
+                this.masteryLevelEl.textContent = this.masteryLevel.toFixed(1) + '%';
                 
-                this.energyFillEl.style.width = Math.max(0, this.energy) + '%';
-                this.energyLevelEl.textContent = Math.round(this.energy) + '%';
+                let concentrationLabel = '普通';
+                if (this.concentration >= 85) concentrationLabel = '高い';
+                else if (this.concentration >= 70) concentrationLabel = '良好';
+                else if (this.concentration <= 30) concentrationLabel = '低い';
+                this.concentrationEl.textContent = concentrationLabel;
                 
-                this.updatePaceDisplay();
+                this.completedKatasEl.textContent = `${this.completedKatas}/${this.totalKatas}`;
+                
+                this.concentrationFillEl.style.width = Math.max(0, this.concentration) + '%';
+                this.concentrationLevelEl.textContent = Math.round(this.concentration) + '%';
+                
+                this.updateTechniqueDisplay();
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            new MarathonPacing();
+            new MartialArtsKata();
         });
     </script>
 </body>
